@@ -47,3 +47,10 @@ export type HealthGoal = {
   current: number;
   unit: string;
 };
+
+export type MedicalRecord = {
+  id: string;
+  capturedAt: Date;
+  imageUrl: string;
+  summary: string;
+};

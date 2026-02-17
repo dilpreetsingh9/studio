@@ -18,6 +18,7 @@ import {
   Bell,
   Calendar,
   HeartPulse,
+  History,
   LayoutDashboard,
   MessageSquare,
   Settings,
@@ -29,7 +30,8 @@ import { Button } from '@/components/ui/button';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const sidebarNav = [
-    { name: 'Dashboard', href: '#', icon: LayoutDashboard, current: true },
+    { name: 'Dashboard', href: '#', icon: LayoutDashboard, current: false },
+    { name: 'Health History', href: '#', icon: History, current: true },
     { name: 'Vitals', href: '#', icon: HeartPulse, current: false },
     { name: 'Appointments', href: '#', icon: Calendar, current: false },
     { name: 'Messages', href: '#', icon: MessageSquare, current: false },
