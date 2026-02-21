@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { Sparkles, Loader2, AlertCircle, Share2, Zap } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { HealthGoal } from '@/lib/types';
 import { generateHealthGoals } from '@/ai/flows/generate-health-goals';
@@ -53,6 +53,20 @@ export default function HealthGoals() {
     }
   };
 
+  const handleShare = () => {
+    toast({
+      title: "Goals Shared",
+      description: "Your health progress has been shared with your care team.",
+    });
+  };
+
+  const handleMotivate = () => {
+    toast({
+      title: "Keep it up!",
+      description: "You are doing great! Every step counts towards a healthier you.",
+    });
+  };
+
   return (
     <Card className="shadow-md border-primary/10">
       <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
@@ -87,11 +101,20 @@ export default function HealthGoals() {
           ))}
         </div>
 
-        <Alert variant="default" className="bg-muted/50 border-none mt-4">
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <Button variant="outline" size="sm" className="w-full text-xs" onClick={handleShare}>
+            <Share2 className="mr-2 h-3.5 w-3.5" /> Share
+          </Button>
+          <Button variant="outline" size="sm" className="w-full text-xs" onClick={handleMotivate}>
+            <Zap className="mr-2 h-3.5 w-3.5" /> Motivate
+          </Button>
+        </div>
+
+        <Alert variant="default" className="bg-muted/50 border-none mt-2">
           <AlertCircle className="h-4 w-4 text-primary" />
           <AlertTitle className="text-xs font-semibold">Medical Disclaimer</AlertTitle>
           <AlertDescription className="text-[10px] text-muted-foreground leading-tight">
-            These goals are AI-generated based on your data and are for informational purposes only. Always consult with your healthcare provider before starting new health regimens or making significant changes to your activity levels.
+            These goals are AI-generated based on your data and are for informational purposes only. Always consult with your healthcare provider before starting new health regimens.
           </AlertDescription>
         </Alert>
       </CardContent>
