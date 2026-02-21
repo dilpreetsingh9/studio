@@ -3,7 +3,7 @@
 /**
  * @fileOverview This file defines a Genkit flow for analyzing a medical document image.
  *
- * - analyzeMedicalDocument - A function that analyzes a medical document image and returns a summary.
+ * - analyzeMedicalDocument - A function that analyzes a medical document image and returns a simplified summary.
  * - AnalyzeMedicalDocumentInput - The input type for the analyzeMedicalDocument function.
  * - AnalyzeMedicalDocumentOutput - The return type for the analyzeMedicalDocument function.
  */
@@ -23,7 +23,9 @@ export type AnalyzeMedicalDocumentInput = z.infer<
 const AnalyzeMedicalDocumentOutputSchema = z.object({
   summary: z
     .string()
-    .describe('A concise summary of the provided medical document.'),
+    .describe('A concise summary of the provided medical document in simplified language.'),
+  keyFindings: z.array(z.string()).describe('A list of the most important points from the document.'),
+  nextSteps: z.array(z.string()).describe('Recommended next steps for the patient based on the document.'),
 });
 export type AnalyzeMedicalDocumentOutput = z.infer<
   typeof AnalyzeMedicalDocumentOutputSchema
@@ -39,10 +41,17 @@ const prompt = ai.definePrompt({
   name: 'analyzeMedicalDocumentPrompt',
   input: { schema: AnalyzeMedicalDocumentInputSchema },
   output: { schema: AnalyzeMedicalDocumentOutputSchema },
-  prompt: `You are an AI assistant specializing in summarizing medical records from images.
-    Analyze the following image of a medical document and provide a concise, easy-to-understand summary.
-    Extract key information such as diagnoses, medications, lab results, and physician notes.
-    Structure the summary in a clear, organized format.
+  prompt: `You are an AI medical assistant designed to help patients understand their medical records.
+    Analyze the following image of a medical document (OCR).
+    
+    Your goal is to:
+    1. Parse the text and identify key medical information.
+    2. Translate complex medical jargon into SIMPLIFIED, everyday language that a non-medical person can easily understand.
+    3. Provide a clear summary of what the document is about.
+    4. Highlight key findings (e.g., normal vs abnormal lab results, specific diagnoses).
+    5. List clear, simplified next steps if mentioned (e.g., "Schedule a follow-up", "Continue current medication").
+
+    Be empathetic and clear. Avoid overly technical terms without explaining them simply.
 
     Document Image: {{media url=documentImage}}
     `,

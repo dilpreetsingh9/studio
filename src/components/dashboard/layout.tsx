@@ -23,6 +23,7 @@ import {
   MessageSquare,
   Settings,
   User,
+  FileText,
 } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { Logo } from '@/components/icons';
@@ -30,8 +31,8 @@ import { Button } from '@/components/ui/button';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const sidebarNav = [
-    { name: 'Dashboard', href: '#', icon: LayoutDashboard, current: false },
-    { name: 'Health History', href: '#', icon: History, current: true },
+    { name: 'Dashboard', href: '#', icon: LayoutDashboard, current: true },
+    { name: 'Health Records', href: '#', icon: FileText, current: false },
     { name: 'Vitals', href: '#', icon: HeartPulse, current: false },
     { name: 'Appointments', href: '#', icon: Calendar, current: false },
     { name: 'Messages', href: '#', icon: MessageSquare, current: false },
@@ -42,9 +43,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 p-2">
             <Logo className="size-8 text-primary" />
-            <span className="text-xl font-semibold">HealthX</span>
+            <span className="text-xl font-bold tracking-tight text-primary">HealthX</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -88,7 +89,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-14 items-center justify-between border-b bg-background px-4 lg:px-6">
+        <header className="flex h-14 items-center justify-between border-b bg-background/50 backdrop-blur-md sticky top-0 z-30 px-4 lg:px-6">
           <SidebarTrigger />
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -97,7 +98,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </Button>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary/10">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

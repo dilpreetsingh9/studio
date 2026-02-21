@@ -1,7 +1,7 @@
 import { DashboardLayout } from '@/components/dashboard/layout';
 import PatientProfile from '@/components/dashboard/patient-profile';
 import VitalsMonitor from '@/components/dashboard/vitals-monitor';
-import HealthHistory from '@/components/dashboard/health-history';
+import HealthRecords from '@/components/dashboard/health-records';
 import CareNavigation from '@/components/dashboard/care-navigation';
 import HealthGoals from '@/components/dashboard/health-goals';
 import SecureMessaging from '@/components/dashboard/secure-messaging';
@@ -12,7 +12,7 @@ export default function Home() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <PatientProfile />
-          <HealthHistory />
+          <HealthRecords />
           <VitalsMonitor />
         </div>
         <div className="space-y-6 lg:col-span-1">
