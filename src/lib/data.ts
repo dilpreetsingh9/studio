@@ -2,7 +2,7 @@ import type { Patient } from '@/lib/types';
 import { HeartPulse, Activity, Flame, TrendingUp } from 'lucide-react';
 
 export const patientData: Patient = {
-  name: 'Saher Dhir',
+  name: 'Saher Sharma',
   avatarUrl: 'https://picsum.photos/seed/patient-saher/100/100',
   details: {
     age: 35,
