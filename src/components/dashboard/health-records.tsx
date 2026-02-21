@@ -15,14 +15,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { MedicalRecord } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 
-export default function HealthRecords() {
+interface HealthRecordsProps {
+  records: MedicalRecord[];
+  onRecordScanned: (record: Omit<MedicalRecord, 'id' | 'capturedAt'>) => void;
+}
+
+export default function HealthRecords({ records, onRecordScanned }: HealthRecordsProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [records, setRecords] = useState<MedicalRecord[]>([]);
-  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(
-    null
-  );
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
 
   useEffect(() => {
     if (records.length > 0 && !selectedRecord) {
@@ -30,25 +31,9 @@ export default function HealthRecords() {
     }
   }, [records, selectedRecord]);
 
-  const handleRecordScanned = (
-    newRecord: Omit<MedicalRecord, 'id' | 'capturedAt'>
-  ) => {
-    const record: MedicalRecord = {
-      id: new Date().toISOString(),
-      capturedAt: new Date(),
-      ...newRecord,
-    };
-    setRecords((prev) => {
-      const newRecords = [record, ...prev];
-      setSelectedRecord(newRecords[0]);
-      return newRecords;
-    });
-    setIsDialogOpen(false);
-  };
-
   return (
     <>
-      <Card className="flex flex-col h-[650px] shadow-md border-primary/10">
+      <Card className="flex flex-col h-[700px] shadow-md border-primary/10">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
             <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -56,7 +41,7 @@ export default function HealthRecords() {
               Health Records
             </CardTitle>
             <CardDescription>
-              AI-powered simplified summaries of your medical documents.
+              Your clinical history simplified by AI.
             </CardDescription>
           </div>
           <Button
@@ -65,7 +50,7 @@ export default function HealthRecords() {
             className="hidden sm:flex"
           >
             <ScanLine className="mr-2 h-4 w-4" />
-            Scan New
+            Scan New Record
           </Button>
         </CardHeader>
         <CardContent className="flex-grow flex flex-col gap-4 overflow-hidden">
@@ -74,13 +59,13 @@ export default function HealthRecords() {
               <div className="bg-primary/10 p-4 rounded-full mb-4">
                 <ScanLine className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground">No records yet</h3>
-              <p className="max-w-xs mb-6">
-                Use our OCR scanner to upload and simplify your medical documents.
+              <h3 className="text-lg font-semibold text-foreground">No records found</h3>
+              <p className="max-w-xs mb-6 text-sm">
+                Scan your medical reports to generate patient-friendly summaries and track your history.
               </p>
               <Button onClick={() => setIsDialogOpen(true)}>
                 <ScanLine className="mr-2 h-4 w-4" />
-                Scan First Record
+                Start First Scan
               </Button>
             </div>
           ) : (
@@ -100,7 +85,7 @@ export default function HealthRecords() {
                     >
                       <div className="flex justify-between items-start mb-1">
                         <p className="font-bold text-sm truncate pr-4">
-                          Record - {new Date(record.capturedAt).toLocaleDateString()}
+                          Report - {new Date(record.capturedAt).toLocaleDateString()}
                         </p>
                         <ChevronRight className={cn(
                           "h-4 w-4 transition-transform",
@@ -124,10 +109,10 @@ export default function HealthRecords() {
                     <CardHeader className="py-4">
                       <div className="flex justify-between items-center">
                         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                          AI Simplified Summary
+                          AI Simplified Analysis
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          Captured {new Date(selectedRecord.capturedAt).toLocaleString()}
+                          {new Date(selectedRecord.capturedAt).toLocaleString()}
                         </span>
                       </div>
                     </CardHeader>
@@ -138,31 +123,31 @@ export default function HealthRecords() {
                              <img
                               src={selectedRecord.imageUrl}
                               alt="Scanned record"
-                              className="w-full h-auto object-cover max-h-48 group-hover:scale-105 transition-transform"
+                              className="w-full h-auto object-cover max-h-48"
                             />
                             <div className="absolute bottom-2 right-2">
-                               <Badge className="bg-black/60 backdrop-blur-md">Original Document</Badge>
+                               <Badge className="bg-black/60 backdrop-blur-md">Source Document</Badge>
                             </div>
                           </div>
 
                           <div className="space-y-4">
-                            <div>
+                            <div className="bg-secondary/30 p-4 rounded-xl border border-primary/10">
                               <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
                                 <Info className="h-4 w-4 text-primary" />
-                                Patient-Friendly Summary
+                                Patient Summary
                               </h4>
-                              <p className="text-sm leading-relaxed text-muted-foreground bg-secondary/30 p-4 rounded-lg italic">
-                                "{selectedRecord.summary}"
+                              <p className="text-sm leading-relaxed text-muted-foreground italic">
+                                {selectedRecord.summary}
                               </p>
                             </div>
 
                             {selectedRecord.keyFindings && selectedRecord.keyFindings.length > 0 && (
                               <div className="space-y-2">
-                                <h4 className="text-sm font-semibold">Key Findings</h4>
+                                <h4 className="text-sm font-semibold text-primary">Key Findings</h4>
                                 <ul className="grid grid-cols-1 gap-2">
                                   {selectedRecord.keyFindings.map((finding, idx) => (
-                                    <li key={idx} className="flex items-start gap-2 text-sm bg-muted/50 p-2 rounded-md">
-                                      <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                                    <li key={idx} className="flex items-start gap-3 text-sm bg-muted/50 p-3 rounded-lg border border-transparent hover:border-primary/20 transition-colors">
+                                      <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />
                                       <span>{finding}</span>
                                     </li>
                                   ))}
@@ -172,10 +157,10 @@ export default function HealthRecords() {
 
                             {selectedRecord.nextSteps && selectedRecord.nextSteps.length > 0 && (
                               <div className="space-y-2">
-                                <h4 className="text-sm font-semibold">Suggested Next Steps</h4>
+                                <h4 className="text-sm font-semibold">Recommended Next Steps</h4>
                                 <div className="flex flex-wrap gap-2">
                                   {selectedRecord.nextSteps.map((step, idx) => (
-                                    <Badge key={idx} variant="secondary" className="px-3 py-1 font-normal">
+                                    <Badge key={idx} variant="secondary" className="px-3 py-1 font-medium bg-primary/10 text-primary hover:bg-primary/20 border-none">
                                       {step}
                                     </Badge>
                                   ))}
@@ -190,7 +175,7 @@ export default function HealthRecords() {
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-xl border border-dashed bg-muted/10">
                     <FileText className="h-12 w-12 opacity-20 mb-2" />
-                    <p>Select a record to view its simplified summary.</p>
+                    <p>Select a record to view details</p>
                   </div>
                 )}
               </div>
@@ -201,14 +186,14 @@ export default function HealthRecords() {
             onClick={() => setIsDialogOpen(true)}
           >
             <ScanLine className="mr-2 h-4 w-4" />
-            Scan New Medical Record
+            Scan New Record
           </Button>
         </CardContent>
       </Card>
       <ScanDocumentDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onRecordScanned={handleRecordScanned}
+        onRecordScanned={onRecordScanned}
       />
     </>
   );

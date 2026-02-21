@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import PatientProfile from '@/components/dashboard/patient-profile';
 import VitalsMonitor from '@/components/dashboard/vitals-monitor';
@@ -7,26 +10,67 @@ import HealthGoals from '@/components/dashboard/health-goals';
 import SecureMessaging from '@/components/dashboard/secure-messaging';
 import MedicationReminder from '@/components/dashboard/medication-reminder';
 import QuickActions from '@/components/dashboard/quick-actions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MedicalRecord } from '@/lib/types';
+import { FileText, LayoutDashboard } from 'lucide-react';
 
 export default function Home() {
+  const [records, setRecords] = useState<MedicalRecord[]>([]);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const handleRecordScanned = (newRecord: Omit<MedicalRecord, 'id' | 'capturedAt'>) => {
+    const record: MedicalRecord = {
+      id: new Date().toISOString(),
+      capturedAt: new Date(),
+      ...newRecord,
+    };
+    setRecords((prev) => [record, ...prev]);
+  };
+
   return (
     <DashboardLayout>
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <PatientProfile />
-          <QuickActions />
-          <HealthRecords />
-          <VitalsMonitor />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="flex items-center justify-between">
+          <TabsList className="bg-background border shadow-sm">
+            <TabsTrigger value="overview" className="gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="records" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Health Records
+            </TabsTrigger>
+          </TabsList>
         </div>
-        <div className="space-y-6 lg:col-span-1">
-          <div id="medication-section">
-            <MedicationReminder />
+
+        <TabsContent value="overview" className="space-y-6 mt-0">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
+              <PatientProfile />
+              <QuickActions 
+                onRecordScanned={handleRecordScanned} 
+                onNavigateToRecords={() => setActiveTab('records')}
+              />
+              <VitalsMonitor />
+              <div id="medication-section">
+                <MedicationReminder />
+              </div>
+            </div>
+            <div className="space-y-6 lg:col-span-1">
+              <HealthGoals />
+              <CareNavigation />
+              <SecureMessaging />
+            </div>
           </div>
-          <HealthGoals />
-          <CareNavigation />
-          <SecureMessaging />
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="records" className="mt-0">
+          <HealthRecords 
+            records={records} 
+            onRecordScanned={handleRecordScanned} 
+          />
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 }

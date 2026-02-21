@@ -6,8 +6,14 @@ import { ScanLine, Pill, Search, Stethoscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ScanDocumentDialog from './scan-document-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { MedicalRecord } from '@/lib/types';
 
-export default function QuickActions() {
+interface QuickActionsProps {
+  onRecordScanned: (record: Omit<MedicalRecord, 'id' | 'capturedAt'>) => void;
+  onNavigateToRecords: () => void;
+}
+
+export default function QuickActions({ onRecordScanned, onNavigateToRecords }: QuickActionsProps) {
   const [isScanOpen, setIsScanOpen] = useState(false);
   const { toast } = useToast();
 
@@ -75,12 +81,13 @@ export default function QuickActions() {
         open={isScanOpen} 
         onOpenChange={setIsScanOpen} 
         onRecordScanned={(record) => {
-          // In a real app, we'd sync this with global state or Firestore.
-          // For now, it leverages the logic in health-records.tsx if mounted.
+          onRecordScanned(record);
           toast({
             title: "Record Scanned",
             description: "Your report has been analyzed and saved to Health Records.",
           });
+          // Optionally switch to records tab after scan
+          onNavigateToRecords();
         }}
       />
     </div>
