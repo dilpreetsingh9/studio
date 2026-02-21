@@ -12,6 +12,7 @@ export type Patient = {
   vitals: Vital[];
   appointments: Appointment[];
   messages: Message[];
+  medications?: Medication[];
 };
 
 export type Vital = {
@@ -55,4 +56,15 @@ export type MedicalRecord = {
   summary: string;
   keyFindings?: string[];
   nextSteps?: string[];
+};
+
+export type MedicationPriority = 'Cannot Miss' | 'Good to have' | 'Can Skip';
+
+export type Medication = {
+  id: string;
+  name: string;
+  dosage: string;
+  frequency: string;
+  priority: MedicationPriority;
+  reminderTime: string;
 };

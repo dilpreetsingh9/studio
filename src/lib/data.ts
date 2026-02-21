@@ -59,4 +59,30 @@ export const patientData: Patient = {
       unreadCount: 0,
     },
   ],
+  medications: [
+    {
+      id: '1',
+      name: 'Metformin',
+      dosage: '500mg',
+      frequency: 'Twice daily',
+      priority: 'Cannot Miss',
+      reminderTime: '08:00 AM',
+    },
+    {
+      id: '2',
+      name: 'Lisinopril',
+      dosage: '10mg',
+      frequency: 'Once daily',
+      priority: 'Cannot Miss',
+      reminderTime: '09:00 AM',
+    },
+    {
+      id: '3',
+      name: 'Vitamin D3',
+      dosage: '2000 IU',
+      frequency: 'Once daily',
+      priority: 'Good to have',
+      reminderTime: '10:00 AM',
+    }
+  ]
 };

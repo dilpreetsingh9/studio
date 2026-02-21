@@ -5,6 +5,7 @@ import HealthRecords from '@/components/dashboard/health-records';
 import CareNavigation from '@/components/dashboard/care-navigation';
 import HealthGoals from '@/components/dashboard/health-goals';
 import SecureMessaging from '@/components/dashboard/secure-messaging';
+import MedicationReminder from '@/components/dashboard/medication-reminder';
 
 export default function Home() {
   return (
@@ -16,8 +17,9 @@ export default function Home() {
           <VitalsMonitor />
         </div>
         <div className="space-y-6 lg:col-span-1">
-          <CareNavigation />
+          <MedicationReminder />
           <HealthGoals />
+          <CareNavigation />
           <SecureMessaging />
         </div>
       </div>
