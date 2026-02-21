@@ -2,8 +2,8 @@ import type { Patient } from '@/lib/types';
 import { HeartPulse, Activity, Flame, TrendingUp } from 'lucide-react';
 
 export const patientData: Patient = {
-  name: 'Sarah Connor',
-  avatarUrl: 'https://picsum.photos/seed/patient-sarah/100/100',
+  name: 'Saher Dhir',
+  avatarUrl: 'https://picsum.photos/seed/patient-saher/100/100',
   details: {
     age: 35,
     gender: 'Female',
@@ -52,9 +52,9 @@ export const patientData: Patient = {
     },
     {
       id: '2',
-      sender: 'John Connor (Son)',
-      avatarUrl: 'https://picsum.photos/seed/john-connor/100/100',
-      lastMessage: 'Hey Mom, are you free for a call this evening?',
+      sender: 'Family Member',
+      avatarUrl: 'https://picsum.photos/seed/family-member/100/100',
+      lastMessage: 'How are you feeling today?',
       timestamp: '3 days ago',
       unreadCount: 0,
     },
