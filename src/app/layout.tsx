@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'HealthX',
+  title: 'HealthConnex',
   description: 'Your personal AI-powered health navigator.',
 };
 

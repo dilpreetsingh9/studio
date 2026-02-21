@@ -45,7 +45,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2">
             <Logo className="size-8 text-primary" />
-            <span className="text-xl font-bold tracking-tight text-primary">HealthX</span>
+            <span className="text-xl font-bold tracking-tight text-primary">HealthConnex</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
