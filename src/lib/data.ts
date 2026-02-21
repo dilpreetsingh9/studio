@@ -1,5 +1,5 @@
 import type { Patient } from '@/lib/types';
-import { HeartPulse, Droplets, Thermometer, Activity } from 'lucide-react';
+import { HeartPulse, Activity, Flame, TrendingUp } from 'lucide-react';
 
 export const patientData: Patient = {
   name: 'Sarah Connor',
@@ -18,10 +18,10 @@ export const patientData: Patient = {
     { id: '3', name: 'Mindful Minutes', current: 60, target: 100, unit: 'mins/week' },
   ],
   vitals: [
-    { name: 'Heart Rate', value: '72', unit: 'bpm', icon: HeartPulse, trend: 'stable' },
-    { name: 'Blood Pressure', value: '120/80', unit: 'mmHg', icon: Droplets, trend: 'stable' },
-    { name: 'Temperature', value: '98.6', unit: '°F', icon: Thermometer, trend: 'stable' },
-    { name: 'Activity', value: '3,450', unit: 'steps', icon: Activity, trend: 'down' },
+    { name: 'HR', value: '72', unit: 'bpm', icon: HeartPulse, trend: 'stable' },
+    { name: 'Activity', value: '8,450', unit: 'steps', icon: Activity, trend: 'up' },
+    { name: 'Calories', value: '1,840', unit: 'kcal', icon: Flame, trend: 'stable' },
+    { name: 'Stairs', value: '12', unit: 'floors', icon: TrendingUp, trend: 'up' },
   ],
   appointments: [
     {
