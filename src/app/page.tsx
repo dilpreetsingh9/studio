@@ -6,6 +6,7 @@ import CareNavigation from '@/components/dashboard/care-navigation';
 import HealthGoals from '@/components/dashboard/health-goals';
 import SecureMessaging from '@/components/dashboard/secure-messaging';
 import MedicationReminder from '@/components/dashboard/medication-reminder';
+import QuickActions from '@/components/dashboard/quick-actions';
 
 export default function Home() {
   return (
@@ -13,11 +14,14 @@ export default function Home() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <PatientProfile />
+          <QuickActions />
           <HealthRecords />
           <VitalsMonitor />
         </div>
         <div className="space-y-6 lg:col-span-1">
-          <MedicationReminder />
+          <div id="medication-section">
+            <MedicationReminder />
+          </div>
           <HealthGoals />
           <CareNavigation />
           <SecureMessaging />
