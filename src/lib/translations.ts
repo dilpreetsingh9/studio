@@ -40,6 +40,12 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     startScan: "Start First Scan",
     report: "Report",
     aiAnalysis: "AI Analysis",
+    syncHealth: "Sync Health App",
+    connecting: "Connecting...",
+    synced: "Synced",
+    appleHealth: "Apple Health",
+    healthConnect: "Health Connect",
+    syncSuccess: "Health data successfully imported.",
   },
   Spanish: {
     dashboard: "Tablero",
@@ -80,6 +86,12 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     startScan: "Iniciar Primer Escaneo",
     report: "Informe",
     aiAnalysis: "Análisis IA",
+    syncHealth: "Sincronizar Salud",
+    connecting: "Conectando...",
+    synced: "Sincronizado",
+    appleHealth: "Apple Health",
+    healthConnect: "Health Connect",
+    syncSuccess: "Datos de salud importados con éxito.",
   },
   French: {
     dashboard: "Tableau de Bord",
@@ -120,6 +132,12 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     startScan: "Démarrer le Scan",
     report: "Rapport",
     aiAnalysis: "Analyse IA",
+    syncHealth: "Synchroniser Santé",
+    connecting: "Connexion...",
+    synced: "Synchronisé",
+    appleHealth: "Santé Apple",
+    healthConnect: "Santé Connect",
+    syncSuccess: "Données de santé importées avec succès.",
   },
   Hindi: {
     dashboard: "डैशबोर्ड",
@@ -160,6 +178,12 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     startScan: "स्कैन शुरू करें",
     report: "रिपोर्ट",
     aiAnalysis: "एआई विश्लेषण",
+    syncHealth: "स्वास्थ्य सिंक",
+    connecting: "जुड़ रहा है...",
+    synced: "सिंक किया गया",
+    appleHealth: "एप्पल हेल्थ",
+    healthConnect: "हेल्थ कनेक्ट",
+    syncSuccess: "स्वास्थ्य डेटा सफलतापूर्वक आयात किया गया।",
   }
 };
 

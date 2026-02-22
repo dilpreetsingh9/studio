@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ScanLine, Pill, Search, Stethoscope } from 'lucide-react';
+import { ScanLine, Pill, Search, Stethoscope, Smartphone, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ScanDocumentDialog from './scan-document-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +21,26 @@ export default function QuickActions({
   language = 'English'
 }: QuickActionsProps) {
   const [isScanOpen, setIsScanOpen] = useState(false);
+  const [platform, setPlatform] = useState<'ios' | 'android' | 'web'>('web');
+  const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const ua = navigator.userAgent.toLowerCase();
+    if (/iphone|ipad|ipod/.test(ua)) setPlatform('ios');
+    else if (/android/.test(ua)) setPlatform('android');
+  }, []);
+
+  const handleSync = () => {
+    setIsSyncing(true);
+    setTimeout(() => {
+      setIsSyncing(false);
+      toast({
+        title: t('synced', language),
+        description: t('syncSuccess', language),
+      });
+    }, 2000);
+  };
 
   const actions = [
     {
@@ -32,13 +51,12 @@ export default function QuickActions({
       onClick: () => setIsScanOpen(true),
     },
     {
-      id: 'meds',
-      title: t('medications', language),
-      icon: Pill,
-      color: 'bg-indigo-100 text-indigo-700',
-      onClick: () => {
-        document.getElementById('medication-section')?.scrollIntoView({ behavior: 'smooth' });
-      },
+      id: 'sync',
+      title: t('syncHealth', language),
+      icon: isSyncing ? RefreshCw : Smartphone,
+      color: 'bg-green-100 text-green-700',
+      onClick: handleSync,
+      isLoading: isSyncing,
     },
     {
       id: 'specialist',
@@ -71,11 +89,18 @@ export default function QuickActions({
       {actions.map((action) => (
         <Card 
           key={action.id} 
-          className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50 group border-primary/5"
+          className={cn(
+            "cursor-pointer hover:shadow-lg transition-all hover:border-primary/50 group border-primary/5",
+            action.isLoading && "opacity-70 pointer-events-none"
+          )}
           onClick={action.onClick}
         >
           <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-3">
-            <div className={cn("p-4 rounded-2xl transition-transform group-hover:scale-110", action.color)}>
+            <div className={cn(
+              "p-4 rounded-2xl transition-transform group-hover:scale-110", 
+              action.color,
+              action.isLoading && "animate-spin"
+            )}>
               <action.icon className="h-6 w-6" />
             </div>
             <span className="text-xs font-bold text-foreground uppercase tracking-wider">{action.title}</span>
