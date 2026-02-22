@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -14,6 +13,9 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarInset,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -27,6 +29,8 @@ import {
   FileText,
   Languages,
   Check,
+  Users,
+  UserPlus,
 } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { Logo } from '@/components/icons';
@@ -43,6 +47,7 @@ import {
   DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { t } from '@/lib/translations';
+import { useToast } from '@/hooks/use-toast';
 
 const COMMON_LANGUAGES = [
   { name: 'English', code: 'en' },
@@ -59,13 +64,18 @@ const COMMON_LANGUAGES = [
 export function DashboardLayout({ 
   children,
   onLanguageChange,
-  currentLanguage = 'English'
+  currentLanguage = 'English',
+  activeTab = 'overview',
+  onTabChange,
 }: { 
   children: React.ReactNode;
   onLanguageChange?: (lang: string) => void;
   currentLanguage?: string;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }) {
   const [detectedLangName, setDetectedLangName] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const detectLanguage = () => {
@@ -91,13 +101,32 @@ export function DashboardLayout({
     setDetectedLangName(detectLanguage());
   }, []);
 
+  const handleShareWithFamily = () => {
+    toast({
+      title: t('shareWithFamily', currentLanguage),
+      description: t('sharingProgress', currentLanguage),
+    });
+  };
+
+  const handleReferFriend = () => {
+    toast({
+      title: t('referFriend', currentLanguage),
+      description: t('referralCopied', currentLanguage),
+    });
+  };
+
   const sidebarNav = [
-    { name: t('dashboard', currentLanguage), href: '#', icon: LayoutDashboard, current: true },
-    { name: t('healthRecords', currentLanguage), href: '#', icon: FileText, current: false },
-    { name: t('vitals', currentLanguage), href: '#', icon: HeartPulse, current: false },
-    { name: t('appointments', currentLanguage), href: '#', icon: Calendar, current: false },
-    { name: t('messages', currentLanguage), href: '#', icon: MessageSquare, current: false },
-    { name: t('profile', currentLanguage), href: '#', icon: User, current: false },
+    { id: 'overview', name: t('dashboard', currentLanguage), icon: LayoutDashboard },
+    { id: 'records', name: t('healthRecords', currentLanguage), icon: FileText },
+    { id: 'vitals', name: t('vitals', currentLanguage), icon: HeartPulse },
+    { id: 'appointments', name: t('appointments', currentLanguage), icon: Calendar },
+    { id: 'messages', name: t('messages', currentLanguage), icon: MessageSquare },
+    { id: 'profile', name: t('profile', currentLanguage), icon: User },
+  ];
+
+  const communityActions = [
+    { id: 'share', name: t('shareWithFamily', currentLanguage), icon: Users, onClick: handleShareWithFamily },
+    { id: 'refer', name: t('referFriend', currentLanguage), icon: UserPlus, onClick: handleReferFriend },
   ];
 
   return (
@@ -110,32 +139,57 @@ export function DashboardLayout({
           </div>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu className="px-2">
-            {sidebarNav.map((item) => (
-              <SidebarMenuItem key={item.name}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={item.current}
-                  tooltip={item.name}
-                  className="h-10 transition-all hover:bg-primary/5 active:scale-95"
-                >
-                  <Link href={item.href}>
+          <SidebarGroup>
+            <SidebarMenu className="px-2">
+              {sidebarNav.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    isActive={activeTab === item.id || (item.id === 'overview' && ['vitals', 'appointments', 'messages', 'profile'].includes(activeTab))}
+                    tooltip={item.name}
+                    className="h-10 transition-all hover:bg-primary/5 active:scale-95"
+                    onClick={() => {
+                      if (['overview', 'records'].includes(item.id)) {
+                        onTabChange?.(item.id);
+                      } else {
+                        onTabChange?.('overview');
+                        // Optional: Scroll to specific section logic could go here
+                      }
+                    }}
+                  >
                     <item.icon className="size-5" />
                     <span className="font-medium">{item.name}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4">{t('community', currentLanguage)}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="px-2">
+                {communityActions.map((action) => (
+                  <SidebarMenuItem key={action.id}>
+                    <SidebarMenuButton
+                      tooltip={action.name}
+                      className="h-10 transition-all hover:bg-primary/5 active:scale-95"
+                      onClick={action.onClick}
+                    >
+                      <action.icon className="size-5" />
+                      <span className="font-medium">{action.name}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="p-2">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={t('settings', currentLanguage)} className="h-10 hover:bg-primary/5">
-                <Link href="#">
-                  <Settings className="size-5" />
-                  <span>{t('settings', currentLanguage)}</span>
-                </Link>
+              <SidebarMenuButton tooltip={t('settings', currentLanguage)} className="h-10 hover:bg-primary/5">
+                <Settings className="size-5" />
+                <span>{t('settings', currentLanguage)}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

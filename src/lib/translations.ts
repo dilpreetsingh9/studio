@@ -52,6 +52,11 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     vitaminB12: "Vitamin B12",
     cholesterol: "Cholesterol",
     bmi: "BMI",
+    shareWithFamily: "Share with Family",
+    referFriend: "Refer a Friend",
+    community: "Community",
+    referralCopied: "Referral link copied to clipboard!",
+    sharingProgress: "Sharing your health progress with family...",
   },
   Spanish: {
     dashboard: "Tablero",
@@ -104,6 +109,11 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     vitaminB12: "Vitamina B12",
     cholesterol: "Colesterol",
     bmi: "IMC",
+    shareWithFamily: "Compartir con Familia",
+    referFriend: "Referir Amigo",
+    community: "Comunidad",
+    referralCopied: "¡Enlace de referencia copiado!",
+    sharingProgress: "Compartiendo progreso de salud con la familia...",
   },
   French: {
     dashboard: "Tableau de Bord",
@@ -156,6 +166,11 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     vitaminB12: "Vitamine B12",
     cholesterol: "Cholestérol",
     bmi: "IMC",
+    shareWithFamily: "Partager avec la famille",
+    referFriend: "Parrainer un ami",
+    community: "Communauté",
+    referralCopied: "Lien de parrainage copié !",
+    sharingProgress: "Partage de vos progrès de santé avec la famille...",
   },
   Hindi: {
     dashboard: "डैशबोर्ड",
@@ -208,6 +223,11 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     vitaminB12: "विटामिन बी12",
     cholesterol: "कोलेस्ट्रॉल",
     bmi: "बीएमआई",
+    shareWithFamily: "परिवार के साथ साझा करें",
+    referFriend: "दोस्त को रेफर करें",
+    community: "समुदाय",
+    referralCopied: "रेफरल लिंक कॉपी किया गया!",
+    sharingProgress: "परिवार के साथ स्वास्थ्य प्रगति साझा की जा रही है...",
   }
 };
 

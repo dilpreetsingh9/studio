@@ -31,7 +31,12 @@ export default function Home() {
   };
 
   return (
-    <DashboardLayout onLanguageChange={setLanguage} currentLanguage={language}>
+    <DashboardLayout 
+      onLanguageChange={setLanguage} 
+      currentLanguage={language} 
+      activeTab={activeTab} 
+      onTabChange={setActiveTab}
+    >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center justify-between">
           <TabsList className="bg-background border shadow-sm">
