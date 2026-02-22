@@ -1,9 +1,18 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Plus, Video } from 'lucide-react';
 import { patientData } from '@/lib/data';
 
 export default function CareNavigation() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -22,7 +31,9 @@ export default function CareNavigation() {
                 <div>
                   <p className="font-semibold">{apt.doctor}</p>
                   <p className="text-sm text-muted-foreground">{apt.specialty}</p>
-                  <p className="text-sm text-muted-foreground">{new Date(apt.date).toDateString()}, {apt.time}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {mounted ? new Date(apt.date).toDateString() : '...'}, {apt.time}
+                  </p>
                 </div>
               </div>
               <Button variant="ghost" size="icon"><Video className="h-5 w-5" /></Button>

@@ -10,7 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Camera, RefreshCcw, Send, Loader2, Save, FileCheck, BrainCircuit, ScanLine } from 'lucide-react';
+import { Camera, RefreshCcw, Loader2, Save, FileCheck, BrainCircuit, ScanLine } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { analyzeMedicalDocument } from '@/ai/flows/analyze-medical-document';
@@ -44,6 +44,11 @@ export default function ScanDocumentDialog({
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     async function getCameraPermission() {

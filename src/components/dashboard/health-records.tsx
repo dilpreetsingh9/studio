@@ -24,6 +24,11 @@ interface HealthRecordsProps {
 export default function HealthRecords({ records, onRecordScanned }: HealthRecordsProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (records.length > 0 && !selectedRecord) {
@@ -85,7 +90,7 @@ export default function HealthRecords({ records, onRecordScanned }: HealthRecord
                     >
                       <div className="flex justify-between items-start mb-1">
                         <p className="font-bold text-sm truncate pr-4">
-                          Report - {new Date(record.capturedAt).toLocaleDateString()}
+                          Report - {mounted ? new Date(record.capturedAt).toLocaleDateString() : '...'}
                         </p>
                         <ChevronRight className={cn(
                           "h-4 w-4 transition-transform",
@@ -96,7 +101,7 @@ export default function HealthRecords({ records, onRecordScanned }: HealthRecord
                         "text-xs",
                         selectedRecord?.id === record.id ? "text-primary-foreground/80" : "text-muted-foreground"
                       )}>
-                        {new Date(record.capturedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {mounted ? new Date(record.capturedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
                       </p>
                     </div>
                   ))}
@@ -112,7 +117,7 @@ export default function HealthRecords({ records, onRecordScanned }: HealthRecord
                           AI Simplified Analysis
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(selectedRecord.capturedAt).toLocaleString()}
+                          {mounted ? new Date(selectedRecord.capturedAt).toLocaleString() : '...'}
                         </span>
                       </div>
                     </CardHeader>
