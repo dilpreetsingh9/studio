@@ -11,7 +11,11 @@ import { generateHealthGoals } from '@/ai/flows/generate-health-goals';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-export default function HealthGoals() {
+interface HealthGoalsProps {
+  language?: string;
+}
+
+export default function HealthGoals({ language = 'English' }: HealthGoalsProps) {
   const [goals, setGoals] = useState<HealthGoal[]>(patientData.healthGoals);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
@@ -26,6 +30,7 @@ export default function HealthGoals() {
         medicalHistory: patientData.medicalHistory,
         currentVitals: vitalsString,
         existingGoals: existingGoalNames,
+        targetLanguage: language
       });
 
       const newGoals: HealthGoal[] = result.recommendedGoals.map((g, index) => ({
@@ -39,7 +44,7 @@ export default function HealthGoals() {
       setGoals(prev => [...newGoals, ...prev]);
       toast({
         title: "AI Goals Generated",
-        description: "New personalized health goals have been added to your plan.",
+        description: `New goals added in ${language}.`,
       });
     } catch (error) {
       console.error(error);
@@ -72,7 +77,7 @@ export default function HealthGoals() {
       <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
         <div>
           <CardTitle>Health Goals</CardTitle>
-          <CardDescription>Your progress towards a healthier you.</CardDescription>
+          <CardDescription>Progress towards your targets ({language}).</CardDescription>
         </div>
         <Button 
           variant="outline" 
@@ -114,7 +119,7 @@ export default function HealthGoals() {
           <AlertCircle className="h-4 w-4 text-primary" />
           <AlertTitle className="text-xs font-semibold">Medical Disclaimer</AlertTitle>
           <AlertDescription className="text-[10px] text-muted-foreground leading-tight">
-            These goals are AI-generated based on your data and are for informational purposes only. Always consult with your healthcare provider before starting new health regimens.
+            These goals are AI-generated for informational purposes only.
           </AlertDescription>
         </Alert>
       </CardContent>

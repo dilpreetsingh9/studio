@@ -12,7 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Camera, RefreshCcw, Loader2, Save, FileCheck, BrainCircuit, ScanLine } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { analyzeMedicalDocument } from '@/ai/flows/analyze-medical-document';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
@@ -23,19 +22,19 @@ interface ScanDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRecordScanned: (record: Omit<MedicalRecord, 'id' | 'capturedAt'>) => void;
+  language?: string;
 }
 
 export default function ScanDocumentDialog({
   open,
   onOpenChange,
   onRecordScanned,
+  language = 'English'
 }: ScanDocumentDialogProps) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState<
-    boolean | null
-  >(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<{
     summary: string;
@@ -68,8 +67,7 @@ export default function ScanDocumentDialog({
         toast({
           variant: 'destructive',
           title: 'Camera Access Denied',
-          description:
-            'Please enable camera permissions in your browser settings.',
+          description: 'Please enable camera permissions in your browser settings.',
         });
       }
     }
@@ -123,6 +121,7 @@ export default function ScanDocumentDialog({
     try {
       const result = await analyzeMedicalDocument({
         documentImage: capturedImage,
+        targetLanguage: language
       });
       setAnalysis(result);
     } catch (error) {
@@ -154,32 +153,24 @@ export default function ScanDocumentDialog({
       return (
         <div className="space-y-4">
           <div className="relative rounded-lg overflow-hidden border-2 border-primary/20">
-            <img
-              src={capturedImage}
-              alt="Captured medical record"
-              className="w-full h-auto"
-            />
+            <img src={capturedImage} alt="Captured record" className="w-full h-auto" />
             {isLoading && (
               <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
                 <BrainCircuit className="h-12 w-12 text-primary animate-pulse mb-4" />
-                <h3 className="font-bold text-lg">AI is Simplifying Records...</h3>
-                <p className="text-sm text-muted-foreground">Parsing medical terms into everyday language.</p>
-                <div className="w-48 h-1 bg-secondary rounded-full mt-4 overflow-hidden">
-                    <div className="h-full bg-primary animate-[progress_2s_ease-in-out_infinite]" style={{ width: '30%' }} />
-                </div>
+                <h3 className="font-bold text-lg">AI Analysis ({language})...</h3>
+                <p className="text-sm text-muted-foreground">Parsing terms into patient-friendly language.</p>
               </div>
             )}
           </div>
-          
           {analysis && (
             <Card className="border-primary/20 bg-primary/5">
               <CardHeader className="py-3">
                 <CardTitle className="text-md flex items-center gap-2">
                   <FileCheck className="h-5 w-5 text-primary" />
-                  Simplified Translation
+                  Simplified Translation ({language})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 <ScrollArea className="h-48 pr-4">
                   <div className="space-y-4">
                     <div>
@@ -207,64 +198,12 @@ export default function ScanDocumentDialog({
       );
     }
 
-    if (hasCameraPermission === false) {
-      return (
-        <Alert variant="destructive">
-          <AlertTitle>Camera Access Required</AlertTitle>
-          <AlertDescription>
-            Please allow camera access in your browser to use the OCR scanner. You
-            may need to refresh the page after granting permission.
-          </AlertDescription>
-        </Alert>
-      );
-    }
-
     return (
       <div className="relative group overflow-hidden rounded-xl border-4 border-muted">
-        <video
-          ref={videoRef}
-          className="w-full aspect-video bg-black"
-          autoPlay
-          muted
-          playsInline
-        />
-        <div className="absolute inset-0 border-[20px] border-black/20 pointer-events-none" />
-        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-primary/40 animate-scan pointer-events-none shadow-[0_0_10px_rgba(59,166,166,0.5)]" />
+        <video ref={videoRef} className="w-full aspect-video bg-black" autoPlay muted playsInline />
+        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-primary/40 animate-scan pointer-events-none" />
         <canvas ref={canvasRef} className="hidden" />
       </div>
-    );
-  };
-
-  const renderFooter = () => {
-    if (capturedImage) {
-      return (
-        <DialogFooter className="sm:justify-between gap-2">
-          <Button variant="outline" onClick={handleRetake} disabled={isLoading}>
-            <RefreshCcw className="mr-2 h-4 w-4" /> Retake
-          </Button>
-          {analysis ? (
-            <Button onClick={handleSave} className="bg-primary">
-              <Save className="mr-2 h-4 w-4" /> Save Simplified Record
-            </Button>
-          ) : (
-            <Button onClick={handleAnalyze} disabled={isLoading} className="bg-primary">
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <BrainCircuit className="mr-2 h-4 w-4" />
-              )}
-              Simplify & Parse
-            </Button>
-          )}
-        </DialogFooter>
-      );
-    }
-    return (
-      <DialogFooter>
-        <Button onClick={handleCapture} disabled={!hasCameraPermission} size="lg" className="w-full sm:w-auto px-12">
-          <Camera className="mr-2 h-5 w-5" /> Scan Document
-        </Button>
-      </DialogFooter>
     );
   };
 
@@ -279,11 +218,33 @@ export default function ScanDocumentDialog({
              <DialogTitle>OCR Medical Scanner</DialogTitle>
           </div>
           <DialogDescription>
-            Scan your health documents to get simplified, patient-friendly summaries.
+            Scan documents to get simplified summaries in {language}.
           </DialogDescription>
         </DialogHeader>
         {renderContent()}
-        {renderFooter()}
+        <DialogFooter className="gap-2 sm:justify-between">
+          {capturedImage ? (
+            <>
+              <Button variant="outline" onClick={handleRetake} disabled={isLoading}>
+                <RefreshCcw className="mr-2 h-4 w-4" /> Retake
+              </Button>
+              {analysis ? (
+                <Button onClick={handleSave} className="bg-primary">
+                  <Save className="mr-2 h-4 w-4" /> Save Simplified Record
+                </Button>
+              ) : (
+                <Button onClick={handleAnalyze} disabled={isLoading} className="bg-primary">
+                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
+                  Simplify & Parse
+                </Button>
+              )}
+            </>
+          ) : (
+            <Button onClick={handleCapture} disabled={!hasCameraPermission} size="lg" className="w-full sm:w-auto px-12">
+              <Camera className="mr-2 h-5 w-5" /> Scan Document
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -11,9 +11,14 @@ import { MedicalRecord } from '@/lib/types';
 interface QuickActionsProps {
   onRecordScanned: (record: Omit<MedicalRecord, 'id' | 'capturedAt'>) => void;
   onNavigateToRecords: () => void;
+  language?: string;
 }
 
-export default function QuickActions({ onRecordScanned, onNavigateToRecords }: QuickActionsProps) {
+export default function QuickActions({ 
+  onRecordScanned, 
+  onNavigateToRecords,
+  language = 'English'
+}: QuickActionsProps) {
   const [isScanOpen, setIsScanOpen] = useState(false);
   const { toast } = useToast();
 
@@ -80,13 +85,13 @@ export default function QuickActions({ onRecordScanned, onNavigateToRecords }: Q
       <ScanDocumentDialog 
         open={isScanOpen} 
         onOpenChange={setIsScanOpen} 
+        language={language}
         onRecordScanned={(record) => {
           onRecordScanned(record);
           toast({
             title: "Record Scanned",
             description: "Your report has been analyzed and saved to Health Records.",
           });
-          // Optionally switch to records tab after scan
           onNavigateToRecords();
         }}
       />

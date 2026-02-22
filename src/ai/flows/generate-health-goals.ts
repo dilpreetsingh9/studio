@@ -11,6 +11,7 @@ const GenerateHealthGoalsInputSchema = z.object({
   medicalHistory: z.string(),
   currentVitals: z.string(),
   existingGoals: z.array(z.string()),
+  targetLanguage: z.string().optional().default('English').describe('The language for the suggested goals.'),
 });
 
 export type GenerateHealthGoalsInput = z.infer<typeof GenerateHealthGoalsInputSchema>;
@@ -40,13 +41,13 @@ const prompt = ai.definePrompt({
   output: { schema: GenerateHealthGoalsOutputSchema },
   prompt: `You are a medical health coach assistant. 
     Based on the following patient details, suggest 3 highly relevant and specific health goals.
+    PROVIDE ALL OUTPUT FIELDS IN {{{targetLanguage}}}.
     
     Medical History: {{{medicalHistory}}}
     Current Vitals: {{{currentVitals}}}
     Existing Goals: {{#each existingGoals}}- {{{this}}}{{/each}}
 
-    Focus on goals that are achievable and directly address the patient's specific health conditions (e.g., if diabetic, focus on glucose-related goals or specific activity levels).
-    Make sure the goals are distinct from existing ones.
+    Focus on goals that address the patient's specific conditions. Ensure the names, units, and rationales are written in {{{targetLanguage}}}.
     `,
 });
 

@@ -17,6 +17,7 @@ import { FileText, LayoutDashboard } from 'lucide-react';
 export default function Home() {
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [language, setLanguage] = useState('English');
 
   const handleRecordScanned = (newRecord: Omit<MedicalRecord, 'id' | 'capturedAt'>) => {
     const record: MedicalRecord = {
@@ -28,7 +29,7 @@ export default function Home() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout onLanguageChange={setLanguage} currentLanguage={language}>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center justify-between">
           <TabsList className="bg-background border shadow-sm">
@@ -50,6 +51,7 @@ export default function Home() {
               <QuickActions 
                 onRecordScanned={handleRecordScanned} 
                 onNavigateToRecords={() => setActiveTab('records')}
+                language={language}
               />
               <VitalsMonitor />
               <div id="medication-section">
@@ -57,9 +59,9 @@ export default function Home() {
               </div>
             </div>
             <div className="space-y-6 lg:col-span-1">
-              <HealthGoals />
+              <HealthGoals language={language} />
               <CareNavigation />
-              <SecureMessaging />
+              <SecureMessaging language={language} />
             </div>
           </div>
         </TabsContent>
@@ -67,7 +69,8 @@ export default function Home() {
         <TabsContent value="records" className="mt-0">
           <HealthRecords 
             records={records} 
-            onRecordScanned={handleRecordScanned} 
+            onRecordScanned={handleRecordScanned}
+            language={language}
           />
         </TabsContent>
       </Tabs>

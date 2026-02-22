@@ -19,9 +19,14 @@ import { Badge } from '@/components/ui/badge';
 interface HealthRecordsProps {
   records: MedicalRecord[];
   onRecordScanned: (record: Omit<MedicalRecord, 'id' | 'capturedAt'>) => void;
+  language?: string;
 }
 
-export default function HealthRecords({ records, onRecordScanned }: HealthRecordsProps) {
+export default function HealthRecords({ 
+  records, 
+  onRecordScanned,
+  language = 'English'
+}: HealthRecordsProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -46,7 +51,7 @@ export default function HealthRecords({ records, onRecordScanned }: HealthRecord
               Health Records
             </CardTitle>
             <CardDescription>
-              Your clinical history simplified by AI.
+              Your clinical history simplified by AI in {language}.
             </CardDescription>
           </div>
           <Button
@@ -66,7 +71,7 @@ export default function HealthRecords({ records, onRecordScanned }: HealthRecord
               </div>
               <h3 className="text-lg font-semibold text-foreground">No records found</h3>
               <p className="max-w-xs mb-6 text-sm">
-                Scan your medical reports to generate patient-friendly summaries and track your history.
+                Scan your medical reports to generate patient-friendly summaries in {language}.
               </p>
               <Button onClick={() => setIsDialogOpen(true)}>
                 <ScanLine className="mr-2 h-4 w-4" />
@@ -114,7 +119,7 @@ export default function HealthRecords({ records, onRecordScanned }: HealthRecord
                     <CardHeader className="py-4">
                       <div className="flex justify-between items-center">
                         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                          AI Simplified Analysis
+                          AI Analysis ({language})
                         </Badge>
                         <span className="text-xs text-muted-foreground">
                           {mounted ? new Date(selectedRecord.capturedAt).toLocaleString() : '...'}
@@ -159,19 +164,6 @@ export default function HealthRecords({ records, onRecordScanned }: HealthRecord
                                 </ul>
                               </div>
                             )}
-
-                            {selectedRecord.nextSteps && selectedRecord.nextSteps.length > 0 && (
-                              <div className="space-y-2">
-                                <h4 className="text-sm font-semibold">Recommended Next Steps</h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {selectedRecord.nextSteps.map((step, idx) => (
-                                    <Badge key={idx} variant="secondary" className="px-3 py-1 font-medium bg-primary/10 text-primary hover:bg-primary/20 border-none">
-                                      {step}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </div>
                       </ScrollArea>
@@ -186,19 +178,13 @@ export default function HealthRecords({ records, onRecordScanned }: HealthRecord
               </div>
             </div>
           )}
-          <Button
-            className="w-full mt-2 sm:hidden"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <ScanLine className="mr-2 h-4 w-4" />
-            Scan New Record
-          </Button>
         </CardContent>
       </Card>
       <ScanDocumentDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onRecordScanned={onRecordScanned}
+        language={language}
       />
     </>
   );
