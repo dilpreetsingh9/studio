@@ -41,6 +41,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
+import { t } from '@/lib/translations';
 
 const COMMON_LANGUAGES = [
   { name: 'English', code: 'en' },
@@ -72,14 +73,11 @@ export function DashboardLayout({
         const primary = langs[0].split('-')[0];
         const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
 
-        // If primary is English, look for a secondary non-English language
         if (primary === 'en' && langs.length > 1) {
           const secondary = langs.find(l => !l.startsWith('en'));
           if (secondary) {
             return displayNames.of(secondary.split('-')[0]) || null;
           }
-          // Regional fallbacks if only English is found (e.g., Canada context)
-          // For demo purposes, we'll suggest a common secondary if only English is present
           return 'French'; 
         }
 
@@ -93,12 +91,12 @@ export function DashboardLayout({
   }, []);
 
   const sidebarNav = [
-    { name: 'Dashboard', href: '#', icon: LayoutDashboard, current: true },
-    { name: 'Health Records', href: '#', icon: FileText, current: false },
-    { name: 'Vitals', href: '#', icon: HeartPulse, current: false },
-    { name: 'Appointments', href: '#', icon: Calendar, current: false },
-    { name: 'Messages', href: '#', icon: MessageSquare, current: false },
-    { name: 'Profile', href: '#', icon: User, current: false },
+    { name: t('dashboard', currentLanguage), href: '#', icon: LayoutDashboard, current: true },
+    { name: t('healthRecords', currentLanguage), href: '#', icon: FileText, current: false },
+    { name: t('vitals', currentLanguage), href: '#', icon: HeartPulse, current: false },
+    { name: t('appointments', currentLanguage), href: '#', icon: Calendar, current: false },
+    { name: t('messages', currentLanguage), href: '#', icon: MessageSquare, current: false },
+    { name: t('profile', currentLanguage), href: '#', icon: User, current: false },
   ];
 
   return (
@@ -131,15 +129,15 @@ export function DashboardLayout({
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Settings">
+              <SidebarMenuButton asChild tooltip={t('settings', currentLanguage)}>
                 <Link href="#">
                   <Settings />
-                  <span>Settings</span>
+                  <span>{t('settings', currentLanguage)}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Your Profile">
+              <SidebarMenuButton tooltip={t('profile', currentLanguage)}>
                 <Avatar className="size-6">
                   <AvatarImage src={patientData.avatarUrl} alt={patientData.name} />
                   <AvatarFallback>{patientData.name.charAt(0)}</AvatarFallback>

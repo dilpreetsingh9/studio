@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import ScanDocumentDialog from './scan-document-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { MedicalRecord } from '@/lib/types';
+import { t } from '@/lib/translations';
 
 interface QuickActionsProps {
   onRecordScanned: (record: Omit<MedicalRecord, 'id' | 'capturedAt'>) => void;
@@ -25,14 +26,14 @@ export default function QuickActions({
   const actions = [
     {
       id: 'scan',
-      title: 'Scan Reports',
+      title: t('scanReports', language),
       icon: ScanLine,
       color: 'bg-blue-100 text-blue-700',
       onClick: () => setIsScanOpen(true),
     },
     {
       id: 'meds',
-      title: 'Medications',
+      title: t('medications', language),
       icon: Pill,
       color: 'bg-indigo-100 text-indigo-700',
       onClick: () => {
@@ -41,7 +42,7 @@ export default function QuickActions({
     },
     {
       id: 'specialist',
-      title: 'Search Specialist',
+      title: t('searchSpecialist', language),
       icon: Search,
       color: 'bg-slate-100 text-slate-700',
       onClick: () => {
@@ -53,7 +54,7 @@ export default function QuickActions({
     },
     {
       id: 'opinion',
-      title: 'Second Opinion',
+      title: t('secondOpinion', language),
       icon: Stethoscope,
       color: 'bg-cyan-100 text-cyan-700',
       onClick: () => {
@@ -70,14 +71,14 @@ export default function QuickActions({
       {actions.map((action) => (
         <Card 
           key={action.id} 
-          className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50 group"
+          className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50 group border-primary/5"
           onClick={action.onClick}
         >
           <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-3">
-            <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", action.color)}>
+            <div className={cn("p-4 rounded-2xl transition-transform group-hover:scale-110", action.color)}>
               <action.icon className="h-6 w-6" />
             </div>
-            <span className="text-sm font-bold text-foreground">{action.title}</span>
+            <span className="text-xs font-bold text-foreground uppercase tracking-wider">{action.title}</span>
           </CardContent>
         </Card>
       ))}

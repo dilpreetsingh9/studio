@@ -34,8 +34,13 @@ import { Medication, MedicationPriority } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/translations';
 
-export default function MedicationReminder() {
+interface MedicationReminderProps {
+  language?: string;
+}
+
+export default function MedicationReminder({ language = 'English' }: MedicationReminderProps) {
   const [meds, setMeds] = useState<Medication[]>(patientData.medications || []);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newMed, setNewMed] = useState<Partial<Medication>>({
@@ -77,19 +82,19 @@ export default function MedicationReminder() {
         <div>
           <CardTitle className="text-xl font-bold flex items-center gap-2">
             <Pill className="h-5 w-5 text-primary" />
-            Medications
+            {t('medications', language)}
           </CardTitle>
           <CardDescription>Daily reminders and schedule.</CardDescription>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button size="sm" variant="outline" className="h-8">
-              <Plus className="h-4 w-4 mr-1" /> Add
+              <Plus className="h-4 w-4 mr-1" /> {t('addMedication', language)}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Medication</DialogTitle>
+              <DialogTitle>{t('addMedication', language)}</DialogTitle>
               <DialogDescription>
                 Enter the details of your medication and its priority.
               </DialogDescription>
@@ -106,7 +111,7 @@ export default function MedicationReminder() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="dosage">Dosage</Label>
+                  <Label htmlFor="dosage">{t('dosage', language)}</Label>
                   <Input 
                     id="dosage" 
                     placeholder="e.g. 500mg" 
@@ -115,7 +120,7 @@ export default function MedicationReminder() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="priority">Priority</Label>
+                  <Label htmlFor="priority">{t('priority', language)}</Label>
                   <Select 
                     value={newMed.priority} 
                     onValueChange={v => setNewMed({...newMed, priority: v as MedicationPriority})}
@@ -133,7 +138,7 @@ export default function MedicationReminder() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="frequency">Frequency</Label>
+                  <Label htmlFor="frequency">{t('frequency', language)}</Label>
                   <Input 
                     id="frequency" 
                     placeholder="e.g. Once daily" 
@@ -142,7 +147,7 @@ export default function MedicationReminder() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="time">Reminder Time</Label>
+                  <Label htmlFor="time">{t('reminderTime', language)}</Label>
                   <Input 
                     id="time" 
                     type="time" 
@@ -153,7 +158,7 @@ export default function MedicationReminder() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleAddMed} className="w-full">Save Medication</Button>
+              <Button onClick={handleAddMed} className="w-full">{t('saveMedication', language)}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

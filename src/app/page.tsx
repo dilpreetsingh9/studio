@@ -13,6 +13,7 @@ import QuickActions from '@/components/dashboard/quick-actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalRecord } from '@/lib/types';
 import { FileText, LayoutDashboard } from 'lucide-react';
+import { t } from '@/lib/translations';
 
 export default function Home() {
   const [records, setRecords] = useState<MedicalRecord[]>([]);
@@ -35,11 +36,11 @@ export default function Home() {
           <TabsList className="bg-background border shadow-sm">
             <TabsTrigger value="overview" className="gap-2">
               <LayoutDashboard className="h-4 w-4" />
-              Overview
+              {t('dashboard', language)}
             </TabsTrigger>
             <TabsTrigger value="records" className="gap-2">
               <FileText className="h-4 w-4" />
-              Health Records
+              {t('healthRecords', language)}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -47,20 +48,20 @@ export default function Home() {
         <TabsContent value="overview" className="space-y-6 mt-0">
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
-              <PatientProfile />
+              <PatientProfile language={language} />
               <QuickActions 
                 onRecordScanned={handleRecordScanned} 
                 onNavigateToRecords={() => setActiveTab('records')}
                 language={language}
               />
-              <VitalsMonitor />
+              <VitalsMonitor language={language} />
               <div id="medication-section">
-                <MedicationReminder />
+                <MedicationReminder language={language} />
               </div>
             </div>
             <div className="space-y-6 lg:col-span-1">
               <HealthGoals language={language} />
-              <CareNavigation />
+              <CareNavigation language={language} />
               <SecureMessaging language={language} />
             </div>
           </div>
