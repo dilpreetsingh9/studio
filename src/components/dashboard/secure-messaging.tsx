@@ -93,8 +93,14 @@ export default function SecureMessaging({ language = 'English' }: SecureMessagin
     try {
       const result = await translateText({ text, targetLanguage: language });
       setTranslatedMessages(prev => ({ ...prev, [msgId]: result.translatedText }));
-    } catch (e) {
-      toast({ variant: "destructive", title: "Translation failed" });
+    } catch (error: any) {
+      console.error('Translation failed', error);
+      const isQuotaError = error.message?.includes('429') || error.message?.toLowerCase().includes('quota');
+      toast({ 
+        variant: "destructive", 
+        title: isQuotaError ? "AI Rate Limit Reached" : "Translation failed",
+        description: isQuotaError ? "Too many requests. Please wait a moment." : undefined
+      });
     } finally {
       setIsTranslating(null);
     }

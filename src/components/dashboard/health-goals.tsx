@@ -46,12 +46,15 @@ export default function HealthGoals({ language = 'English' }: HealthGoalsProps) 
         title: "AI Goals Generated",
         description: `New goals added in ${language}.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      const isQuotaError = error.message?.includes('429') || error.message?.toLowerCase().includes('quota');
       toast({
         variant: "destructive",
-        title: "Generation Failed",
-        description: "Could not generate AI goals at this time.",
+        title: isQuotaError ? "AI Quota Exceeded" : "Generation Failed",
+        description: isQuotaError 
+          ? "The AI service is temporarily unavailable. Please try again in a minute." 
+          : "Could not generate AI goals at this time.",
       });
     } finally {
       setIsGenerating(false);

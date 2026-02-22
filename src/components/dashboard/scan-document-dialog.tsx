@@ -124,12 +124,15 @@ export default function ScanDocumentDialog({
         targetLanguage: language
       });
       setAnalysis(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error analyzing document:', error);
+      const isQuotaError = error.message?.includes('429') || error.message?.toLowerCase().includes('quota');
       toast({
         variant: 'destructive',
-        title: 'Analysis Failed',
-        description: 'Could not simplify the document. Please try again.',
+        title: isQuotaError ? 'AI Rate Limit Reached' : 'Analysis Failed',
+        description: isQuotaError 
+          ? 'The AI is currently busy. Please wait a moment and try again.' 
+          : 'Could not simplify the document. Please try again.',
       });
     } finally {
       setIsLoading(false);

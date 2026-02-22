@@ -8,6 +8,7 @@ import { patientData } from '@/lib/data';
 import { t } from '@/lib/translations';
 import { translateText } from '@/ai/flows/translate-text';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface PatientProfileProps {
   language?: string;
@@ -16,6 +17,7 @@ interface PatientProfileProps {
 export default function PatientProfile({ language = 'English' }: PatientProfileProps) {
   const [translatedHistory, setTranslatedHistory] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     async function translateHistory() {
@@ -30,14 +32,22 @@ export default function PatientProfile({ language = 'English' }: PatientProfileP
           targetLanguage: language 
         });
         setTranslatedHistory(result.translatedText);
-      } catch (e) {
-        console.error('Translation failed', e);
+      } catch (error: any) {
+        console.error('Translation failed', error);
+        const isQuotaError = error.message?.includes('429') || error.message?.toLowerCase().includes('quota');
+        if (isQuotaError) {
+          toast({
+            variant: 'destructive',
+            title: 'Translation Quota Reached',
+            description: 'Could not translate history due to AI rate limits. Please try again later.',
+          });
+        }
       } finally {
         setIsTranslating(false);
       }
     }
     translateHistory();
-  }, [language]);
+  }, [language, toast]);
 
   return (
     <Card className="shadow-sm border-primary/10">
