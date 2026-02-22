@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -101,62 +102,72 @@ export function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 p-2">
-            <Logo className="size-8 text-primary" />
-            <span className="text-xl font-bold tracking-tight text-primary">HealthConnex</span>
+      <Sidebar collapsible="icon" className="border-r-0">
+        <SidebarHeader className="h-14 flex justify-center px-4">
+          <div className="flex items-center gap-2">
+            <Logo className="size-8 text-primary shrink-0" />
+            <span className="text-xl font-bold tracking-tight text-primary group-data-[collapsible=icon]:hidden">HealthConnex</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
+          <SidebarMenu className="px-2">
             {sidebarNav.map((item) => (
               <SidebarMenuItem key={item.name}>
                 <SidebarMenuButton
                   asChild
                   isActive={item.current}
                   tooltip={item.name}
+                  className="h-10 transition-all hover:bg-primary/5 active:scale-95"
                 >
                   <Link href={item.href}>
-                    <item.icon />
-                    <span>{item.name}</span>
+                    <item.icon className="size-5" />
+                    <span className="font-medium">{item.name}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
+        <SidebarFooter className="p-2">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={t('settings', currentLanguage)}>
+              <SidebarMenuButton asChild tooltip={t('settings', currentLanguage)} className="h-10 hover:bg-primary/5">
                 <Link href="#">
-                  <Settings />
+                  <Settings className="size-5" />
                   <span>{t('settings', currentLanguage)}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip={t('profile', currentLanguage)}>
-                <Avatar className="size-6">
+              <SidebarMenuButton tooltip={t('profile', currentLanguage)} className="h-12 hover:bg-primary/5">
+                <Avatar className="size-7">
                   <AvatarImage src={patientData.avatarUrl} alt={patientData.name} />
                   <AvatarFallback>{patientData.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <span>{patientData.name}</span>
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-bold text-sm">{patientData.name}</span>
+                  <span className="text-[10px] text-muted-foreground">O+ Patient</span>
+                </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset>
-        <header className="flex h-14 items-center justify-between border-b bg-background/50 backdrop-blur-md sticky top-0 z-30 px-4 lg:px-6">
-          <SidebarTrigger />
+      <SidebarInset className="overflow-hidden flex flex-col h-svh">
+        <header className="flex h-14 items-center justify-between border-b bg-background/80 backdrop-blur-md sticky top-0 z-30 px-4 shrink-0">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="h-9 w-9" />
+            <div className="md:hidden flex items-center gap-1.5 ml-1">
+              <Logo className="size-6 text-primary" />
+              <span className="text-lg font-bold tracking-tight text-primary">HealthConnex</span>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all">
-                  <Languages className="h-4 w-4" />
-                  <span className="hidden sm:inline">{currentLanguage}</span>
+                <Button variant="outline" size="sm" className="h-8 gap-2 rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all px-3">
+                  <Languages className="h-3.5 w-3.5" />
+                  <span className="text-xs font-semibold">{currentLanguage}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -193,13 +204,18 @@ export function DashboardLayout({
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full relative">
               <Bell className="h-5 w-5" />
+              <span className="absolute top-2 right-2.5 h-2 w-2 bg-destructive rounded-full border-2 border-background" />
               <span className="sr-only">Notifications</span>
             </Button>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary/10">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary/10 pb-10">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {children}
+          </div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );
