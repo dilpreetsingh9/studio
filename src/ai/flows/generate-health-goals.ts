@@ -4,7 +4,7 @@
  * @fileOverview This file defines a Genkit flow for generating health goals based on patient data.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, runWithModelFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateHealthGoalsInputSchema = z.object({
@@ -58,7 +58,6 @@ const generateHealthGoalsFlow = ai.defineFlow(
     outputSchema: GenerateHealthGoalsOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+    return runWithModelFallback(prompt, input);
   }
 );

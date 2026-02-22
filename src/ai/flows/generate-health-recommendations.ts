@@ -1,15 +1,10 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for generating health recommendations and next steps based on aggregated medical records.
- *
- * It includes:
- * - `generateHealthRecommendations` - An async function to generate health recommendations.
- * - `GenerateHealthRecommendationsInput` - The input type for the generateHealthRecommendations function.
- * - `GenerateHealthRecommendationsOutput` - The output type for the generateHealthRecommendations function.
+ * @fileOverview This file defines a Genkit flow for generating health recommendations.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, runWithModelFallback} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateHealthRecommendationsInputSchema = z.object({
@@ -72,7 +67,6 @@ const generateHealthRecommendationsFlow = ai.defineFlow(
     outputSchema: GenerateHealthRecommendationsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    return runWithModelFallback(prompt, input);
   }
 );

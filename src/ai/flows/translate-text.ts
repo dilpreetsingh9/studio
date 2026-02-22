@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for translating medical text.
+ * @fileOverview This file defines a Genkit flow for translating medical text with fallback logic.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, runWithModelFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const TranslateTextInputSchema = z.object({
@@ -22,6 +22,17 @@ export async function translateText(input: TranslateTextInput): Promise<Translat
   return translateTextFlow(input);
 }
 
+const prompt = ai.definePrompt({
+  name: 'translateTextPrompt',
+  input: { schema: TranslateTextInputSchema },
+  output: { schema: TranslateTextOutputSchema },
+  prompt: `You are a medical translator. Translate the following medical text into {{{targetLanguage}}}. 
+      Ensure the tone remains professional yet accessible to a patient. 
+      Maintain all medical accuracy.
+      
+      Text: {{{text}}}`,
+});
+
 const translateTextFlow = ai.defineFlow(
   {
     name: 'translateTextFlow',
@@ -29,14 +40,13 @@ const translateTextFlow = ai.defineFlow(
     outputSchema: TranslateTextOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-      prompt: `You are a medical translator. Translate the following medical text into ${input.targetLanguage}. 
-      Ensure the tone remains professional yet accessible to a patient. 
-      Maintain all medical accuracy.
-      
-      Text: ${input.text}`,
-      output: { schema: TranslateTextOutputSchema }
-    });
-    return output!;
+    const translatedText = await runWithModelFallback(
+      async (inp, config) => {
+        const { output } = await prompt(inp, config);
+        return { output: output?.translatedText };
+      },
+      input
+    );
+    return { translatedText };
   }
 );

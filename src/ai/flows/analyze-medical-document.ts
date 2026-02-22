@@ -2,10 +2,9 @@
 
 /**
  * @fileOverview This file defines a Genkit flow for analyzing a medical document image.
- * It is capable of processing documents in multiple source languages and translating them to a target language.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, runWithModelFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const AnalyzeMedicalDocumentInputSchema = z.object({
@@ -68,7 +67,6 @@ const analyzeMedicalDocumentFlow = ai.defineFlow(
     outputSchema: AnalyzeMedicalDocumentOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+    return runWithModelFallback(prompt, input);
   }
 );

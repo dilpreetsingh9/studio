@@ -1,13 +1,9 @@
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for summarizing medical records.
- *
- * - summarizeMedicalRecords - A function that summarizes medical records for a patient.
- * - SummarizeMedicalRecordsInput - The input type for the summarizeMedicalRecords function.
- * - SummarizeMedicalRecordsOutput - The return type for the summarizeMedicalRecords function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, runWithModelFallback} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SummarizeMedicalRecordsInputSchema = z.object({
@@ -44,7 +40,6 @@ const summarizeMedicalRecordsFlow = ai.defineFlow(
     outputSchema: SummarizeMedicalRecordsOutputSchema,
   },
   async input => {
-    const {output} = await summarizeMedicalRecordsPrompt(input);
-    return output!;
+    return runWithModelFallback(summarizeMedicalRecordsPrompt, input);
   }
 );
