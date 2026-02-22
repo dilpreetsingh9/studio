@@ -25,6 +25,7 @@ import {
   User,
   FileText,
   Languages,
+  Check,
 } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { Logo } from '@/components/icons';
@@ -34,7 +35,24 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
+
+const COMMON_LANGUAGES = [
+  { name: 'English', code: 'en' },
+  { name: 'Spanish', code: 'es' },
+  { name: 'French', code: 'fr' },
+  { name: 'Hindi', code: 'hi' },
+  { name: 'Chinese', code: 'zh' },
+  { name: 'Arabic', code: 'ar' },
+  { name: 'Portuguese', code: 'pt' },
+  { name: 'German', code: 'de' },
+  { name: 'Japanese', code: 'ja' },
+];
 
 export function DashboardLayout({ 
   children,
@@ -45,16 +63,33 @@ export function DashboardLayout({
   onLanguageChange?: (lang: string) => void;
   currentLanguage?: string;
 }) {
-  const [localLangName, setLocalLangName] = useState('Local Language');
+  const [detectedLangName, setDetectedLangName] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
-      const localLang = displayNames.of(navigator.language.split('-')[0]);
-      if (localLang) setLocalLangName(localLang);
-    } catch (e) {
-      console.warn('Language detection failed');
-    }
+    const detectLanguage = () => {
+      try {
+        const langs = navigator.languages || [navigator.language];
+        const primary = langs[0].split('-')[0];
+        const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
+
+        // If primary is English, look for a secondary non-English language
+        if (primary === 'en' && langs.length > 1) {
+          const secondary = langs.find(l => !l.startsWith('en'));
+          if (secondary) {
+            return displayNames.of(secondary.split('-')[0]) || null;
+          }
+          // Regional fallbacks if only English is found (e.g., Canada context)
+          // For demo purposes, we'll suggest a common secondary if only English is present
+          return 'French'; 
+        }
+
+        return displayNames.of(primary) || null;
+      } catch (e) {
+        return 'French';
+      }
+    };
+
+    setDetectedLangName(detectLanguage());
   }, []);
 
   const sidebarNav = [
@@ -121,20 +156,45 @@ export function DashboardLayout({
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
+                <Button variant="outline" size="sm" className="gap-2 rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all">
                   <Languages className="h-4 w-4" />
                   <span className="hidden sm:inline">{currentLanguage}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onLanguageChange?.('English')}>
-                  English
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => onLanguageChange?.('English')} className="justify-between">
+                  English {currentLanguage === 'English' && <Check className="h-4 w-4 text-primary" />}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onLanguageChange?.(localLangName)}>
-                  {localLangName} (Auto-detected)
-                </DropdownMenuItem>
+                
+                {detectedLangName && detectedLangName !== 'English' && (
+                  <DropdownMenuItem onClick={() => onLanguageChange?.(detectedLangName)} className="justify-between">
+                    {detectedLangName} (Detected) {currentLanguage === detectedLangName && <Check className="h-4 w-4 text-primary" />}
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <span>More Languages</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent className="max-h-[300px] overflow-y-auto">
+                      {COMMON_LANGUAGES.map((lang) => (
+                        <DropdownMenuItem 
+                          key={lang.code} 
+                          onClick={() => onLanguageChange?.(lang.name)}
+                          className="justify-between"
+                        >
+                          {lang.name} {currentLanguage === lang.name && <Check className="h-4 w-4 text-primary" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
               </DropdownMenuContent>
             </DropdownMenu>
+            
             <Button variant="ghost" size="icon" className="rounded-full">
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notifications</span>

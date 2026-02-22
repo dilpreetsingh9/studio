@@ -2,6 +2,7 @@
 
 /**
  * @fileOverview This file defines a Genkit flow for analyzing a medical document image.
+ * It is capable of processing documents in multiple source languages and translating them to a target language.
  */
 
 import { ai } from '@/ai/genkit';
@@ -38,22 +39,23 @@ const prompt = ai.definePrompt({
   name: 'analyzeMedicalDocumentPrompt',
   input: { schema: AnalyzeMedicalDocumentInputSchema },
   output: { schema: AnalyzeMedicalDocumentOutputSchema },
-  prompt: `You are an AI medical assistant specializing in document analysis. 
-    Analyze the provided medical document image and provide the response in {{{targetLanguage}}}.
+  prompt: `You are an AI medical assistant specializing in document analysis and translation. 
+    Analyze the provided medical document image. Note that the source document may be in ANY language. 
+    
+    Your task is to:
+    1. **Structural Extraction**: Detect and extract all critical medical data points found in the document, regardless of the source language.
+    2. **Contextual Interpretation & Simplification**: Build a patient-friendly response translated entirely into {{{targetLanguage}}}.
+    
+    Response requirements:
+    - **Summary**: What is this document? Summarize it in {{{targetLanguage}}}.
+    - **Key Findings**: Translate technical data and findings from the source language into plain language in {{{targetLanguage}}}.
+    - **Next Steps**: Provide clear, simplified instructions in {{{targetLanguage}}}.
 
-    ### Step 1: Structural Extraction (Internal OCR)
-    Identify and extract all critical medical data points found in the document.
-
-    ### Step 2: Contextual Interpretation & Simplification
-    Based on the data extracted in Step 1, build a patient-friendly response in {{{targetLanguage}}}:
-    1. **Summary**: What is this document?
-    2. **Key Findings**: Translate technical data into plain language in {{{targetLanguage}}}.
-    3. **Next Steps**: Provide clear, simplified instructions in {{{targetLanguage}}}.
-
-    **Safety Guidelines**:
+    Safety Guidelines:
     - Use SIMPLIFIED, everyday language.
     - Be empathetic and clear.
     - Provide the output ONLY in {{{targetLanguage}}}.
+    - Maintain accuracy even when translating complex medical terms.
 
     Document Image: {{media url=documentImage}}
     `,
