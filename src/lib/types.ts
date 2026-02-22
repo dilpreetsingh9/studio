@@ -6,16 +6,27 @@ export type Patient = {
     gender: string;
     bloodType: string;
     allergies: string[];
+    height?: number; // in cm
+    weight?: number; // in kg
   };
   medicalHistory: string;
   healthGoals: HealthGoal[];
   vitals: Vital[];
+  labResults: LabResult[];
   appointments: Appointment[];
   messages: Message[];
   medications?: Medication[];
 };
 
 export type Vital = {
+  name: string;
+  value: string;
+  unit: string;
+  icon: React.ComponentType<{ className?: string }>;
+  trend: 'up' | 'down' | 'stable';
+};
+
+export type LabResult = {
   name: string;
   value: string;
   unit: string;

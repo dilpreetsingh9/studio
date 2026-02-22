@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import PatientProfile from '@/components/dashboard/patient-profile';
 import VitalsMonitor from '@/components/dashboard/vitals-monitor';
+import LabResults from '@/components/dashboard/lab-results';
 import HealthRecords from '@/components/dashboard/health-records';
 import CareNavigation from '@/components/dashboard/care-navigation';
 import HealthGoals from '@/components/dashboard/health-goals';
@@ -49,6 +50,7 @@ export default function Home() {
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
               <PatientProfile language={language} />
+              <LabResults language={language} />
               <QuickActions 
                 onRecordScanned={handleRecordScanned} 
                 onNavigateToRecords={() => setActiveTab('records')}

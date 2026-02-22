@@ -1,5 +1,5 @@
 import type { Patient } from '@/lib/types';
-import { HeartPulse, Activity, Flame, TrendingUp } from 'lucide-react';
+import { HeartPulse, Activity, Flame, TrendingUp, Droplets, Sun, Zap, FlaskConical } from 'lucide-react';
 
 export const patientData: Patient = {
   name: 'Saher Sharma',
@@ -9,6 +9,8 @@ export const patientData: Patient = {
     gender: 'Female',
     bloodType: 'O+',
     allergies: ['Peanuts', 'Penicillin'],
+    height: 165,
+    weight: 62,
   },
   medicalHistory:
     'Diagnosed with Type 2 Diabetes in 2022. History of seasonal allergies. No major surgeries. Family history of heart disease.',
@@ -22,6 +24,12 @@ export const patientData: Patient = {
     { name: 'Activity', value: '8,450', unit: 'steps', icon: Activity, trend: 'up' },
     { name: 'Calories', value: '1,840', unit: 'kcal', icon: Flame, trend: 'stable' },
     { name: 'Stairs', value: '12', unit: 'floors', icon: TrendingUp, trend: 'up' },
+  ],
+  labResults: [
+    { name: 'Hemoglobin', value: '13.5', unit: 'g/dL', icon: Droplets, trend: 'stable' },
+    { name: 'Vitamin D3', value: '28', unit: 'ng/mL', icon: Sun, trend: 'down' },
+    { name: 'Vitamin B12', value: '450', unit: 'pg/mL', icon: Zap, trend: 'up' },
+    { name: 'Cholesterol', value: '185', unit: 'mg/dL', icon: FlaskConical, trend: 'stable' },
   ],
   appointments: [
     {

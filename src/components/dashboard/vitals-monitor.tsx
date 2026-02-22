@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { patientData } from '@/lib/data';
-import { ArrowDown, ArrowRight, ArrowUp, Activity, Smartphone, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUp, Activity, Smartphone, RefreshCw, CheckCircle2, Scale } from 'lucide-react';
 import { t } from '@/lib/translations';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -34,7 +34,6 @@ export default function VitalsMonitor({ language = 'English' }: VitalsMonitorPro
 
   const handleSync = () => {
     setIsSyncing(true);
-    // Simulate native health app communication delay
     setTimeout(() => {
       setIsSyncing(false);
       setLastSynced(new Date());
@@ -44,6 +43,14 @@ export default function VitalsMonitor({ language = 'English' }: VitalsMonitorPro
       });
     }, 2500);
   };
+
+  const bmi = useMemo(() => {
+    if (patientData.details.height && patientData.details.weight) {
+      const heightInMeters = patientData.details.height / 100;
+      return (patientData.details.weight / (heightInMeters * heightInMeters)).toFixed(1);
+    }
+    return null;
+  }, []);
 
   const getPlatformName = () => {
     if (platform === 'ios') return t('appleHealth', language);
@@ -81,7 +88,7 @@ export default function VitalsMonitor({ language = 'English' }: VitalsMonitorPro
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
           {patientData.vitals.map((vital) => (
             <Card key={vital.name} className="flex flex-col justify-between p-4 border-primary/5 bg-primary/5 hover:bg-primary/10 transition-colors cursor-default relative overflow-hidden group">
               {isSyncing && (
@@ -101,6 +108,22 @@ export default function VitalsMonitor({ language = 'English' }: VitalsMonitorPro
               </div>
             </Card>
           ))}
+          {bmi && (
+            <Card className="flex flex-col justify-between p-4 border-primary/5 bg-primary/5 hover:bg-primary/10 transition-colors cursor-default relative overflow-hidden group">
+              <div className="flex items-center justify-between relative z-10">
+                <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">{t('bmi', language)}</p>
+                <Scale className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="mt-2 relative z-10">
+                <span className="text-2xl font-black">{bmi}</span>
+                <span className="ml-1 text-[10px] text-muted-foreground font-medium">kg/m²</span>
+              </div>
+              <div className="mt-1 flex items-center text-[10px] text-muted-foreground font-medium relative z-10">
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                <span className="ml-1 capitalize">Optimal</span>
+              </div>
+            </Card>
+          )}
         </div>
         {lastSynced && (
           <p className="text-[10px] text-muted-foreground mt-3 text-right italic">
