@@ -16,6 +16,7 @@ export type Patient = {
   appointments: Appointment[];
   messages: Message[];
   medications?: Medication[];
+  journalEntries?: JournalEntry[];
 };
 
 export type Vital = {
@@ -78,4 +79,13 @@ export type Medication = {
   frequency: string;
   priority: MedicationPriority;
   reminderTime: string;
+};
+
+export type JournalEntry = {
+  id: string;
+  timestamp: Date;
+  content: string;
+  summary: string;
+  category: string;
+  tags: string[];
 };

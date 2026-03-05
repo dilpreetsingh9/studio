@@ -92,5 +92,15 @@ export const patientData: Patient = {
       priority: 'Good to have',
       reminderTime: '10:00 AM',
     }
+  ],
+  journalEntries: [
+    {
+      id: '1',
+      timestamp: new Date(Date.now() - 86400000),
+      content: 'Woke up feeling a bit sluggish. Did 30 mins of light cardio and felt better. Had a high protein breakfast.',
+      summary: 'Morning exercise and high-protein breakfast. Improved mood post-cardio.',
+      category: 'Exercise',
+      tags: ['cardio', 'breakfast', 'sluggish'],
+    }
   ]
 };

@@ -11,6 +11,7 @@ import HealthGoals from '@/components/dashboard/health-goals';
 import SecureMessaging from '@/components/dashboard/secure-messaging';
 import MedicationReminder from '@/components/dashboard/medication-reminder';
 import QuickActions from '@/components/dashboard/quick-actions';
+import HealthJournal from '@/components/dashboard/health-journal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalRecord } from '@/lib/types';
 import { FileText, LayoutDashboard } from 'lucide-react';
@@ -65,6 +66,7 @@ export default function Home() {
               <div id="medication-section">
                 <MedicationReminder language={language} />
               </div>
+              <HealthJournal language={language} />
             </div>
             <div className="space-y-6 lg:col-span-1">
               <HealthGoals language={language} />
