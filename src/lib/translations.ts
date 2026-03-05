@@ -57,6 +57,10 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     community: "Community",
     referralCopied: "Referral link copied to clipboard!",
     sharingProgress: "Sharing your health progress with family...",
+    missed: "Missed",
+    safetyAlert: "Safety Alert",
+    actionPlan: "Action Plan",
+    enablePush: "Enable Push Reminders",
   },
   Spanish: {
     dashboard: "Tablero",
@@ -114,6 +118,10 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     community: "Comunidad",
     referralCopied: "¡Enlace de referencia copiado!",
     sharingProgress: "Compartiendo progreso de salud con la familia...",
+    missed: "Omitido",
+    safetyAlert: "Alerta de Seguridad",
+    actionPlan: "Plan de Acción",
+    enablePush: "Activar Recordatorios",
   },
   French: {
     dashboard: "Tableau de Bord",
@@ -171,6 +179,10 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     community: "Communauté",
     referralCopied: "Lien de parrainage copié !",
     sharingProgress: "Partage de vos progrès de santé avec la famille...",
+    missed: "Manqué",
+    safetyAlert: "Alerte de Sécurité",
+    actionPlan: "Plan d'Action",
+    enablePush: "Activer les Rappels",
   },
   Hindi: {
     dashboard: "डैशबोर्ड",
@@ -228,6 +240,10 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     community: "समुदाय",
     referralCopied: "रेफरल लिंक कॉपी किया गया!",
     sharingProgress: "परिवार के साथ स्वास्थ्य प्रगति साझा की जा रही है...",
+    missed: "छूट गया",
+    safetyAlert: "सुरक्षा अलर्ट",
+    actionPlan: "कार्य योजना",
+    enablePush: "रिमाइंडर चालू करें",
   }
 };
 
