@@ -38,7 +38,9 @@ const prompt = ai.definePrompt({
     Task:
     1. Transcribe the audio exactly.
     2. Create a structured summary for a "Health Journal" in {{{targetLanguage}}}.
-    3. Categorize the entry and provide relevant medical/fitness tags.
+    3. Categorize the entry (using the exact categories provided in the schema) and provide relevant medical/fitness tags in {{{targetLanguage}}}.
+    
+    IMPORTANT: All text fields (transcription, summary, tags) MUST be in {{{targetLanguage}}}.
     
     Audio: {{media url=audioDataUri}}
     `,

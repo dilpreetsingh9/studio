@@ -55,7 +55,10 @@ export default function HealthJournal({ language = 'English' }: HealthJournalPro
 
       mediaRecorder.start();
       setIsRecording(true);
-      toast({ title: "Recording Started", description: "Dictate your routine now." });
+      toast({ 
+        title: t('recordingStarted', language), 
+        description: t('recordingDescription', language) 
+      });
     } catch (err) {
       toast({
         variant: "destructive",
@@ -91,15 +94,15 @@ export default function HealthJournal({ language = 'English' }: HealthJournalPro
 
       setEntries(prev => [newEntry, ...prev]);
       toast({
-        title: "Entry Saved",
-        description: "Your health journal has been updated via Dictahealth.",
+        title: t('entrySaved', language),
+        description: t('entrySavedDesc', language),
       });
     } catch (error: any) {
       console.error(error);
       const isQuotaError = error.message?.includes('429') || error.message?.toLowerCase().includes('quota');
       toast({
         variant: "destructive",
-        title: isQuotaError ? "AI Busy" : "Transcription Failed",
+        title: isQuotaError ? "AI Busy" : t('transcriptionFailed', language),
         description: "Could not process your dictation at this time.",
       });
     } finally {
@@ -127,9 +130,9 @@ export default function HealthJournal({ language = 'English' }: HealthJournalPro
         <div>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
-            Health Journal
+            {t('healthJournal', language)}
           </CardTitle>
-          <CardDescription>Dictahealth: Voice-powered routine tracking.</CardDescription>
+          <CardDescription>{t('journalSubtitle', language)}</CardDescription>
         </div>
         <Button 
           size="sm" 
@@ -148,7 +151,7 @@ export default function HealthJournal({ language = 'English' }: HealthJournalPro
           ) : (
             <Mic className="h-4 w-4 mr-2" />
           )}
-          {isRecording ? "Stop" : "Dictate"}
+          {isProcessing ? t('transcribing', language) : isRecording ? t('stop', language) : t('dictate', language)}
         </Button>
       </CardHeader>
       <CardContent>
@@ -157,7 +160,7 @@ export default function HealthJournal({ language = 'English' }: HealthJournalPro
             {entries.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground italic text-sm border-2 border-dashed rounded-xl bg-muted/5">
                 <Mic className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                No entries yet. Start dictating your routine!
+                {t('noEntries', language)}
               </div>
             ) : (
               entries.map((entry) => (
@@ -201,9 +204,9 @@ export default function HealthJournal({ language = 'English' }: HealthJournalPro
             <Mic className="h-4 w-4 text-primary" />
           </div>
           <div className="space-y-0.5">
-            <p className="text-[11px] font-bold text-primary">Pro Tip</p>
+            <p className="text-[11px] font-bold text-primary">{t('proTip', language)}</p>
             <p className="text-[10px] text-muted-foreground leading-tight italic">
-              Dictate things like "Had a salad for lunch and felt energetic" or "Slight knee pain after running". AI will tag and save it.
+              {t('proTipContent', language)}
             </p>
           </div>
         </div>
