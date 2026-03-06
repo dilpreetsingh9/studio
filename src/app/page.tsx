@@ -54,15 +54,19 @@ export default function Home() {
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
               <PatientProfile language={language} />
-              <LabResults language={language} />
+              
               <QuickActions 
                 onRecordScanned={handleRecordScanned} 
                 onNavigateToRecords={() => setActiveTab('records')}
                 language={language}
               />
+
+              <LabResults language={language} />
+
               <div id="medication-section">
                 <MedicationReminder language={language} />
               </div>
+              
               <HealthGoals language={language} />
               <HealthJournal language={language} />
             </div>
