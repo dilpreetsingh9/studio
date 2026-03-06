@@ -65,10 +65,10 @@ export default function Home() {
               <div id="medication-section">
                 <MedicationReminder language={language} />
               </div>
+              <HealthGoals language={language} />
               <HealthJournal language={language} />
             </div>
             <div className="space-y-6 lg:col-span-1">
-              <HealthGoals language={language} />
               <CareNavigation language={language} />
             </div>
           </div>
