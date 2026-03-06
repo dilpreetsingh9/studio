@@ -8,7 +8,6 @@ import LabResults from '@/components/dashboard/lab-results';
 import HealthRecords from '@/components/dashboard/health-records';
 import CareNavigation from '@/components/dashboard/care-navigation';
 import HealthGoals from '@/components/dashboard/health-goals';
-import SecureMessaging from '@/components/dashboard/secure-messaging';
 import MedicationReminder from '@/components/dashboard/medication-reminder';
 import QuickActions from '@/components/dashboard/quick-actions';
 import HealthJournal from '@/components/dashboard/health-journal';
@@ -71,7 +70,6 @@ export default function Home() {
             <div className="space-y-6 lg:col-span-1">
               <HealthGoals language={language} />
               <CareNavigation language={language} />
-              <SecureMessaging language={language} />
             </div>
           </div>
         </TabsContent>

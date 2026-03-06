@@ -14,7 +14,6 @@ export type Patient = {
   vitals: Vital[];
   labResults: LabResult[];
   appointments: Appointment[];
-  messages: Message[];
   medications?: Medication[];
   journalEntries?: JournalEntry[];
 };
@@ -42,15 +41,6 @@ export type Appointment = {
   date: string;
   time: string;
   status: 'upcoming' | 'completed' | 'cancelled';
-};
-
-export type Message = {
-  id: string;
-  sender: string;
-  avatarUrl: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
 };
 
 export type HealthGoal = {

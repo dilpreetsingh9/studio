@@ -23,7 +23,6 @@ import {
   Calendar,
   HeartPulse,
   LayoutDashboard,
-  MessageSquare,
   Settings,
   User,
   FileText,
@@ -120,7 +119,6 @@ export function DashboardLayout({
     { id: 'records', name: t('healthRecords', currentLanguage), icon: FileText },
     { id: 'vitals', name: t('vitals', currentLanguage), icon: HeartPulse },
     { id: 'appointments', name: t('appointments', currentLanguage), icon: Calendar },
-    { id: 'messages', name: t('messages', currentLanguage), icon: MessageSquare },
     { id: 'profile', name: t('profile', currentLanguage), icon: User },
   ];
 
@@ -144,7 +142,7 @@ export function DashboardLayout({
               {sidebarNav.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    isActive={activeTab === item.id || (item.id === 'overview' && ['vitals', 'appointments', 'messages', 'profile'].includes(activeTab))}
+                    isActive={activeTab === item.id || (item.id === 'overview' && ['vitals', 'appointments', 'profile'].includes(activeTab))}
                     tooltip={item.name}
                     className="h-10 transition-all hover:bg-primary/5 active:scale-95"
                     onClick={() => {

@@ -49,24 +49,6 @@ export const patientData: Patient = {
       status: 'completed',
     },
   ],
-  messages: [
-    {
-      id: '1',
-      sender: 'Dr. Evelyn Reed',
-      avatarUrl: 'https://picsum.photos/seed/dr-reed/100/100',
-      lastMessage: 'Your recent test results are in. We should...',
-      timestamp: '1 day ago',
-      unreadCount: 1,
-    },
-    {
-      id: '2',
-      sender: 'Family Member',
-      avatarUrl: 'https://picsum.photos/seed/family-member/100/100',
-      lastMessage: 'How are you feeling today?',
-      timestamp: '3 days ago',
-      unreadCount: 0,
-    },
-  ],
   medications: [
     {
       id: '1',
