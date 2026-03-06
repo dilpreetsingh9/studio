@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import PatientProfile from '@/components/dashboard/patient-profile';
-import VitalsMonitor from '@/components/dashboard/vitals-monitor';
 import LabResults from '@/components/dashboard/lab-results';
 import HealthRecords from '@/components/dashboard/health-records';
 import CareNavigation from '@/components/dashboard/care-navigation';
@@ -61,7 +60,6 @@ export default function Home() {
                 onNavigateToRecords={() => setActiveTab('records')}
                 language={language}
               />
-              <VitalsMonitor language={language} />
               <div id="medication-section">
                 <MedicationReminder language={language} />
               </div>
