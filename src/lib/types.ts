@@ -1,21 +1,38 @@
+
+export type LifeStage = 'Regular' | 'TTC' | 'Pregnancy' | 'Perimenopause';
+export type CyclePhase = 'Menstrual' | 'Follicular' | 'Ovulatory' | 'Luteal';
+
 export type Patient = {
   name: string;
   avatarUrl: string;
+  lifeStage: LifeStage;
   details: {
     age: number;
     gender: string;
     bloodType: string;
     allergies: string[];
-    height?: number; // in cm
-    weight?: number; // in kg
+    height?: number;
+    weight?: number;
   };
   medicalHistory: string;
-  healthGoals: HealthGoal[];
+  cycleData: {
+    lastPeriodStart: Date;
+    avgCycleLength: number;
+    currentDay: number;
+    predictedPhase: CyclePhase;
+  };
   vitals: Vital[];
   labResults: LabResult[];
-  appointments: Appointment[];
-  medications?: Medication[];
+  symptoms: SymptomLog[];
   journalEntries?: JournalEntry[];
+};
+
+export type SymptomLog = {
+  id: string;
+  timestamp: Date;
+  type: 'Mood' | 'Energy' | 'Pain' | 'Acne' | 'Libido' | 'Sleep' | 'Stress' | 'Digestive';
+  value: number; // 1-5
+  note?: string;
 };
 
 export type Vital = {
@@ -34,23 +51,6 @@ export type LabResult = {
   trend: 'up' | 'down' | 'stable';
 };
 
-export type Appointment = {
-  id: string;
-  doctor: string;
-  specialty: string;
-  date: string;
-  time: string;
-  status: 'upcoming' | 'completed' | 'cancelled';
-};
-
-export type HealthGoal = {
-  id: string;
-  name: string;
-  target: number;
-  current: number;
-  unit: string;
-};
-
 export type MedicalRecord = {
   id: string;
   capturedAt: Date;
@@ -58,17 +58,6 @@ export type MedicalRecord = {
   summary: string;
   keyFindings?: string[];
   nextSteps?: string[];
-};
-
-export type MedicationPriority = 'Cannot Miss' | 'Good to have' | 'Can Skip';
-
-export type Medication = {
-  id: string;
-  name: string;
-  dosage: string;
-  frequency: string;
-  priority: MedicationPriority;
-  reminderTime: string;
 };
 
 export type JournalEntry = {

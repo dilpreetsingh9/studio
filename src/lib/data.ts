@@ -1,88 +1,50 @@
+
 import type { Patient } from '@/lib/types';
 import { HeartPulse, Activity, Flame, TrendingUp, Droplets, Sun, Zap, FlaskConical } from 'lucide-react';
 
 export const patientData: Patient = {
   name: 'Saher Sharma',
   avatarUrl: 'https://picsum.photos/seed/patient-saher/100/100',
+  lifeStage: 'Regular',
   details: {
-    age: 35,
+    age: 28,
     gender: 'Female',
     bloodType: 'O+',
-    allergies: ['Peanuts', 'Penicillin'],
+    allergies: ['Peanuts'],
     height: 165,
-    weight: 62,
+    weight: 60,
   },
-  medicalHistory:
-    'Diagnosed with Type 2 Diabetes in 2022. History of seasonal allergies. No major surgeries. Family history of heart disease.',
-  healthGoals: [
-    { id: '1', name: 'Weekly Steps', current: 25000, target: 35000, unit: 'steps' },
-    { id: '2', name: 'Hydration', current: 6, target: 8, unit: 'glasses/day' },
-    { id: '3', name: 'Mindful Minutes', current: 60, target: 100, unit: 'mins/week' },
-  ],
+  medicalHistory: 'Regular cycles, history of mild endometriosis. Focus on hormone balance and optimizing energy.',
+  cycleData: {
+    lastPeriodStart: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
+    avgCycleLength: 28,
+    currentDay: 12,
+    predictedPhase: 'Follicular',
+  },
   vitals: [
-    { name: 'HR', value: '72', unit: 'bpm', icon: HeartPulse, trend: 'stable' },
-    { name: 'Activity', value: '8,450', unit: 'steps', icon: Activity, trend: 'up' },
-    { name: 'Calories', value: '1,840', unit: 'kcal', icon: Flame, trend: 'stable' },
-    { name: 'Stairs', value: '12', unit: 'floors', icon: TrendingUp, trend: 'up' },
+    { name: 'RHR', value: '64', unit: 'bpm', icon: HeartPulse, trend: 'stable' },
+    { name: 'BBT', value: '36.4', unit: '°C', icon: Droplets, trend: 'stable' },
+    { name: 'Sleep', value: '7.5', unit: 'hrs', icon: Activity, trend: 'up' },
+    { name: 'HRV', value: '55', unit: 'ms', icon: Zap, trend: 'up' },
   ],
   labResults: [
-    { name: 'Hemoglobin', value: '13.5', unit: 'g/dL', icon: Droplets, trend: 'stable' },
-    { name: 'Vitamin D3', value: '28', unit: 'ng/mL', icon: Sun, trend: 'down' },
-    { name: 'Vitamin B12', value: '450', unit: 'pg/mL', icon: Zap, trend: 'up' },
-    { name: 'Cholesterol', value: '185', unit: 'mg/dL', icon: FlaskConical, trend: 'stable' },
+    { name: 'Progesterone', value: '1.2', unit: 'ng/mL', icon: FlaskConical, trend: 'stable' },
+    { name: 'Estrogen', value: '120', unit: 'pg/mL', icon: FlaskConical, trend: 'up' },
+    { name: 'LH', value: '8.4', unit: 'mIU/mL', icon: FlaskConical, trend: 'up' },
+    { name: 'FSH', value: '5.2', unit: 'mIU/mL', icon: FlaskConical, trend: 'stable' },
   ],
-  appointments: [
-    {
-      id: '1',
-      doctor: 'Dr. Evelyn Reed',
-      specialty: 'Cardiologist',
-      date: '2024-08-15',
-      time: '10:00 AM',
-      status: 'upcoming',
-    },
-    {
-      id: '2',
-      doctor: 'Dr. Kyle Reese',
-      specialty: 'Endocrinologist',
-      date: '2024-07-22',
-      time: '02:30 PM',
-      status: 'completed',
-    },
-  ],
-  medications: [
-    {
-      id: '1',
-      name: 'Metformin',
-      dosage: '500mg',
-      frequency: 'Twice daily',
-      priority: 'Cannot Miss',
-      reminderTime: '08:00 AM',
-    },
-    {
-      id: '2',
-      name: 'Lisinopril',
-      dosage: '10mg',
-      frequency: 'Once daily',
-      priority: 'Cannot Miss',
-      reminderTime: '09:00 AM',
-    },
-    {
-      id: '3',
-      name: 'Vitamin D3',
-      dosage: '2000 IU',
-      frequency: 'Once daily',
-      priority: 'Good to have',
-      reminderTime: '10:00 AM',
-    }
+  symptoms: [
+    { id: '1', timestamp: new Date(), type: 'Energy', value: 4, note: 'Feeling productive' },
+    { id: '2', timestamp: new Date(), type: 'Mood', value: 5, note: 'Very positive today' },
   ],
   journalEntries: [
     {
       id: '1',
       timestamp: new Date(Date.now() - 86400000),
-      content: 'Woke up feeling a bit sluggish. Did 30 mins of light cardio and felt better. Had a high protein breakfast.',
-      summary: 'Morning exercise and high-protein breakfast. Improved mood post-cardio.',
-      category: 'Exercise',
-      tags: ['cardio', 'breakfast', 'sluggish'],
+      content: 'Starting the follicular phase. Feeling a surge in energy and mental clarity.',
+      summary: 'High energy follicular phase start.',
+      category: 'General',
+      tags: ['follicular', 'energy'],
     }
   ]
 };

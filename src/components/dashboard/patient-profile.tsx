@@ -1,29 +1,28 @@
+
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { patientData } from '@/lib/data';
-import { t } from '@/lib/translations';
-import { translateText } from '@/ai/flows/translate-text';
+import { LifeStage } from '@/lib/types';
 import { 
-  Loader2, 
   Activity, 
-  HeartPulse, 
-  Smartphone, 
   RefreshCw, 
   CheckCircle2, 
-  Scale, 
-  ArrowUp, 
-  ArrowDown, 
+  Smartphone,
+  ClipboardList,
+  Scale,
+  ArrowUp,
+  ArrowDown,
   ArrowRight,
-  ClipboardList
+  Settings2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
   const className = "h-4 w-4 text-muted-foreground";
@@ -32,64 +31,20 @@ const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
   return <ArrowRight className={className} />;
 };
 
-interface PatientProfileProps {
-  language?: string;
-}
-
-export default function PatientProfile({ language = 'English' }: PatientProfileProps) {
-  const [translatedHistory, setTranslatedHistory] = useState<string | null>(null);
-  const [isTranslating, setIsTranslating] = useState(false);
+export default function PatientProfile({ language = 'English' }) {
+  const [lifeStage, setLifeStage] = useState<LifeStage>(patientData.lifeStage);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSynced, setLastSynced] = useState<Date | null>(null);
-  const [platform, setPlatform] = useState<'ios' | 'android' | 'web'>('web');
   const { toast } = useToast();
-
-  useEffect(() => {
-    const ua = navigator.userAgent.toLowerCase();
-    if (/iphone|ipad|ipod/.test(ua)) setPlatform('ios');
-    else if (/android/.test(ua)) setPlatform('android');
-  }, []);
-
-  useEffect(() => {
-    async function translateHistory() {
-      if (language === 'English') {
-        setTranslatedHistory(null);
-        return;
-      }
-      setIsTranslating(true);
-      try {
-        const result = await translateText({ 
-          text: patientData.medicalHistory, 
-          targetLanguage: language 
-        });
-        setTranslatedHistory(result.translatedText);
-      } catch (error: any) {
-        console.error('Translation failed', error);
-        const isQuotaError = error.message?.includes('429') || error.message?.toLowerCase().includes('quota');
-        if (isQuotaError) {
-          toast({
-            variant: 'destructive',
-            title: 'Translation Quota Reached',
-            description: 'Could not translate history due to AI rate limits. Please try again later.',
-          });
-        }
-      } finally {
-        setIsTranslating(false);
-      }
-    }
-    translateHistory();
-  }, [language, toast]);
 
   const handleSync = () => {
     setIsSyncing(true);
     setTimeout(() => {
       setIsSyncing(false);
-      setLastSynced(new Date());
       toast({
-        title: t('synced', language),
-        description: t('syncSuccess', language),
+        title: "Biometrics Updated",
+        description: "Synced latest temperature and sleep data.",
       });
-    }, 2500);
+    }, 2000);
   };
 
   const bmi = useMemo(() => {
@@ -100,33 +55,33 @@ export default function PatientProfile({ language = 'English' }: PatientProfileP
     return null;
   }, []);
 
-  const getPlatformName = () => {
-    if (platform === 'ios') return t('appleHealth', language);
-    if (platform === 'android') return t('healthConnect', language);
-    return 'Health Data';
-  };
-
   return (
-    <Card className="shadow-md border-primary/10 overflow-hidden">
+    <Card className="shadow-md border-primary/5 overflow-hidden bg-white">
       <CardHeader className="pb-4">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="flex items-start gap-4">
-            <Avatar className="h-20 w-20 border-2 border-primary/20 shrink-0">
-              <AvatarImage src={patientData.avatarUrl} alt={patientData.name} data-ai-hint="woman portrait" />
+            <Avatar className="h-16 w-16 border-2 border-primary/10 shrink-0">
+              <AvatarImage src={patientData.avatarUrl} alt={patientData.name} />
               <AvatarFallback>{patientData.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <CardTitle className="text-3xl font-bold">{patientData.name}</CardTitle>
-              <CardDescription className="text-base text-muted-foreground">
-                {patientData.details.age} {t('age', language)} · {patientData.details.gender} · {t('bloodType', language)}: {patientData.details.bloodType}
+              <CardTitle className="text-2xl font-black tracking-tight">{patientData.name}</CardTitle>
+              <CardDescription className="text-sm font-medium text-muted-foreground">
+                {patientData.details.age} years · {lifeStage} Mode
               </CardDescription>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{t('allergies', language)}:</span>
-                {patientData.details.allergies.map(allergy => (
-                  <Badge key={allergy} variant="secondary" className="bg-destructive/10 text-destructive hover:bg-destructive/20 border-transparent text-[10px]">
-                    {allergy}
-                  </Badge>
-                ))}
+              <div className="mt-2">
+                <Select value={lifeStage} onValueChange={(v) => setLifeStage(v as LifeStage)}>
+                  <SelectTrigger className="h-7 w-[160px] text-[10px] uppercase font-bold tracking-wider rounded-full bg-secondary/20 border-transparent">
+                    <Settings2 className="h-3 w-3 mr-1" />
+                    <SelectValue placeholder="Select Life Stage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Regular">Regular Intelligence</SelectItem>
+                    <SelectItem value="TTC">Trying to Conceive</SelectItem>
+                    <SelectItem value="Pregnancy">Pregnancy Support</SelectItem>
+                    <SelectItem value="Perimenopause">Perimenopause Tracking</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -134,90 +89,66 @@ export default function PatientProfile({ language = 'English' }: PatientProfileP
             variant="outline" 
             size="sm" 
             className={cn(
-              "h-9 gap-2 rounded-xl border-primary/20 transition-all shrink-0",
-              isSyncing && "bg-primary/5 border-primary animate-pulse"
+              "h-9 gap-2 rounded-2xl border-primary/10 transition-all shrink-0",
+              isSyncing && "bg-secondary/20 animate-pulse"
             )}
             onClick={handleSync}
             disabled={isSyncing}
           >
-            {isSyncing ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : lastSynced ? (
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-            ) : (
-              <Smartphone className="h-4 w-4" />
-            )}
-            <span className="text-xs font-bold">
-              {isSyncing ? t('connecting', language) : t('syncHealth', language)}
-            </span>
+            {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
+            <span className="text-xs font-bold">Sync Wearables</span>
           </Button>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        <div className="bg-secondary/20 p-5 rounded-2xl border border-secondary/50">
-          <h4 className="font-bold text-sm mb-2 flex items-center gap-2 text-primary">
-            <ClipboardList className="h-4 w-4" />
-            {t('medicalHistory', language)}
-            {isTranslating && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+        <div className="bg-muted/30 p-4 rounded-2xl border border-muted">
+          <h4 className="font-bold text-xs mb-1.5 flex items-center gap-2 uppercase tracking-widest text-muted-foreground">
+            <ClipboardList className="h-3.5 w-3.5" />
+            Hormone Summary
           </h4>
-          <p className="text-sm text-muted-foreground leading-relaxed italic">
-            "{translatedHistory || patientData.medicalHistory}"
+          <p className="text-sm text-foreground leading-relaxed italic">
+            "{patientData.medicalHistory}"
           </p>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-sm flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
-              {t('vitalsMonitor', language)}
-            </h4>
-            {lastSynced && (
-              <span className="text-[10px] text-muted-foreground italic">
-                Synced {lastSynced.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            {patientData.vitals.map((vital) => (
-              <div key={vital.name} className="flex flex-col justify-between p-3 rounded-xl border bg-primary/5 hover:bg-primary/10 transition-all group relative overflow-hidden">
-                {isSyncing && <div className="absolute inset-0 bg-primary/5 animate-pulse" />}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">{vital.name}</span>
-                  <vital.icon className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          {patientData.vitals.map((vital) => (
+            <div key={vital.name} className="flex flex-col justify-between p-3 rounded-2xl border bg-secondary/5 hover:bg-secondary/10 transition-all group relative">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{vital.name}</span>
+                <vital.icon className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
+              </div>
+              <div>
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-lg font-black">{vital.value}</span>
+                  <span className="text-[9px] text-muted-foreground font-bold">{vital.unit}</span>
                 </div>
-                <div>
-                  <div className="flex items-baseline gap-0.5">
-                    <span className="text-xl font-black">{vital.value}</span>
-                    <span className="text-[9px] text-muted-foreground font-bold">{vital.unit}</span>
-                  </div>
-                  <div className="flex items-center mt-1">
-                    <TrendIcon trend={vital.trend} />
-                    <span className="text-[9px] ml-1 text-muted-foreground capitalize">{vital.trend}</span>
-                  </div>
+                <div className="flex items-center mt-0.5">
+                  <TrendIcon trend={vital.trend} />
+                  <span className="text-[9px] ml-1 text-muted-foreground capitalize">{vital.trend}</span>
                 </div>
               </div>
-            ))}
-            {bmi && (
-              <div className="flex flex-col justify-between p-3 rounded-xl border bg-accent/5 hover:bg-accent/10 transition-all group">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">{t('bmi', language)}</span>
-                  <Scale className="h-3.5 w-3.5 text-accent" />
+            </div>
+          ))}
+          {bmi && (
+            <div className="flex flex-col justify-between p-3 rounded-2xl border bg-accent/20 hover:bg-accent/30 transition-all group">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">BMI</span>
+                <Scale className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
+              </div>
+              <div>
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-lg font-black">{bmi}</span>
+                  <span className="text-[9px] text-muted-foreground font-bold">kg/m²</span>
                 </div>
-                <div>
-                  <div className="flex items-baseline gap-0.5">
-                    <span className="text-xl font-black">{bmi}</span>
-                    <span className="text-[9px] text-muted-foreground font-bold">kg/m²</span>
-                  </div>
-                  <div className="flex items-center mt-1">
-                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-[9px] ml-1 text-muted-foreground">Optimal</span>
-                  </div>
+                <div className="flex items-center mt-0.5">
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[9px] ml-1 text-muted-foreground">Optimal</span>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
