@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -14,12 +13,38 @@ import HealthJournal from '@/components/dashboard/health-journal';
 import QuickActions from '@/components/dashboard/quick-actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalRecord } from '@/lib/types';
-import { FileText, LayoutDashboard, Sparkles } from 'lucide-react';
+import { FileText, Sparkles } from 'lucide-react';
+import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { LoginScreen } from '@/components/auth/login-screen';
+import { ProfileSetup } from '@/components/auth/profile-setup';
+import { ECGLoader } from '@/components/ecg-loader';
 
 export default function Home() {
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+  
+  const profileRef = useMemoFirebase(() => {
+    return user ? doc(db, 'users', user.uid) : null;
+  }, [user, db]);
+
+  const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
+
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [language, setLanguage] = useState('English');
+
+  if (isUserLoading || (user && isProfileLoading)) {
+    return <ECGLoader />;
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  if (!profile && !isProfileLoading) {
+    return <ProfileSetup />;
+  }
 
   const handleRecordScanned = (newRecord: Omit<MedicalRecord, 'id' | 'capturedAt'>) => {
     const record: MedicalRecord = {
@@ -30,12 +55,15 @@ export default function Home() {
     setRecords((prev) => [record, ...prev]);
   };
 
+  const isMale = profile?.gender === 'Male';
+
   return (
     <DashboardLayout 
       onLanguageChange={setLanguage} 
       currentLanguage={language} 
       activeTab={activeTab} 
       onTabChange={setActiveTab}
+      userProfile={profile}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center justify-between">
@@ -54,12 +82,14 @@ export default function Home() {
         <TabsContent value="overview" className="space-y-6 mt-0">
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
-              <PatientProfile language={language} />
+              <PatientProfile language={language} profile={profile} />
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CycleIntelligence language={language} />
-                <SymptomTracker />
-              </div>
+              {!isMale && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <CycleIntelligence language={language} />
+                  <SymptomTracker />
+                </div>
+              )}
 
               <QuickActions 
                 onRecordScanned={handleRecordScanned} 
@@ -67,7 +97,7 @@ export default function Home() {
                 language={language}
               />
 
-              <LifestyleGuidance />
+              {!isMale && <LifestyleGuidance />}
 
               <div id="medication-section">
                 <MedicationReminder language={language} />
@@ -78,7 +108,6 @@ export default function Home() {
             
             <div className="space-y-6 lg:col-span-1">
               <LabResults language={language} />
-              {/* Future Analytics and Community Components would go here */}
             </div>
           </div>
         </TabsContent>

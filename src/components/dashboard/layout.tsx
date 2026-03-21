@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
   SidebarProvider,
@@ -30,8 +29,8 @@ import {
   Check,
   Users,
   UserPlus,
+  LogOut,
 } from 'lucide-react';
-import { patientData } from '@/lib/data';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +46,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { t } from '@/lib/translations';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 const COMMON_LANGUAGES = [
   { name: 'English', code: 'en' },
@@ -66,15 +67,18 @@ export function DashboardLayout({
   currentLanguage = 'English',
   activeTab = 'overview',
   onTabChange,
+  userProfile,
 }: { 
   children: React.ReactNode;
   onLanguageChange?: (lang: string) => void;
   currentLanguage?: string;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  userProfile?: any;
 }) {
   const [detectedLangName, setDetectedLangName] = useState<string | null>(null);
   const { toast } = useToast();
+  const auth = useAuth();
 
   useEffect(() => {
     const detectLanguage = () => {
@@ -82,36 +86,16 @@ export function DashboardLayout({
         const langs = navigator.languages || [navigator.language];
         const primary = langs[0].split('-')[0];
         const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
-
-        if (primary === 'en' && langs.length > 1) {
-          const secondary = langs.find(l => !l.startsWith('en'));
-          if (secondary) {
-            return displayNames.of(secondary.split('-')[0]) || null;
-          }
-          return 'French'; 
-        }
-
         return displayNames.of(primary) || null;
       } catch (e) {
-        return 'French';
+        return 'English';
       }
     };
-
     setDetectedLangName(detectLanguage());
   }, []);
 
-  const handleShareWithFamily = () => {
-    toast({
-      title: t('shareWithFamily', currentLanguage),
-      description: t('sharingProgress', currentLanguage),
-    });
-  };
-
-  const handleReferFriend = () => {
-    toast({
-      title: t('referFriend', currentLanguage),
-      description: t('referralCopied', currentLanguage),
-    });
+  const handleLogout = async () => {
+    await signOut(auth);
   };
 
   const sidebarNav = [
@@ -120,11 +104,6 @@ export function DashboardLayout({
     { id: 'vitals', name: t('vitals', currentLanguage), icon: HeartPulse },
     { id: 'appointments', name: t('appointments', currentLanguage), icon: Calendar },
     { id: 'profile', name: t('profile', currentLanguage), icon: User },
-  ];
-
-  const communityActions = [
-    { id: 'share', name: t('shareWithFamily', currentLanguage), icon: Users, onClick: handleShareWithFamily },
-    { id: 'refer', name: t('referFriend', currentLanguage), icon: UserPlus, onClick: handleReferFriend },
   ];
 
   return (
@@ -142,17 +121,10 @@ export function DashboardLayout({
               {sidebarNav.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    isActive={activeTab === item.id || (item.id === 'overview' && ['vitals', 'appointments', 'profile'].includes(activeTab))}
+                    isActive={activeTab === item.id}
                     tooltip={item.name}
                     className="h-10 transition-all hover:bg-primary/5 active:scale-95"
-                    onClick={() => {
-                      if (['overview', 'records'].includes(item.id)) {
-                        onTabChange?.(item.id);
-                      } else {
-                        onTabChange?.('overview');
-                        // Optional: Scroll to specific section logic could go here
-                      }
-                    }}
+                    onClick={() => onTabChange?.(item.id === 'records' ? 'records' : 'overview')}
                   >
                     <item.icon className="size-5" />
                     <span className="font-medium">{item.name}</span>
@@ -161,45 +133,28 @@ export function DashboardLayout({
               ))}
             </SidebarMenu>
           </SidebarGroup>
-
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-4">{t('community', currentLanguage)}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="px-2">
-                {communityActions.map((action) => (
-                  <SidebarMenuItem key={action.id}>
-                    <SidebarMenuButton
-                      tooltip={action.name}
-                      className="h-10 transition-all hover:bg-primary/5 active:scale-95"
-                      onClick={action.onClick}
-                    >
-                      <action.icon className="size-5" />
-                      <span className="font-medium">{action.name}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="p-2">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip={t('settings', currentLanguage)} className="h-10 hover:bg-primary/5">
-                <Settings className="size-5" />
-                <span>{t('settings', currentLanguage)}</span>
+              <SidebarMenuButton tooltip={t('profile', currentLanguage)} className="h-12 hover:bg-primary/5">
+                <Avatar className="size-7">
+                  <AvatarFallback>{userProfile?.firstName?.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-bold text-sm truncate">{userProfile?.firstName} {userProfile?.lastName}</span>
+                  <span className="text-[10px] text-muted-foreground">{userProfile?.bloodType} Patient</span>
+                </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip={t('profile', currentLanguage)} className="h-12 hover:bg-primary/5">
-                <Avatar className="size-7">
-                  <AvatarImage src={patientData.avatarUrl} alt={patientData.name} />
-                  <AvatarFallback>{patientData.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-bold text-sm">{patientData.name}</span>
-                  <span className="text-[10px] text-muted-foreground">O+ Patient</span>
-                </div>
+              <SidebarMenuButton 
+                tooltip="Logout" 
+                className="h-10 hover:bg-destructive/5 text-destructive"
+                onClick={handleLogout}
+              >
+                <LogOut className="size-5" />
+                <span>Logout</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -223,42 +178,15 @@ export function DashboardLayout({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => onLanguageChange?.('English')} className="justify-between">
-                  English {currentLanguage === 'English' && <Check className="h-4 w-4 text-primary" />}
-                </DropdownMenuItem>
-                
-                {detectedLangName && detectedLangName !== 'English' && (
-                  <DropdownMenuItem onClick={() => onLanguageChange?.(detectedLangName)} className="justify-between">
-                    {detectedLangName} (Detected) {currentLanguage === detectedLangName && <Check className="h-4 w-4 text-primary" />}
+                {COMMON_LANGUAGES.map((lang) => (
+                  <DropdownMenuItem key={lang.code} onClick={() => onLanguageChange?.(lang.name)} className="justify-between">
+                    {lang.name} {currentLanguage === lang.name && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
-                )}
-
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <span>More Languages</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent className="max-h-[300px] overflow-y-auto">
-                      {COMMON_LANGUAGES.map((lang) => (
-                        <DropdownMenuItem 
-                          key={lang.code} 
-                          onClick={() => onLanguageChange?.(lang.name)}
-                          className="justify-between"
-                        >
-                          {lang.name} {currentLanguage === lang.name && <Check className="h-4 w-4 text-primary" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full relative">
               <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2.5 h-2 w-2 bg-destructive rounded-full border-2 border-background" />
               <span className="sr-only">Notifications</span>
             </Button>
           </div>
