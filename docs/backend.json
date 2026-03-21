@@ -1,0 +1,983 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a patient's profile, storing core demographic and health information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The user's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The user's last name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's primary email address, typically obtained from a login provider like Google.",
+          "format": "email"
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "The user's date of birth.",
+          "format": "date"
+        },
+        "gender": {
+          "type": "string",
+          "description": "The user's gender, used for conditional display of modules (e.g., cycle intelligence)."
+        },
+        "bloodType": {
+          "type": "string",
+          "description": "The user's blood type (e.g., A+, O-)."
+        },
+        "allergies": {
+          "type": "array",
+          "description": "A list of known allergies for the user.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "languagePreference": {
+          "type": "string",
+          "description": "The preferred language for the user interface and communications."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "dateOfBirth",
+        "gender",
+        "bloodType",
+        "allergies"
+      ]
+    },
+    "MedicalRecord": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MedicalRecord",
+      "type": "object",
+      "description": "Represents an aggregated medical record entry from various sources for a patient.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the MedicalRecord entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile this medical record belongs to. (Relationship: UserProfile 1:N MedicalRecord)"
+        },
+        "recordType": {
+          "type": "string",
+          "description": "The type of medical record (e.g., 'Lab Result', 'Diagnosis', 'Medication', 'Procedure', 'VisitNote')."
+        },
+        "source": {
+          "type": "string",
+          "description": "The source system or institution from which the record was obtained (e.g., 'Hospital A', 'Lab B')."
+        },
+        "recordDate": {
+          "type": "string",
+          "description": "The date when the medical record event occurred or was recorded.",
+          "format": "date"
+        },
+        "title": {
+          "type": "string",
+          "description": "A brief title or summary for the medical record."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description or content of the medical record."
+        },
+        "documentUri": {
+          "type": "string",
+          "description": "Optional URI to an external document or report related to this record.",
+          "format": "uri"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Keywords or categories to help organize and search medical records.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the medical record was added to the system.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the medical record was last updated in the system.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "recordType",
+        "source",
+        "recordDate",
+        "title",
+        "description"
+      ]
+    },
+    "Insight": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Insight",
+      "type": "object",
+      "description": "Stores AI-powered insights and personalized recommendations generated from patient medical data.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Insight entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile this insight is for. (Relationship: UserProfile 1:N Insight)"
+        },
+        "generatedDate": {
+          "type": "string",
+          "description": "The date and time when the insight was generated.",
+          "format": "date-time"
+        },
+        "title": {
+          "type": "string",
+          "description": "A concise title summarizing the insight."
+        },
+        "content": {
+          "type": "string",
+          "description": "The detailed explanation or reasoning behind the AI-generated insight."
+        },
+        "riskCategory": {
+          "type": "string",
+          "description": "The categorized risk level associated with the insight (e.g., 'Low', 'Medium', 'High', 'Critical')."
+        },
+        "recommendations": {
+          "type": "array",
+          "description": "A list of actionable recommendations based on the insight.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "relatedMedicalRecordIds": {
+          "type": "array",
+          "description": "References to MedicalRecords that contributed to generating this insight. (Relationship: MedicalRecord N:N Insight)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the insight was recorded in the system.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the insight was last updated (e.g., if re-evaluated).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "generatedDate",
+        "title",
+        "content",
+        "riskCategory"
+      ]
+    },
+    "Specialist": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Specialist",
+      "type": "object",
+      "description": "Information about a healthcare specialist, used for care navigation and referrals.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Specialist entity."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The specialist's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The specialist's last name."
+        },
+        "specialty": {
+          "type": "string",
+          "description": "The medical specialty of the provider (e.g., 'Cardiologist', 'Dermatologist')."
+        },
+        "organization": {
+          "type": "string",
+          "description": "The organization or clinic the specialist is affiliated with."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "The specialist's contact email address.",
+          "format": "email"
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "The specialist's contact phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "The physical address of the specialist's practice or clinic."
+        },
+        "website": {
+          "type": "string",
+          "description": "Optional website URL for the specialist or their practice.",
+          "format": "uri"
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the specialist, their focus, or qualifications."
+        },
+        "avgRating": {
+          "type": "number",
+          "description": "The average rating of the specialist, typically on a scale (e.g., 1-5)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the specialist's information was added to the system.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the specialist's information was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "specialty",
+        "organization",
+        "contactEmail"
+      ]
+    },
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Stores details about a patient's medical appointments with healthcare providers.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Appointment entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile attending this appointment. (Relationship: UserProfile 1:N Appointment)"
+        },
+        "specialistId": {
+          "type": "string",
+          "description": "Reference to the Specialist for this appointment. (Relationship: Specialist 1:N Appointment)"
+        },
+        "appointmentDateTime": {
+          "type": "string",
+          "description": "The scheduled date and time of the appointment.",
+          "format": "date-time"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of appointment (e.g., 'Consultation', 'Follow-up', 'Procedure', 'Telehealth')."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the appointment (e.g., 'Scheduled', 'Confirmed', 'Completed', 'Cancelled', 'Rescheduled')."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any additional notes or instructions for the appointment."
+        },
+        "location": {
+          "type": "string",
+          "description": "The physical or virtual location of the appointment."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the appointment was created in the system.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the appointment details were last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "specialistId",
+        "appointmentDateTime",
+        "type",
+        "status",
+        "location"
+      ]
+    },
+    "Referral": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Referral",
+      "type": "object",
+      "description": "Manages referrals for a patient to see a specialist or receive specific care.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Referral entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile for whom this referral is made. (Relationship: UserProfile 1:N Referral)"
+        },
+        "referringProviderId": {
+          "type": "string",
+          "description": "Reference to the CareProvider or Specialist who issued the referral. (Relationship: CareProvider/Specialist 1:N Referral)"
+        },
+        "referredToSpecialistId": {
+          "type": "string",
+          "description": "Reference to the Specialist to whom the patient is being referred. (Relationship: Specialist 1:N Referral)"
+        },
+        "referralDate": {
+          "type": "string",
+          "description": "The date when the referral was issued.",
+          "format": "date"
+        },
+        "reason": {
+          "type": "string",
+          "description": "The medical reason or purpose for the referral."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the referral (e.g., 'Pending', 'Approved', 'Denied', 'Completed', 'Expired')."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes or context regarding the referral."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the referral was created in the system.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the referral details were last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "referringProviderId",
+        "referredToSpecialistId",
+        "referralDate",
+        "reason",
+        "status"
+      ]
+    },
+    "HealthGoal": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "HealthGoal",
+      "type": "object",
+      "description": "Tracks a patient's personal health goals and monitors their progress towards healthier behaviors.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the HealthGoal entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who owns this health goal. (Relationship: UserProfile 1:N HealthGoal)"
+        },
+        "goalType": {
+          "type": "string",
+          "description": "The category of the health goal (e.g., 'Weight Management', 'Exercise', 'Medication Adherence', 'Sleep Improvement')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the health goal."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The date when the health goal was started.",
+          "format": "date"
+        },
+        "targetDate": {
+          "type": "string",
+          "description": "The target date for achieving the health goal.",
+          "format": "date"
+        },
+        "currentProgress": {
+          "type": "number",
+          "description": "The current value representing the user's progress towards the goal (e.g., steps taken, weight lost)."
+        },
+        "targetValue": {
+          "type": "number",
+          "description": "The target value to be achieved for the goal (e.g., target weight, target steps)."
+        },
+        "unitOfMeasure": {
+          "type": "string",
+          "description": "The unit of measurement for the goal's progress and target (e.g., 'kg', 'lbs', 'steps', '%')."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the health goal (e.g., 'Active', 'Completed', 'Paused', 'Abandoned')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the health goal was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the health goal was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "goalType",
+        "description",
+        "startDate",
+        "targetDate",
+        "targetValue",
+        "unitOfMeasure",
+        "status"
+      ]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Stores notifications to be delivered to the user for reminders, progress updates, or alerts.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Notification entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who should receive this notification. (Relationship: UserProfile 1:N Notification)"
+        },
+        "message": {
+          "type": "string",
+          "description": "The content of the notification message."
+        },
+        "type": {
+          "type": "string",
+          "description": "The category of the notification (e.g., 'Reminder', 'Insight', 'ProgressUpdate', 'Alert', 'Appointment')."
+        },
+        "sentDateTime": {
+          "type": "string",
+          "description": "The date and time when the notification was sent.",
+          "format": "date-time"
+        },
+        "isRead": {
+          "type": "boolean",
+          "description": "Indicates whether the user has read the notification."
+        },
+        "actionUri": {
+          "type": "string",
+          "description": "Optional URI for a deep link within the app, related to the notification.",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the notification was created in the system.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the notification was last updated (e.g., read status changed).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "message",
+        "type",
+        "sentDateTime",
+        "isRead"
+      ]
+    },
+    "Conversation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Conversation",
+      "type": "object",
+      "description": "Represents a secure communication thread between a patient, family members, and/or healthcare providers.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Conversation entity."
+        },
+        "participantIds": {
+          "type": "array",
+          "description": "References to the IDs of all participants in this conversation (can be UserProfile, FamilyMember, or CareProvider IDs).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subject": {
+          "type": "string",
+          "description": "The subject or topic of the conversation."
+        },
+        "lastMessageDateTime": {
+          "type": "string",
+          "description": "The date and time of the last message sent in this conversation.",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the conversation was initiated.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the conversation was last updated (e.g., a new message was added).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "participantIds",
+        "subject"
+      ]
+    },
+    "Message": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Message",
+      "type": "object",
+      "description": "Represents an individual message within a secure communication conversation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Message entity."
+        },
+        "conversationId": {
+          "type": "string",
+          "description": "Reference to the Conversation this message belongs to. (Relationship: Conversation 1:N Message)"
+        },
+        "senderId": {
+          "type": "string",
+          "description": "Reference to the ID of the participant who sent this message (UserProfile, FamilyMember, or CareProvider ID)."
+        },
+        "messageContent": {
+          "type": "string",
+          "description": "The actual text content of the message."
+        },
+        "sentDateTime": {
+          "type": "string",
+          "description": "The date and time when the message was sent.",
+          "format": "date-time"
+        },
+        "readByParticipantIds": {
+          "type": "array",
+          "description": "An array of participant IDs who have read this message. (Relationship: Participant N:N Message)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the message was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the message was last updated (e.g., edited, if supported).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "conversationId",
+        "senderId",
+        "messageContent",
+        "sentDateTime"
+      ]
+    },
+    "FamilyMember": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FamilyMember",
+      "type": "object",
+      "description": "Represents a family member associated with a primary patient for coordinated care and communication.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the FamilyMember entity."
+        },
+        "patientUserId": {
+          "type": "string",
+          "description": "Reference to the UserProfile (patient) this family member is associated with. (Relationship: UserProfile 1:N FamilyMember)"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The family member's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The family member's last name."
+        },
+        "relationshipType": {
+          "type": "string",
+          "description": "The relationship of the family member to the patient (e.g., 'Spouse', 'Child', 'Parent', 'Sibling')."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "The family member's contact email address.",
+          "format": "email"
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "The family member's contact phone number."
+        },
+        "canViewPatientRecords": {
+          "type": "boolean",
+          "description": "Indicates if this family member has permission to view the patient's medical records."
+        },
+        "canMessagePatient": {
+          "type": "boolean",
+          "description": "Indicates if this family member has permission to communicate with the patient through the app."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the family member record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the family member record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "patientUserId",
+        "firstName",
+        "lastName",
+        "relationshipType",
+        "canViewPatientRecords",
+        "canMessagePatient"
+      ]
+    },
+    "CareProvider": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CareProvider",
+      "type": "object",
+      "description": "Represents any healthcare provider (e.g., doctor, nurse, therapist) involved in a patient's care.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CareProvider entity."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The care provider's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The care provider's last name."
+        },
+        "profession": {
+          "type": "string",
+          "description": "The professional role of the care provider (e.g., 'General Practitioner', 'Nurse', 'Therapist', 'Specialist')."
+        },
+        "organization": {
+          "type": "string",
+          "description": "The organization or clinic the care provider is affiliated with."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "The care provider's contact email address.",
+          "format": "email"
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "The care provider's contact phone number."
+        },
+        "patientUserIds": {
+          "type": "array",
+          "description": "References to the UserProfiles (patients) this care provider is caring for. (Relationship: UserProfile N:N CareProvider)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the care provider's information was added to the system.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the care provider's information was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "profession",
+        "organization",
+        "contactEmail",
+        "patientUserIds"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores core demographic and health information for each authenticated user. The document ID (`userId`) must match `request.auth.uid` for ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, matching `request.auth.uid`."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/medicalRecords/{medicalRecordId}",
+        "definition": {
+          "entityName": "MedicalRecord",
+          "schema": {
+            "$ref": "#/backend/entities/MedicalRecord"
+          },
+          "description": "Stores individual medical record entries for a specific patient. Includes denormalized `userId` matching the parent path for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the patient, matching the parent user's ID."
+            },
+            {
+              "name": "medicalRecordId",
+              "description": "The unique identifier for the specific medical record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/insights/{insightId}",
+        "definition": {
+          "entityName": "Insight",
+          "schema": {
+            "$ref": "#/backend/entities/Insight"
+          },
+          "description": "Stores AI-generated insights and recommendations specific to a patient. Includes denormalized `userId` matching the parent path for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the patient, matching the parent user's ID."
+            },
+            {
+              "name": "insightId",
+              "description": "The unique identifier for the specific insight."
+            }
+          ]
+        }
+      },
+      {
+        "path": "specialists/{specialistId}",
+        "definition": {
+          "entityName": "Specialist",
+          "schema": {
+            "$ref": "#/backend/entities/Specialist"
+          },
+          "description": "A global directory of healthcare specialists. This collection is likely publicly readable by authenticated users and managed by administrators.",
+          "params": [
+            {
+              "name": "specialistId",
+              "description": "The unique identifier for the specialist."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/appointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Stores appointment details for a patient. Includes denormalized `userId` matching the parent path for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the patient, matching the parent user's ID."
+            },
+            {
+              "name": "appointmentId",
+              "description": "The unique identifier for the specific appointment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/referrals/{referralId}",
+        "definition": {
+          "entityName": "Referral",
+          "schema": {
+            "$ref": "#/backend/entities/Referral"
+          },
+          "description": "Manages referrals issued for a patient. Includes denormalized `userId` matching the parent path for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the patient, matching the parent user's ID."
+            },
+            {
+              "name": "referralId",
+              "description": "The unique identifier for the specific referral."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/healthGoals/{healthGoalId}",
+        "definition": {
+          "entityName": "HealthGoal",
+          "schema": {
+            "$ref": "#/backend/entities/HealthGoal"
+          },
+          "description": "Tracks personal health goals and progress for a patient. Includes denormalized `userId` matching the parent path for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the patient, matching the parent user's ID."
+            },
+            {
+              "name": "healthGoalId",
+              "description": "The unique identifier for the specific health goal."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": {
+            "$ref": "#/backend/entities/Notification"
+          },
+          "description": "Stores notifications specific to a user. Includes denormalized `userId` matching the parent path for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the patient, matching the parent user's ID."
+            },
+            {
+              "name": "notificationId",
+              "description": "The unique identifier for the specific notification."
+            }
+          ]
+        }
+      },
+      {
+        "path": "conversations/{conversationId}",
+        "definition": {
+          "entityName": "Conversation",
+          "schema": {
+            "$ref": "#/backend/entities/Conversation"
+          },
+          "description": "Represents a secure communication thread. Access is controlled by the `participantIds` array denormalized within the document, ensuring Authorization Independence for read/write. `request.auth.uid` must be in `participantIds`.",
+          "params": [
+            {
+              "name": "conversationId",
+              "description": "The unique identifier for the conversation."
+            }
+          ]
+        }
+      },
+      {
+        "path": "conversations/{conversationId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": {
+            "$ref": "#/backend/entities/Message"
+          },
+          "description": "Individual messages within a conversation. To maintain Authorization Independence and avoid `get()` calls to the parent, the `participantIds` array from the parent `Conversation` MUST be denormalized into each `Message` document.",
+          "params": [
+            {
+              "name": "conversationId",
+              "description": "The unique identifier of the parent conversation."
+            },
+            {
+              "name": "messageId",
+              "description": "The unique identifier for the specific message."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{patientUserId}/familyMembers/{familyMemberId}",
+        "definition": {
+          "entityName": "FamilyMember",
+          "schema": {
+            "$ref": "#/backend/entities/FamilyMember"
+          },
+          "description": "Associates family members with a primary patient for coordinated care. The `patientUserId` in the document MUST match the parent path for authorization independence.",
+          "params": [
+            {
+              "name": "patientUserId",
+              "description": "The unique identifier of the patient (UserProfile) this family member is associated with."
+            },
+            {
+              "name": "familyMemberId",
+              "description": "The unique identifier for the specific family member record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "careProviders/{careProviderId}",
+        "definition": {
+          "entityName": "CareProvider",
+          "schema": {
+            "$ref": "#/backend/entities/CareProvider"
+          },
+          "description": "A global directory of healthcare providers. Documents contain a `patientUserIds` array for membership-based access, allowing users to find their associated providers through queries (`where('patientUserIds', 'array-contains', request.auth.uid)`).",
+          "params": [
+            {
+              "name": "careProviderId",
+              "description": "The unique identifier for the care provider."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore data structure adheres to the core design principles by prioritizing Authorization Independence, Structural Segregation, and Access Modeling. All user-specific data is organized under a top-level `users/{userId}` collection, leveraging path-based ownership for simple and robust security rules.\n\n**Authorization Independence:**\nCritical to this design is the denormalization of authorization context. For all subcollections (`medicalRecords`, `insights`, `appointments`, `referrals`, `healthGoals`, `notifications`, `familyMembers`), the `userId` (or `patientUserId` for `familyMembers`) is explicitly included in the document's data. This allows security rules to evaluate access by comparing `request.auth.uid` to the `userId` in the path and/or the `userId` field within the `resource.data` document, without needing to perform `get()` calls to parent documents. This ensures atomic operations and simplifies rule debugging. For instance, a `MedicalRecord` document will contain `userId: '...'`, matching `users/{userId}/medicalRecords/{medicalRecordId}`, preventing hierarchical authorization dependencies.\n\nFor collaborative entities like `Conversation` and `Message`, the `participantIds` array is denormalized within the `Conversation` document. Crucially, to strictly adhere to the mandate of avoiding `get()` calls for subcollections that depend on parent attributes, the `participantIds` array from the parent `Conversation` *must also be denormalized into each `Message` document*. This allows security rules for `Message` documents to be evaluated independently by checking `request.auth.uid in resource.data.participantIds` rather than `get()`ing the parent `Conversation`.\n\n`CareProvider` documents also contain a `patientUserIds` array, allowing direct membership checks without `get()` calls.\n\n**QAPs (Queryable Authorization Patterns):**\n1.  **User-Owned Subcollections:** For paths like `users/{userId}/medicalRecords/{medicalRecordId}`, `list` operations are inherently secure. A client can only query their own data (e.g., `db.collection('users').doc(auth.uid).collection('medicalRecords')`), and security rules can easily enforce `allow list: if request.auth.uid == userId;`. The path itself acts as the filter, fulfilling the QAP.\n2.  **Collaborative Data (`conversations`):** Users can query for conversations they are a part of by using `db.collection('conversations').where('participantIds', 'array-contains', request.auth.uid)`. This query is directly supported by Firestore indices and allows security rules to permit `list` operations only when `request.auth.uid` is present in the `participantIds` array within the query's filter, thereby maintaining QAP compliance.\n3.  **Shared Resources (`careProviders`):** Similarly, to find their associated care providers, a user can query `db.collection('careProviders').where('patientUserIds', 'array-contains', request.auth.uid)`. This also adheres to QAP, allowing efficient and secure listing of relevant providers.\n\n**Structural Segregation and Access Modeling:**\n*   `UserProfile` and all its `1:N` related entities (`MedicalRecord`, `Insight`, `Appointment`, `Referral`, `HealthGoal`, `Notification`, `FamilyMember`) are housed under `users/{userId}`. This ensures that personal data is strictly isolated and accessible only by the owning user (or authorized family members/care providers via explicit permissions or shared conversations, which are handled via membership maps).\n*   `Specialist` entities are placed in a top-level collection `specialists/{specialistId}`. This collection represents a global directory, likely read-only for all authenticated users and managed by administrators, thus having a homogeneous security posture.\n*   `CareProvider` entities are also in a top-level collection `careProviders/{careProviderId}`. This global collection facilitates N:N relationships with `UserProfile`s via the `patientUserIds` array, allowing users to discover and manage their linked providers while maintaining data integrity and segregation.\n*   `Conversation` and `Message` entities are structured to support secure multi-party communication using denormalized `participantIds` for authorization."
+  }
+}

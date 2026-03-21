@@ -1,0 +1,188 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * CORE PHILOSOPHY:
+     * This ruleset enforces a strict user-ownership model for all personal health data and a membership-based 
+     * collaborative model for communication and care provider relationships.
+     * 
+     * DATA STRUCTURE:
+     * - Personal data (Medical Records, Insights, Appointments, Goals, etc.) is hierarchically nested 
+     *   under `/users/{userId}/...` to ensure natural isolation.
+     * - Communications (Conversations, Messages) are top-level but secured via a `participantIds` array.
+     * - Provider and Specialist directories are top-level, with CareProvider access limited by `patientUserIds`.
+     * 
+     * KEY SECURITY DECISIONS:
+     * - DENORMALIZATION: To ensure high performance and avoid costly `get()` calls, critical authorization 
+     *   IDs (like `userId` or `participantIds`) are denormalized directly onto every document.
+     * - PROTOTYPING MODE: Rules focus on authorization (WHO can access) rather than schema validation 
+     *   (WHAT is sent), allowing for rapid frontend iteration without breaking rules on every field change.
+     * - AUDITABILITY: All state-changing operations (update/delete) explicitly verify the existence 
+     *   of the document before evaluating ownership.
+     */
+
+    // --- GLOBAL HELPER FUNCTIONS ---
+
+    // Note: `request` and `resource` are context objects implicitly available in match blocks.
+    // However, when defining custom functions, `request` and `resource` must be explicitly
+    // passed as arguments if the function needs to access them. The previous "Invalid variable name: request."
+    // warning for `isParticipant` indicated this limitation for custom functions.
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    /**
+     * @description Checks if the authenticated user is present in the provided list of participants.
+     * @param {object} req The `request` object from the rule context.
+     * @param {array} participantList An array of user UIDs.
+     */
+    function isParticipant(req, participantList) {
+      // Corrected to accept `req` as an argument and use it for authentication check,
+      // resolving the "Invalid variable name: request." warning.
+      // Also, directly checks `req.auth != null` instead of calling `isSignedIn()`
+      // to make this function self-contained regarding the passed `req` object.
+      return req.auth != null && req.auth.uid in participantList;
+    }
+
+    // --- USER PROFILE & PERSONAL DATA ---
+
+    /**
+     * @description Rules for the root User Profile document.
+     * @path /users/{userId}
+     * @allow (create) if the new doc ID matches the auth UID. (update) if the owner is logged in.
+     * @deny (create) if the user tries to create a profile for someone else.
+     * @principle Ownership and Self-Creation.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Users cannot list other user profiles.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Rules for user-specific subcollections (MedicalRecords, Insights, etc.).
+       * @path /users/{userId}/{subcollection}/{id}
+       * @allow (list/create/update) if the authenticated user is the owner of the parent path.
+       * @deny (all) if the userId in the path does not match the requester's UID.
+       * @principle Structural Segregation and Path-based Ownership.
+       */
+      match /medicalRecords/{id} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      match /insights/{id} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      match /appointments/{id} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      match /referrals/{id} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      match /healthGoals/{id} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      match /notifications/{id} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      match /familyMembers/{id} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.patientUserId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.patientUserId == resource.data.patientUserId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    // --- DIRECTORIES ---
+
+    /**
+     * @description Specialists directory is a global resource.
+     * @path /specialists/{specialistId}
+     * @allow (get, list) if the user is signed in.
+     * @deny (write) for all non-admin users.
+     * @principle Authenticated Public Read with Admin-Only Writes.
+     */
+    match /specialists/{specialistId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if false; // TODO: Implement admin roles for management.
+    }
+
+    /**
+     * @description CareProvider directory restricted by patient association.
+     * @path /careProviders/{careProviderId}
+     * @allow (get, list) if the user's UID is in the patientUserIds list.
+     * @deny (write) for all non-admin users.
+     * @principle Shared Access via Membership (QAP).
+     */
+    match /careProviders/{careProviderId} {
+      // Using the corrected `isParticipant` function, passing `request` explicitly.
+      allow get, list: if isParticipant(request, resource.data.patientUserIds);
+      allow create, update, delete: if false; // TODO: Implement admin/provider roles for management.
+    }
+
+    // --- COMMUNICATION ---
+
+    /**
+     * @description Conversations shared between patients, family, and providers.
+     * @path /conversations/{conversationId}
+     * @allow (get, list, create, update) if the user's UID is in the participantIds array.
+     * @deny (delete) Destructive operations are restricted.
+     * @principle Shared Access (Closed Collaborators) with denormalized membership.
+     */
+    match /conversations/{conversationId} {
+      // Using the corrected `isParticipant` function, passing `request` explicitly.
+      allow get, list: if isParticipant(request, resource.data.participantIds);
+      allow create: if isParticipant(request, request.resource.data.participantIds);
+      allow update: if isParticipant(request, resource.data.participantIds) && isParticipant(request, request.resource.data.participantIds);
+      allow delete: if false;
+
+      /**
+       * @description Messages within a conversation.
+       * @path /conversations/{conversationId}/messages/{messageId}
+       * @allow (get, list, create) if the user is a participant.
+       * @deny (all) if participantIds is not denormalized into the message doc.
+       * @principle Authorization Independence for subcollections.
+       */
+      match /messages/{messageId} {
+        // Using the corrected `isParticipant` function, passing `request` explicitly.
+        allow get, list: if isParticipant(request, resource.data.participantIds);
+        allow create: if isParticipant(request, request.resource.data.participantIds);
+        allow update, delete: if false; // Messages are immutable for audit trails.
+      }
+    }
+  }
+}
