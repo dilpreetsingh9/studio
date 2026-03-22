@@ -12,6 +12,9 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'HealthConnex',
   },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
@@ -20,6 +23,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -33,8 +37,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased selection:bg-primary/10">
         <FirebaseClientProvider>
           {children}
           <Toaster />

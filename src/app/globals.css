@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -58,6 +59,9 @@
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
+    /* Respect mobile safe areas */
+    padding-bottom: env(safe-area-inset-bottom);
+    touch-action: manipulation;
   }
 }
 

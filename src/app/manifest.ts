@@ -3,11 +3,12 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'HealthConnex',
+    name: 'HealthConnex: Hormone Intelligence',
     short_name: 'HealthConnex',
-    description: 'Your personal AI-powered health navigator.',
+    description: 'Privacy-first hormone intelligence and health navigation for women.',
     start_url: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#FAFAFA',
     theme_color: '#0A2558',
     icons: [
@@ -15,11 +16,13 @@ export default function manifest(): MetadataRoute.Manifest {
         src: 'https://picsum.photos/seed/healthconnex-icon/192/192',
         sizes: '192x192',
         type: 'image/png',
+        purpose: 'maskable',
       },
       {
         src: 'https://picsum.photos/seed/healthconnex-icon/512/512',
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
       },
     ],
   }
