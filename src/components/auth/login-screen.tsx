@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons';
 import { useAuth } from '@/firebase';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { Loader2, Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Loader2, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type AuthMode = 'choice' | 'email-signin' | 'email-signup';
 
@@ -20,18 +22,34 @@ export function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    setAuthError(null);
     const provider = new GoogleAuthProvider();
+    // Prompting for account selection can help avoid silent failures
+    provider.setCustomParameters({ prompt: 'select_account' });
+
     try {
       await signInWithPopup(auth, provider);
     } catch (error: any) {
       console.error('Google login failed', error);
+      let errorMessage = "Could not sign in with Google. Please try again.";
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = "This domain is not authorized for Google Sign-In. Please add this URL to your Firebase Console 'Authorized Domains'.";
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = "Sign-in popup was closed before completion.";
+      } else if (error.code === 'auth/cancelled-by-user') {
+        errorMessage = "Sign-in was cancelled.";
+      }
+
+      setAuthError(errorMessage);
       toast({
         variant: "destructive",
-        title: "Authentication Failed",
-        description: "Could not sign in with Google. Please try again.",
+        title: "Authentication Error",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -43,6 +61,7 @@ export function LoginScreen() {
     if (!email || !password) return;
 
     setIsLoading(true);
+    setAuthError(null);
     try {
       if (mode === 'email-signin') {
         await signInWithEmailAndPassword(auth, email, password);
@@ -51,10 +70,12 @@ export function LoginScreen() {
       }
     } catch (error: any) {
       console.error('Email auth failed', error);
+      const errorMessage = error.message || "An error occurred during sign in.";
+      setAuthError(errorMessage);
       toast({
         variant: "destructive",
         title: "Authentication Failed",
-        description: error.message || "An error occurred during sign in.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -195,6 +216,16 @@ export function LoginScreen() {
           </div>
         </CardHeader>
         <CardContent>
+          {authError && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Authentication Error</AlertTitle>
+              <AlertDescription className="text-xs">
+                {authError}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {mode === 'choice' ? renderChoiceMode() : renderEmailForm()}
           
           <p className="text-center text-[10px] text-muted-foreground px-8 leading-relaxed mt-8 opacity-60">
