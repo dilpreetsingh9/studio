@@ -1,13 +1,22 @@
 'use client';
 
-import { Activity } from 'lucide-react';
-
 export function ECGLoader() {
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[100] flex flex-col items-center justify-center gap-6">
       <div className="relative">
         <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-ecg" />
-        <Activity className="h-16 w-16 text-primary animate-ecg relative z-10" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-16 w-16 text-primary animate-ecg relative z-10"
+        >
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
       </div>
       <div className="space-y-2 text-center">
         <h2 className="text-xl font-bold tracking-tight text-primary">Healthea</h2>
@@ -19,18 +28,12 @@ export function ECGLoader() {
           fill="none"
           stroke="currentColor"
           strokeWidth="0.5"
-          className="text-primary"
+          className="text-primary animate-dash"
           style={{
             strokeDasharray: 200,
             strokeDashoffset: 200,
-            animation: 'dash 3s linear infinite'
           }}
         />
-        <style>{`
-          @keyframes dash {
-            to { strokeDashoffset: 0; }
-          }
-        `}</style>
       </svg>
     </div>
   );

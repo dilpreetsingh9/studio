@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { patientData } from '@/lib/data';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
   const className = "h-4 w-4 text-muted-foreground";
@@ -31,6 +33,8 @@ export default function PatientProfile({ language = 'English', profile }: { lang
   const [lifeStage, setLifeStage] = useState<LifeStage>(profile?.lifeStage || 'Regular');
   const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
+
+  const saherImage = PlaceHolderImages.find(img => img.id === 'patient-saher');
 
   const handleSync = () => {
     setIsSyncing(true);
@@ -56,7 +60,18 @@ export default function PatientProfile({ language = 'English', profile }: { lang
       <CardHeader className="pb-4">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="flex items-start gap-4">
-            <Avatar className="h-16 w-16 border-2 border-primary/10 shrink-0">
+            <Avatar className="h-16 w-16 border-2 border-primary/10 shrink-0 overflow-hidden relative">
+              {saherImage && (
+                <Image 
+                  src={saherImage.imageUrl}
+                  alt={`${profile?.firstName} portrait`}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="64px"
+                  data-ai-hint={saherImage.imageHint}
+                />
+              )}
               <AvatarFallback className="text-xl font-bold">{profile?.firstName?.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
