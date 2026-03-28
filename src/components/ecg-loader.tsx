@@ -10,7 +10,7 @@ export function ECGLoader() {
         <Activity className="h-16 w-16 text-primary animate-ecg relative z-10" />
       </div>
       <div className="space-y-2 text-center">
-        <h2 className="text-xl font-bold tracking-tight text-primary">HealthConnex</h2>
+        <h2 className="text-xl font-bold tracking-tight text-primary">Healthea</h2>
         <p className="text-sm text-muted-foreground animate-pulse">Initializing Hormone Intelligence...</p>
       </div>
       <svg className="absolute bottom-20 w-64 h-20 opacity-20" viewBox="0 0 100 20">

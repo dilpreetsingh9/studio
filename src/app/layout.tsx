@@ -4,12 +4,12 @@ import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from "@/firebase/client-provider"
 
 export const metadata: Metadata = {
-  title: 'HealthConnex',
+  title: 'Healthea',
   description: 'Your personal AI-powered health navigator.',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'HealthConnex',
+    title: 'Healthea',
   },
   formatDetection: {
     telephone: false,

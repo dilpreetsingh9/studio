@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -86,7 +85,7 @@ export function DashboardLayout({
         <SidebarHeader className="h-14 flex justify-center px-4 pt-[env(safe-area-inset-top)]">
           <div className="flex items-center gap-2">
             <Logo className="size-8 text-primary shrink-0" />
-            <span className="text-xl font-bold tracking-tight text-primary group-data-[collapsible=icon]:hidden uppercase">HealthConnex</span>
+            <span className="text-xl font-bold tracking-tight text-primary group-data-[collapsible=icon]:hidden uppercase">Healthea</span>
           </div>
         </SidebarHeader>
         <SidebarContent className="pt-2">
@@ -159,7 +158,7 @@ export function DashboardLayout({
             <SidebarTrigger className="h-9 w-9" />
             <div className="md:hidden flex items-center gap-1.5 ml-1">
               <Logo className="size-6 text-primary" />
-              <span className="text-lg font-bold tracking-tight text-primary uppercase">HealthConnex</span>
+              <span className="text-lg font-bold tracking-tight text-primary uppercase">Healthea</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
