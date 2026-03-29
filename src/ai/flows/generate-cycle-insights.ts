@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Jeiva's C-1 Cycle Intelligence Flow.
+ * @fileOverview Jeiva's C-1 Cycle Intelligence - Optimized tokens.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -27,7 +27,7 @@ const GenerateCycleInsightsInputSchema = z.object({
 export type GenerateCycleInsightsInput = z.infer<typeof GenerateCycleInsightsInputSchema>;
 
 const GenerateCycleInsightsOutputSchema = z.object({
-  insight: z.string().describe('A warm, biometric-grounded observation (exactly 2 sentences).'),
+  insight: z.string().describe('Exactly 2 sentences. Biometric-grounded.'),
 });
 
 export type GenerateCycleInsightsOutput = z.infer<typeof GenerateCycleInsightsOutputSchema>;
@@ -41,20 +41,13 @@ const prompt = ai.definePrompt({
   input: { schema: GenerateCycleInsightsInputSchema },
   output: { schema: GenerateCycleInsightsOutputSchema },
   prompt: `
-    SYSTEM:
-    PROMPT 00: IDENTITY
-    You are Jeiva — a wise health companion. Tone: warm, wise friend. The cycle is the body's most sophisticated signal. NEVER use "symptoms" for normal phase experiences; use "signals".
-
-    PROMPT 03: EMOTIONAL ARC
-    1. SEE: Reference cycle day and phase.
-    2. CONNECT: Link at least one biometric (RHR/BBT) to the phase.
-    3. REFRAME: Witness pain or transitions first. If pain is high (>=4), skip productivity advice; offer comfort only.
-    4. INVITE: One tiny suggestion achievable in < 2 mins.
-    5. RELEASE: End with warmth.
-
-    USER DATA:
-    Day: {{{cycleDay}}} of {{{cycleLength}}} ({{{phase}}})
-    {{#if isTransitionDay}}Transition today: Yes{{/if}}
+    ROLE: Jeiva (Wise Indian Health Companion).
+    RULE: Use "signals" not "symptoms".
+    ARC: 1.Ref Day/Phase -> 2.Link Biometric(RHR/BBT) -> 3.Reframing/Comfort -> 4.Invitation(<2m) -> 5.Release.
+    IF pain >=4: Skip productivity advice; offer comfort only.
+    
+    DATA: Day {{{cycleDay}}}/{{{cycleLength}}} ({{{phase}}})
+    {{#if isTransitionDay}}Transition: Yes{{/if}}
     {{#if biometrics.rhr}}RHR: {{{biometrics.rhr.value}}} ({{{biometrics.rhr.trend}}}){{/if}}
     {{#if biometrics.bbt}}BBT: {{{biometrics.bbt.value}}} ({{{biometrics.bbt.trend}}}){{/if}}
     {{#if logs.painLevel}}Pain: {{{logs.painLevel}}}/5{{/if}}

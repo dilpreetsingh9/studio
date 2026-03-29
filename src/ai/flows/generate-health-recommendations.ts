@@ -1,8 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Jeiva's H-1 Synthesis Flow - The primary daily intelligence engine.
- * Consolidates Identity (00), Relationship (01), Hierarchy (02), and Arc (03).
+ * @fileOverview Jeiva's H-1 Synthesis Flow - Optimized for token efficiency.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -41,15 +40,15 @@ const GenerateHealthRecommendationsInputSchema = z.object({
 export type GenerateHealthRecommendationsInput = z.infer<typeof GenerateHealthRecommendationsInputSchema>;
 
 const GenerateHealthRecommendationsOutputSchema = z.object({
-  observation: z.string().optional().describe('A 2-3 sentence warm connection or invitation following the emotional arc.'),
-  actionLine: z.string().optional().describe('A short optional suggestion. Max 8 words. No period.'),
+  observation: z.string().optional().describe('2-3 sentence warm connection/invitation.'),
+  actionLine: z.string().optional().describe('Short suggestion. Max 8 words.'),
   dialogueMoment: z.object({
-    question: z.string().describe('One warm specific question. Max 20 words.'),
-    optionA: z.string().describe('External framing. Max 6 words.'),
-    optionB: z.string().describe('Internal framing. Max 6 words.'),
+    question: z.string().describe('Warm specific question. Max 20 words.'),
+    optionA: z.string().describe('Max 6 words.'),
+    optionB: z.string().describe('Max 6 words.'),
   }).optional(),
   theme: z.string().describe('Theme slug.'),
-  tierReached: z.string().describe('Hierarchy tier triggered.'),
+  tierReached: z.string().describe('Hierarchy tier.'),
 });
 
 export type GenerateHealthRecommendationsOutput = z.infer<typeof GenerateHealthRecommendationsOutputSchema>;
@@ -63,23 +62,15 @@ const prompt = ai.definePrompt({
   input: { schema: GenerateHealthRecommendationsInputSchema },
   output: { schema: GenerateHealthRecommendationsOutputSchema },
   prompt: `
-    SYSTEM:
-    ROLE: Jeiva, wise health companion for Indian users. TONE: Warm, wise-friend. BANNED: Jargon, "must/should/critical/urgent/danger". No exclamation marks/emojis.
-    
-    RELATIONSHIP (Maturity: {{{relationshipState.relationshipMaturity}}}):
-    - New: Welcome, set expectations.
-    - Deep: Ref patterns, longitudinal history.
-
+    ROLE: Jeiva (Indian health companion). TONE: Warm/Wise. BANNED: Jargon, must/should/critical/urgent/danger. No exclamation/emoji.
+    ARC: See(data) -> Connect(pattern) -> Reframe(meaning) -> Invite(task<2m) -> Release.
     PRIORITY:
     - T1: Meds missed 2d+, Vital dev >20%, Cycle transition.
-    - T2: 3d trends, Sleep <5.5h (3n), 1 missed med.
+    - T2: 3d trends, Sleep <5.5h(3n), 1 missed med.
     - T3: Daily synthesis (2+ signals).
     - T4: Dialogue if T1-3 absent & daysSinceDialogue >=3.
-
-    ARC: See (data) -> Connect (pattern) -> Reframe (meaning w/o alarm) -> Invite (task <2m) -> Release (open).
     
-    USER DATA:
-    Name: {{{clinicalData.firstName}}} | Time: {{{clinicalData.timeOfDay}}} | Days: {{{relationshipState.daysActive}}}
+    USER: {{{clinicalData.firstName}}} | Time: {{{clinicalData.timeOfDay}}} | Maturity: {{{relationshipState.relationshipMaturity}}}
     {{#if clinicalData.phase}}Cycle: D{{{clinicalData.cycleDay}}} ({{{clinicalData.phase}}}){{/if}}
     {{#if clinicalData.vitals.rhr}}RHR: {{{clinicalData.vitals.rhr.value}}} ({{{clinicalData.vitals.rhr.trend}}}){{/if}}
     {{#if clinicalData.vitals.sleep}}Sleep: {{{clinicalData.vitals.sleep.value}}}h{{/if}}
