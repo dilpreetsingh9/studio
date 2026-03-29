@@ -10,3 +10,4 @@ import '@/ai/flows/analyze-missed-medication.ts';
 import '@/ai/flows/transcribe-health-dictation.ts';
 import '@/ai/flows/generate-cycle-insights.ts';
 import '@/ai/flows/generate-phase-guidance.ts';
+import '@/ai/flows/analyze-lab-result.ts';
