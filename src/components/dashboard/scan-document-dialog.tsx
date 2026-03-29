@@ -10,9 +10,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Camera, RefreshCcw, Loader2, Save, FileCheck, BrainCircuit, ScanLine } from 'lucide-react';
+import { Camera, RefreshCcw, Loader2, Save, FileCheck, BrainCircuit, ScanLine, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeMedicalDocument } from '@/ai/flows/analyze-medical-document';
+import { confirmLabUpload } from '@/ai/flows/confirm-lab-upload';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { MedicalRecord } from '@/lib/types';
@@ -41,6 +42,7 @@ export default function ScanDocumentDialog({
     keyFindings?: string[];
     nextSteps?: string[];
   } | null>(null);
+  const [confirmationNote, setConfirmationNote] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -84,6 +86,7 @@ export default function ScanDocumentDialog({
     if (!isOpen) {
       setCapturedImage(null);
       setAnalysis(null);
+      setConfirmationNote(null);
       setIsLoading(false);
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
@@ -112,18 +115,33 @@ export default function ScanDocumentDialog({
   const handleRetake = () => {
     setCapturedImage(null);
     setAnalysis(null);
+    setConfirmationNote(null);
   };
 
   const handleAnalyze = async () => {
     if (!capturedImage) return;
     setIsLoading(true);
     setAnalysis(null);
+    setConfirmationNote(null);
     try {
       const result = await analyzeMedicalDocument({
         documentImage: capturedImage,
         targetLanguage: language
       });
       setAnalysis(result);
+
+      // Call Nitya's confirmation flow
+      // We mock the counts based on parsed key findings for this MVP
+      const markersFound = result.keyFindings?.length || 0;
+      const unclearCount = markersFound === 0 ? 1 : 0; 
+
+      const confirmation = await confirmLabUpload({
+        markersReadCount: markersFound,
+        markersUnclearCount: unclearCount,
+        targetLanguage: language
+      });
+      setConfirmationNote(confirmation.confirmation);
+
     } catch (error: any) {
       console.error('Error analyzing document:', error);
       const isQuotaError = error.message?.includes('429') || error.message?.toLowerCase().includes('quota');
@@ -165,6 +183,16 @@ export default function ScanDocumentDialog({
               </div>
             )}
           </div>
+
+          {confirmationNote && (
+            <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2">
+              <MessageSquare className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <p className="text-sm font-medium italic leading-relaxed text-foreground">
+                "{confirmationNote}"
+              </p>
+            </div>
+          )}
+
           {analysis && (
             <Card className="border-primary/20 bg-primary/5">
               <CardHeader className="py-3">
