@@ -7,6 +7,7 @@
  * Special logic for:
  * - Week 1: deliver felt value even on thin data.
  * - Month Milestone (Week 4, 8, 12): deeper witnessing of relationship depth.
+ * - Thin Data: Honest acknowledgement of quiet weeks without faking insight.
  * - Standard (WL-2): connects signals into a meaningful narrative.
  * 
  * Persona: Nitya - Indian health companion.
@@ -45,7 +46,7 @@ const GenerateWeeklyLetterInputSchema = z.object({
 export type GenerateWeeklyLetterInput = z.infer<typeof GenerateWeeklyLetterInputSchema>;
 
 const GenerateWeeklyLetterOutputSchema = z.object({
-  letterContent: z.string().describe('The full warm letter (3-4 paragraphs).'),
+  letterContent: z.string().describe('The full warm letter content.'),
   closingLine: z.string().describe('A standalone, deeply considered closing line.'),
 });
 
@@ -65,10 +66,16 @@ const prompt = ai.definePrompt({
     You are Nitya — an AI health companion for Indian users.
     
     TASK:
-    Write a reflective letter based on the user's data. This is the most important retention moment.
+    Write a reflective letter based on the user's data. 
     
     THE "MAGAZINE COVER" RULE:
     The first sentence of the letter must be one strong, specific claim that captures the essence of their week (or month). The rest of the letter delivers on that claim.
+
+    THIN DATA LOGIC (if daysActive < 3 and weekNumber > 1):
+    - PHILOSOPHY: Do not fake insight. Honesty builds trust. Quiet weeks happen and they count.
+    - Paragraph 1: Acknowledge the quiet week warmly. Example: "Nitya didn't hear much from you this week. That is okay."
+    - Paragraph 2: Surface anything Nitya DID notice, however small (biometrics, one log). One tiny re-entry invitation for next week.
+    - Length: 80–120 words. 2 paragraphs maximum.
 
     WEEK 1 SPECIAL LOGIC (if weekNumber is 1):
     - PHILOSOPHY: Witnessing, not condescending. Prove Nitya noticed something real.
@@ -95,7 +102,6 @@ const prompt = ai.definePrompt({
     - Length: 150–220 words.
 
     STRICT CONSTRAINTS:
-    - Exactly 3 natural paragraphs (4 for milestones). 
     - No headers. No bullets. No bold text.
     - Warm. Plain. Data-specific.
     - BANNED: "should", "must", "important", "critical", "optimal", "getting started", "trophy", "congratulations".
@@ -106,6 +112,7 @@ const prompt = ai.definePrompt({
     Name: {{{firstName}}}
     Week: {{{weekNumber}}}
     Month: {{{monthNumber}}}
+    Days Active: {{{daysActive}}}
     Sleep: {{{avgSleep}}} hrs
     RHR: {{{avgRHR}}} bpm
     Improvement: {{{biggestImprovement}}}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Sparkles, Loader2, Calendar, ArrowRight, Quote } from 'lucide-react';
+import { Mail, Sparkles, Loader2, Calendar, ArrowRight, Quote, Info } from 'lucide-react';
 import { generateWeeklyLetter, GenerateWeeklyLetterOutput } from '@/ai/flows/generate-weekly-letter';
 import { patientData } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,11 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
         const diffMs = new Date().getTime() - createdDate.getTime();
         const diffDays = Math.floor(diffMs / (1000 * 3600 * 24));
         weekNumber = Math.ceil((diffDays + 1) / 7);
-        daysActive = Math.min(diffDays + 1, 7);
+        
+        // Mocking days active for demonstration based on journal and vitals
+        // In a real app, this would be a query count for the current week
+        const activityCount = (patientData.journalEntries?.length || 0) + (patientData.medications?.filter(m => m.streak! > 0).length || 0);
+        daysActive = Math.min(Math.max(activityCount, 1), 7);
 
         // Check if it's a month milestone (Week 4, 8, 12)
         if (weekNumber % 4 === 0) {
@@ -62,7 +66,6 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
         biggestWatch: weekNumber === 1 
           ? 'how your sleep duration shifted slightly mid-week' 
           : 'a slight dip in sleep duration toward the weekend',
-        // Monthly specific observations (Mocked for MVP)
         monthDelta: monthNumber ? 'the gradual lowering of your baseline stress signals over these thirty days' : undefined,
         mostConsistent: monthNumber ? 'your morning routine of checking in before the day gets full' : undefined,
         stillEmerging: monthNumber ? 'the connection between your sleep quality and your late-evening tea' : undefined,
@@ -85,24 +88,30 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
   const currentWeek = profile?.createdAt ? Math.ceil((new Date().getTime() - (profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt)).getTime()) / (1000 * 3600 * 24 * 7)) : 1;
   const isMonthMilestone = currentWeek > 0 && currentWeek % 4 === 0;
 
+  // For UI demo, we'll assume "thin data" if journal entries are zero
+  const isThinWeek = (patientData.journalEntries?.length || 0) < 2 && currentWeek > 1;
+
   return (
     <div className="space-y-4">
       {!isOpen ? (
         <Card className={cn(
           "shadow-md border-primary/10 transition-all cursor-pointer group",
-          isMonthMilestone ? "bg-accent/5 hover:bg-accent/10 border-accent/20" : "bg-primary/5 hover:bg-primary/10"
+          isMonthMilestone ? "bg-accent/5 hover:bg-accent/10 border-accent/20" : "bg-primary/5 hover:bg-primary/10",
+          isThinWeek && "bg-muted/5 border-muted hover:bg-muted/10"
         )} onClick={fetchWeeklyLetter}>
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="bg-white p-3 rounded-2xl shadow-sm border group-hover:scale-110 transition-transform">
-                <Mail className={cn("h-6 w-6", isMonthMilestone ? "text-accent" : "text-primary")} />
+                <Mail className={cn("h-6 w-6", isMonthMilestone ? "text-accent" : (isThinWeek ? "text-muted-foreground" : "text-primary"))} />
               </div>
               <div>
-                <h3 className={cn("text-lg font-bold", isMonthMilestone ? "text-accent" : "text-primary")}>
-                  {isMonthMilestone ? 'A Monthly Reflection' : 'Your Weekly Reflection'}
+                <h3 className={cn("text-lg font-bold", isMonthMilestone ? "text-accent" : (isThinWeek ? "text-muted-foreground" : "text-primary"))}>
+                  {isMonthMilestone ? 'A Monthly Reflection' : (isThinWeek ? 'A Quiet Reflection' : 'Your Weekly Reflection')}
                 </h3>
                 <p className="text-sm text-muted-foreground font-medium italic">
-                  {isMonthMilestone ? 'Thirty days. A moment to look at the larger pattern.' : 'A quiet look back at the last seven days.'}
+                  {isMonthMilestone 
+                    ? 'Thirty days. A moment to look at the larger pattern.' 
+                    : (isThinWeek ? 'A small note on a quiet week.' : 'A quiet look back at the last seven days.')}
                 </p>
               </div>
             </div>
@@ -121,10 +130,11 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
             <div className="flex items-center justify-between">
               <Badge variant="outline" className={cn(
                 "gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em]",
-                isMonthMilestone ? "bg-accent/5 text-accent border-accent/20" : "bg-primary/5 text-primary border-primary/20"
+                isMonthMilestone ? "bg-accent/5 text-accent border-accent/20" : "bg-primary/5 text-primary border-primary/20",
+                isThinWeek && "bg-muted/10 text-muted-foreground border-muted"
               )}>
                 <Calendar className="h-3.5 w-3.5" />
-                {isMonthMilestone ? `Milestone: Month ${currentWeek / 4}` : `Review: Week ${currentWeek}`}
+                {isMonthMilestone ? `Milestone: Month ${currentWeek / 4}` : (isThinWeek ? `Quiet Review: Week ${currentWeek}` : `Review: Week ${currentWeek}`)}
               </Badge>
               <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} className="h-8 text-[10px] font-bold text-muted-foreground uppercase hover:bg-primary/5">
                 Close Letter
@@ -146,6 +156,15 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
                   ))}
                 </div>
                 
+                {isThinWeek && (
+                  <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-start gap-3">
+                    <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <p className="text-xs text-muted-foreground font-medium leading-relaxed italic">
+                      This was a quiet week for our data, so I've kept this letter short and honest. I'm here when you're ready to share more.
+                    </p>
+                  </div>
+                )}
+
                 <div className="pt-8 border-t border-primary/10">
                   <p className="text-xl font-bold text-primary italic leading-tight pr-8">
                     {letter.closingLine}
@@ -163,19 +182,21 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
               </div>
             )}
             
-            <div className="pt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-               {[
-                 { label: 'Sleep', value: '7.2h', color: 'bg-indigo-50' },
-                 { label: 'RHR', value: '65bpm', color: 'bg-rose-50' },
-                 { label: 'Activity', value: '4/7', color: 'bg-emerald-50' },
-                 { label: 'Journal', value: `${patientData.journalEntries?.length || 0} entries`, color: 'bg-amber-50' }
-               ].map((stat) => (
-                 <div key={stat.label} className={cn("p-3 rounded-2xl border border-transparent hover:border-primary/10 transition-colors", stat.color)}>
-                   <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-1">{stat.label}</p>
-                   <p className="text-sm font-bold text-primary">{stat.value}</p>
-                 </div>
-               ))}
-            </div>
+            {!isThinWeek && (
+              <div className="pt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+                 {[
+                   { label: 'Sleep', value: '7.2h', color: 'bg-indigo-50' },
+                   { label: 'RHR', value: '65bpm', color: 'bg-rose-50' },
+                   { label: 'Activity', value: '4/7', color: 'bg-emerald-50' },
+                   { label: 'Journal', value: `${patientData.journalEntries?.length || 0} entries`, color: 'bg-amber-50' }
+                 ].map((stat) => (
+                   <div key={stat.label} className={cn("p-3 rounded-2xl border border-transparent hover:border-primary/10 transition-colors", stat.color)}>
+                     <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-1">{stat.label}</p>
+                     <p className="text-sm font-bold text-primary">{stat.value}</p>
+                   </div>
+                 ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
