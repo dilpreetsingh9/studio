@@ -1,55 +1,85 @@
-
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, Sparkles, Droplets, Zap, Sun, Moon } from 'lucide-react';
+import { Sparkles, Droplets, Zap, Sun, Moon, Loader2, MessageSquare, AlertCircle } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { CyclePhase } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { generateCycleInsights, GenerateCycleInsightsOutput } from '@/ai/flows/generate-cycle-insights';
 
 const phaseConfig: Record<CyclePhase, { 
   color: string; 
   icon: any; 
   label: string; 
-  desc: string;
-  advice: string;
 }> = {
   Menstrual: { 
     color: 'bg-red-100 text-red-700 border-red-200', 
     icon: Droplets, 
     label: 'Menstrual Phase', 
-    desc: 'Days 1-5 · Shedding',
-    advice: 'Prioritize rest and warm nourishing foods.'
   },
   Follicular: { 
     color: 'bg-emerald-100 text-emerald-700 border-emerald-200', 
     icon: Zap, 
     label: 'Follicular Phase', 
-    desc: 'Days 6-12 · Growth',
-    advice: 'High energy. Great for creative work and intense exercise.'
   },
   Ovulatory: { 
     color: 'bg-amber-100 text-amber-700 border-amber-200', 
     icon: Sun, 
     label: 'Ovulatory Phase', 
-    desc: 'Days 13-16 · Peak Fertility',
-    advice: 'Social energy is high. Peak strength and libido.'
   },
   Luteal: { 
     color: 'bg-indigo-100 text-indigo-700 border-indigo-200', 
     icon: Moon, 
     label: 'Luteal Phase', 
-    desc: 'Days 17-28 · Preparation',
-    advice: 'Slow down. Focus on grounding tasks and gentle movement.'
   },
 };
 
-export default function CycleIntelligence({ language = 'English' }) {
+export default function CycleIntelligence({ language = 'English', profile }: { language?: string; profile?: any }) {
+  const [insight, setInsight] = useState<GenerateCycleInsightsOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const { currentDay, avgCycleLength, predictedPhase } = patientData.cycleData;
   const config = phaseConfig[predictedPhase];
   const progress = (currentDay / avgCycleLength) * 100;
+  const isIrregular = profile?.cycleRegularity === 'irregular';
+
+  const fetchCycleInsight = async () => {
+    if (!profile) return;
+    setIsLoading(true);
+    try {
+      const result = await generateCycleInsights({
+        cycleDay: currentDay,
+        cycleLength: avgCycleLength,
+        phase: predictedPhase,
+        daysUntilPeriod: avgCycleLength - currentDay,
+        biometrics: {
+          rhr: { value: Number(patientData.vitals[0].value), trend: patientData.vitals[0].trend as any },
+          bbt: { value: Number(patientData.vitals[1].value), trend: patientData.vitals[1].trend as any },
+          sleepHrs: Number(patientData.vitals[2].value),
+        },
+        logs: {
+          energy: patientData.symptoms[0]?.value,
+          mood: patientData.symptoms[1]?.value,
+          painLevel: patientData.symptoms.find(s => s.type === 'Pain')?.value,
+          symptoms: patientData.symptoms.map(s => s.type),
+        },
+        cycleRegularity: profile.cycleRegularity || 'regular',
+        targetLanguage: language
+      });
+      setInsight(result);
+    } catch (error) {
+      console.error('Failed to fetch cycle insight:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCycleInsight();
+  }, [profile, language]);
 
   return (
     <Card className="shadow-md border-primary/5 overflow-hidden">
@@ -63,7 +93,12 @@ export default function CycleIntelligence({ language = 'English' }) {
             {config.label}
           </Badge>
         </div>
-        <CardDescription>Your biometrics correlated with your hormonal phase.</CardDescription>
+        <CardDescription>
+          {isIrregular 
+            ? "Observing your unique patterns today." 
+            : "Your biometrics correlated with your hormonal phase."
+          }
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="relative pt-4">
@@ -72,10 +107,12 @@ export default function CycleIntelligence({ language = 'English' }) {
               <span className="text-4xl font-black">Day {currentDay}</span>
               <span className="text-muted-foreground ml-2 text-sm">of {avgCycleLength}</span>
             </div>
-            <div className="text-right">
-              <p className="text-xs font-bold text-muted-foreground uppercase">Next Period</p>
-              <p className="text-sm font-semibold">in {avgCycleLength - currentDay} days</p>
-            </div>
+            {!isIrregular && (
+              <div className="text-right">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Next Period</p>
+                <p className="text-sm font-semibold">in {avgCycleLength - currentDay} days</p>
+              </div>
+            )}
           </div>
           <Progress value={progress} className="h-3 rounded-full bg-secondary/30" />
           
@@ -89,17 +126,40 @@ export default function CycleIntelligence({ language = 'English' }) {
           </div>
         </div>
 
-        <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20 flex gap-4 items-start">
-          <div className={cn("p-3 rounded-xl", config.color)}>
-            <config.icon className="h-6 w-6" />
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-6 text-muted-foreground bg-muted/5 rounded-2xl border-2 border-dashed">
+            <Loader2 className="h-6 w-6 animate-spin mb-2 opacity-50" />
+            <p className="text-xs italic">Nitya is reading your signals...</p>
           </div>
-          <div>
-            <h4 className="font-bold text-sm mb-1">Phase Insight</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed italic">
-              "{config.advice}"
+        ) : insight && (
+          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex gap-4 items-start relative overflow-hidden group">
+            <div className={cn("p-3 rounded-xl shrink-0", config.color)}>
+              <MessageSquare className="h-5 w-5" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium leading-relaxed italic text-foreground">
+                "{insight.insight}"
+              </p>
+              {insight.phaseAdvice && (
+                <div className="flex items-start gap-2 pt-2 border-t border-primary/10">
+                  <AlertCircle className="h-3.5 w-3.5 text-primary mt-0.5" />
+                  <p className="text-[11px] text-muted-foreground font-medium">
+                    {insight.phaseAdvice}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {isIrregular && (
+          <div className="p-3 bg-secondary/10 rounded-xl border border-secondary/20 flex gap-3 items-center">
+            <AlertCircle className="h-4 w-4 text-primary" />
+            <p className="text-[10px] font-medium text-muted-foreground">
+              Patterns are more useful than predictions for irregular cycles. I am focusing on what your body is telling me today.
             </p>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

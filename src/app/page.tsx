@@ -89,7 +89,7 @@ export default function Home() {
               
               {!isMale && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <CycleIntelligence language={language} />
+                  <CycleIntelligence language={language} profile={profile} />
                   <SymptomTracker />
                 </div>
               )}
