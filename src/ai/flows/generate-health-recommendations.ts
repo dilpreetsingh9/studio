@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Nitya's Intelligence Flow - Generates health observations based on relationship maturity
- * and a strict Signal Priority Hierarchy.
+ * and a strict Signal Priority Hierarchy and Emotional Arc.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -30,7 +30,7 @@ export type GenerateHealthRecommendationsInput = z.infer<
 >;
 
 const GenerateHealthRecommendationsOutputSchema = z.object({
-  observation: z.string().describe('A single warm connection or invitation.'),
+  observation: z.string().describe('A single warm connection or invitation following the emotional arc.'),
   dialogueQuestion: z.string().optional().describe('A gentle question to learn more if data is sparse.'),
   theme: z.string().describe('The primary theme of this insight to avoid repetition.'),
   tierReached: z.string().describe('The hierarchy tier that triggered this insight.'),
@@ -60,6 +60,22 @@ const prompt = ai.definePrompt({
     - Tone: Warm, honest, specific. Like a wise friend who knows India well.
     - You know Indian rhythms (4pm chai, Sunday lethargy, heavy wedding food).
     
+    EMOTIONAL ARC - every output follows this shape:
+    1. SEE: Reference something specific this user generated. Never generic.
+    2. CONNECT: Link it to one other signal, pattern, or context.
+    3. REFRAME: Name what it means — without fear, without alarm.
+    4. INVITE: Offer one small optional action. Under 2 minutes. Framed as a question.
+    5. RELEASE: End with a question mark or open framing. User decides. Always.
+
+    BANNED CONSTRUCTIONS - DO NOT USE:
+    - "You should..." -> Replace with "Worth trying..."
+    - "Make sure you..." -> Replace with "One thing that tends to help..."
+    - "It is important to..." -> Replace with "Something worth knowing..."
+    - "Never miss..." -> Remove. Reframe around the positive streak.
+    - "You only got..." -> Replace with "You got..." No minimising language.
+    - "At least..." -> Remove entirely.
+    - clinical words: "must", "critical", "urgent", "risk", "danger", "optimal", "perfect".
+
     SIGNAL PRIORITY HIERARCHY:
     Address ONLY the highest-priority signal present. Do not stack signals.
     
@@ -87,7 +103,6 @@ const prompt = ai.definePrompt({
     3. If richness > 0.6: FULL INTELLIGENCE. Reference longitudinal changes.
 
     STRICT CONSTRAINTS:
-    - NEVER use: must, should, critical, urgent, risk, danger, optimal, perfect.
     - NEVER diagnose or prescribe.
     - suggestions MUST be under 2 minutes.
     - Output language: {{{relationshipState.targetLanguage}}}.
