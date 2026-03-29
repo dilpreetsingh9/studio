@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Loader2, ClipboardList } from 'lucide-react';
+import { Loader2, ClipboardList, Sparkles } from 'lucide-react';
 
 export function ProfileSetup() {
   const { user } = useUser();
@@ -25,6 +26,8 @@ export function ProfileSetup() {
     allergies: '',
     height: '',
     weight: '',
+    healthFocus: '',
+    cityTier: 'unknown',
   });
 
   const handleSubmit = async () => {
@@ -41,6 +44,7 @@ export function ProfileSetup() {
         allergies: formData.allergies.split(',').map(a => a.trim()).filter(Boolean),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        reEngagementCount: 0,
       });
     } catch (error) {
       console.error('Profile save failed', error);
@@ -78,7 +82,7 @@ export function ProfileSetup() {
                 <Label>Date of Birth</Label>
                 <Input type="date" value={formData.dateOfBirth} onChange={e => setFormData({...formData, dateOfBirth: e.target.value})} />
               </div>
-              <Button className="col-span-2 h-12 mt-4" onClick={() => setStep(2)}>Next Step</Button>
+              <Button className="col-span-2 h-12 mt-4 rounded-xl font-bold" onClick={() => setStep(2)}>Next Step</Button>
             </div>
           )}
 
@@ -87,7 +91,7 @@ export function ProfileSetup() {
               <div className="space-y-2">
                 <Label>Gender</Label>
                 <Select value={formData.gender} onValueChange={v => setFormData({...formData, gender: v})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl h-11">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
@@ -100,7 +104,7 @@ export function ProfileSetup() {
               <div className="space-y-2">
                 <Label>Blood Type</Label>
                 <Select value={formData.bloodType} onValueChange={v => setFormData({...formData, bloodType: v})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl h-11">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
@@ -123,10 +127,51 @@ export function ProfileSetup() {
                 <Input placeholder="Peanuts, Penicillin..." value={formData.allergies} onChange={e => setFormData({...formData, allergies: e.target.value})} />
               </div>
               <div className="col-span-2 flex gap-3 mt-4">
-                <Button variant="outline" className="flex-1 h-12" onClick={() => setStep(1)}>Back</Button>
-                <Button className="flex-[2] h-12" onClick={handleSubmit} disabled={isLoading}>
+                <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold" onClick={() => setStep(1)}>Back</Button>
+                <Button className="flex-[2] h-12 rounded-xl font-bold" onClick={() => setStep(3)}>Almost Done</Button>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    What is your primary health focus?
+                  </Label>
+                  <Input 
+                    placeholder="e.g. Hormone balance, energy levels, better sleep" 
+                    value={formData.healthFocus} 
+                    onChange={e => setFormData({...formData, healthFocus: e.target.value})}
+                    className="h-12 rounded-xl"
+                  />
+                  <p className="text-[10px] text-muted-foreground italic">Nitya uses this to find the right patterns for you.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Where do you live?</Label>
+                  <Select value={formData.cityTier} onValueChange={v => setFormData({...formData, cityTier: v})}>
+                    <SelectTrigger className="rounded-xl h-11">
+                      <SelectValue placeholder="Select location tier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="metro">Metro City (Mumbai, Delhi, etc.)</SelectItem>
+                      <SelectItem value="tier2">Tier 2 City (Pune, Jaipur, etc.)</SelectItem>
+                      <SelectItem value="tier3">Tier 3 City / Town</SelectItem>
+                      <SelectItem value="unknown">I'd prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground italic">This helps Nitya understand your daily rhythms and food options.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold" onClick={() => setStep(2)}>Back</Button>
+                <Button className="flex-[2] h-12 rounded-xl font-bold" onClick={handleSubmit} disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Complete Setup
+                  Begin Our Journey
                 </Button>
               </div>
             </div>
