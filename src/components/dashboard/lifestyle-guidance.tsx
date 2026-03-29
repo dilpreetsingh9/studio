@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, HelpCircle, CheckCircle2, Home, HandHeart, ChevronRight, AlertCircle, CalendarHeart } from 'lucide-react';
+import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, HelpCircle, CheckCircle2, Home, HandHeart, ChevronRight, AlertCircle, CalendarHeart, Coffee } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { generateHealthRecommendations, GenerateHealthRecommendationsOutput } from '@/ai/flows/generate-health-recommendations';
 import { generatePhaseGuidance, GeneratePhaseGuidanceOutput } from '@/ai/flows/generate-phase-guidance';
@@ -10,6 +10,7 @@ import { generateReengagementNote } from '@/ai/flows/generate-reengagement-note'
 import { generateDayOneWelcome } from '@/ai/flows/generate-day-one-welcome';
 import { analyzeMedicationGap } from '@/ai/flows/analyze-medication-gap';
 import { generateRelationshipMilestone } from '@/ai/flows/generate-relationship-milestone';
+import { generateMorningNudge } from '@/ai/flows/generate-morning-nudge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [reengagementNote, setReengagementNote] = useState<string | null>(null);
   const [dayOneNote, setDayOneNote] = useState<string | null>(null);
   const [milestoneNote, setMilestoneNote] = useState<string | null>(null);
+  const [morningNudge, setMorningNudge] = useState<string | null>(null);
   const [medicationGapInsight, setMedicationGapInsight] = useState<string | null>(null);
   const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +51,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       }
 
       const userRef = doc(db, 'users', profile.id);
+      const maturity = daysActive > 30 ? 'established' : (daysActive > 7 ? 'developing' : 'new');
 
       // 1. Day One Logic
       if (daysActive <= 1) {
@@ -61,7 +64,20 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         });
         setDayOneNote(welcome.welcomeNote);
       } else {
-        // 2. Relationship Milestone Logic (30, 60, 90...)
+        // 2. Morning Nudge Logic (Invitation)
+        const isMorning = new Date().getHours() >= 5 && new Date().getHours() < 12;
+        if (isMorning) {
+          const nudgeResult = await generateMorningNudge({
+            firstName: profile.firstName,
+            daysActive,
+            relationshipMaturity: maturity as any,
+            yesterdayTheme: 'Sleep Consistency', // Mocked from longitudinal logic
+            targetLanguage: 'English'
+          });
+          setMorningNudge(nudgeResult.nudge);
+        }
+
+        // 3. Relationship Milestone Logic (30, 60, 90...)
         const milestones = [30, 60, 90, 180, 365];
         if (milestones.includes(daysActive)) {
           const milestoneResult = await generateRelationshipMilestone({
@@ -75,7 +91,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           setMilestoneNote(milestoneResult.note);
         }
 
-        // 3. Re-engagement Logic
+        // 4. Re-engagement Logic
         let daysAway = 0;
         if (profile.lastOpenDate) {
           const lastDate = profile.lastOpenDate.toDate ? profile.lastOpenDate.toDate() : new Date(profile.lastOpenDate);
@@ -99,7 +115,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
       await updateDoc(userRef, { lastOpenDate: serverTimestamp() });
 
-      // 4. Medication Gap Logic (Tier 1 Priority)
+      // 5. Medication Gap Logic (Tier 1 Priority)
       const medsWithGaps = (patientData.medications || []).filter(med => {
         if (!med.lastTaken) return false;
         const lastTakenDate = new Date(med.lastTaken);
@@ -121,7 +137,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         setMedicationGapInsight(gapResult.observation);
       }
 
-      // 5. Main Synthesis Logic
+      // 6. Main Synthesis Logic
       let daysSinceDialogue = 100;
       if (profile.lastDialogueResponseDate) {
         const lastDate = profile.lastDialogueResponseDate.toDate ? profile.lastDialogueResponseDate.toDate() : new Date(profile.lastDialogueResponseDate);
@@ -154,7 +170,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           daysActive: daysActive,
           dataRichnessScore: daysActive > 7 ? 0.4 : 0.1,
           recentInsightThemes: [],
-          relationshipMaturity: daysActive > 30 ? 'established' : (daysActive > 7 ? 'developing' : 'new'),
+          relationshipMaturity: maturity as any,
           daysSinceDialogue: daysSinceDialogue,
           targetLanguage: 'English',
           toneMode: profile.toneMode
@@ -224,11 +240,20 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   return (
     <Card className="shadow-lg border-primary/10 overflow-hidden bg-white">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <div>
+        <div className="space-y-1">
           <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
             Nitya's Daily Synthesis
           </CardTitle>
-          <CardDescription>Small steps, achievable in under 2 minutes.</CardDescription>
+          <CardDescription className="flex items-center gap-1.5">
+            {morningNudge ? (
+              <span className="flex items-center gap-1 text-primary font-bold animate-in fade-in slide-in-from-left-2 duration-700">
+                <Coffee className="h-3.5 w-3.5" />
+                {morningNudge}
+              </span>
+            ) : (
+              "Small steps, achievable in under 2 minutes."
+            )}
+          </CardDescription>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
           <Sparkles className="h-3 w-3" />
