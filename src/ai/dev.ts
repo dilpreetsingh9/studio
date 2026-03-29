@@ -19,3 +19,4 @@ import '@/ai/flows/generate-recovery-insights.ts';
 import '@/ai/flows/acknowledge-symptom-log.ts';
 import '@/ai/flows/tag-journal-entry.ts';
 import '@/ai/flows/confirm-log-entry.ts';
+import '@/ai/flows/connect-food-to-state.ts';

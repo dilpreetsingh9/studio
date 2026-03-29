@@ -1,4 +1,3 @@
-
 export type LifeStage = 'Regular' | 'TTC' | 'Pregnancy' | 'Perimenopause';
 export type CyclePhase = 'Menstrual' | 'Follicular' | 'Ovulatory' | 'Luteal';
 
@@ -69,5 +68,6 @@ export type JournalEntry = {
   tags: string[];
   sentiment?: 'positive' | 'neutral' | 'low';
   foodItem?: string | null;
+  foodConnection?: string;
   flagForSynthesis?: boolean;
 };

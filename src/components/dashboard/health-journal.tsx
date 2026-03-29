@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Loader2, BookOpen, Clock, Tag, Plus, Trash2, Send, MessageSquare } from 'lucide-react';
+import { Mic, Square, Loader2, BookOpen, Clock, Tag, Plus, Trash2, Send, MessageSquare, Flame } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { transcribeHealthDictation } from '@/ai/flows/transcribe-health-dictation';
 import { tagJournalEntry } from '@/ai/flows/tag-journal-entry';
 import { confirmLogEntry } from '@/ai/flows/confirm-log-entry';
+import { connectFoodToState } from '@/ai/flows/connect-food-to-state';
 import { patientData } from '@/lib/data';
 import { JournalEntry } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -94,8 +95,21 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         phase: patientData.cycleData.predictedPhase
       });
 
+      let foodConnection = undefined;
+      if (taggingResult.food_item) {
+        const foodResult = await connectFoodToState({
+          foodItem: taggingResult.food_item,
+          timeOfDay: new Date().getHours() < 12 ? 'Morning' : (new Date().getHours() < 17 ? 'Afternoon' : 'Evening'),
+          phase: patientData.cycleData.predictedPhase,
+          energyScore: 3,
+          fastingToday: false,
+          targetLanguage: language
+        });
+        foodConnection = foodResult.connection;
+      }
+
       const confirmationResult = await confirmLogEntry({
-        logType: 'journal',
+        logType: taggingResult.food_item ? 'food' : 'journal',
         logStreak: entries.length + 1,
         isFirstLog: entries.length === 0,
         detectedItem: taggingResult.food_item,
@@ -111,6 +125,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         tags: taggingResult.tags,
         sentiment: taggingResult.sentiment,
         foodItem: taggingResult.food_item,
+        foodConnection: foodConnection,
         flagForSynthesis: taggingResult.flag_for_synthesis
       };
 
@@ -146,8 +161,21 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         phase: patientData.cycleData.predictedPhase
       });
 
+      let foodConnection = undefined;
+      if (taggingResult.food_item) {
+        const foodResult = await connectFoodToState({
+          foodItem: taggingResult.food_item,
+          timeOfDay: new Date().getHours() < 12 ? 'Morning' : (new Date().getHours() < 17 ? 'Afternoon' : 'Evening'),
+          phase: patientData.cycleData.predictedPhase,
+          energyScore: 3,
+          fastingToday: false,
+          targetLanguage: language
+        });
+        foodConnection = foodResult.connection;
+      }
+
       const confirmationResult = await confirmLogEntry({
-        logType: 'journal',
+        logType: taggingResult.food_item ? 'food' : 'journal',
         logStreak: entries.length + 1,
         isFirstLog: entries.length === 0,
         detectedItem: taggingResult.food_item,
@@ -163,6 +191,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         tags: taggingResult.tags,
         sentiment: taggingResult.sentiment,
         foodItem: taggingResult.food_item,
+        foodConnection: foodConnection,
         flagForSynthesis: taggingResult.flag_for_synthesis
       };
 
@@ -284,6 +313,16 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
                   <p className="text-xs text-muted-foreground italic mb-4 leading-relaxed line-clamp-3">
                     "{entry.content}"
                   </p>
+                  
+                  {entry.foodConnection && (
+                    <div className="mb-4 p-3 bg-primary/5 border border-primary/10 rounded-2xl flex gap-3 items-start animate-in fade-in slide-in-from-left-2">
+                      <Flame className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <p className="text-[11px] font-medium leading-relaxed italic text-foreground">
+                        "{entry.foodConnection}"
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap gap-1.5">
                     {entry.tags.map(tag => (
                       <Badge key={tag} variant="secondary" className="text-[9px] h-5 bg-muted/50 border-transparent font-medium">
