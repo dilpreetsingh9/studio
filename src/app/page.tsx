@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import PatientProfile from '@/components/dashboard/patient-profile';
 import CycleIntelligence from '@/components/dashboard/cycle-intelligence';
+import RecoveryIntelligence from '@/components/dashboard/recovery-intelligence';
 import SymptomTracker from '@/components/dashboard/symptom-tracker';
 import LifestyleGuidance from '@/components/dashboard/lifestyle-guidance';
 import HealthRecords from '@/components/dashboard/health-records';
@@ -14,7 +15,7 @@ import QuickActions from '@/components/dashboard/quick-actions';
 import WeeklyInsightLetter from '@/components/dashboard/weekly-insight-letter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalRecord } from '@/lib/types';
-import { FileText, Sparkles, Mail } from 'lucide-react';
+import { FileText, Sparkles } from 'lucide-react';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { LoginScreen } from '@/components/auth/login-screen';
@@ -91,12 +92,14 @@ export default function Home() {
 
               <PatientProfile language={language} profile={profile} />
               
-              {!isMale && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {!isMale ? (
                   <CycleIntelligence language={language} profile={profile} />
-                  <SymptomTracker />
-                </div>
-              )}
+                ) : (
+                  <RecoveryIntelligence language={language} profile={profile} />
+                )}
+                <SymptomTracker />
+              </div>
 
               <QuickActions 
                 onRecordScanned={handleRecordScanned} 

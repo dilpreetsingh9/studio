@@ -15,3 +15,4 @@ import '@/ai/flows/analyze-lab-result.ts';
 import '@/ai/flows/generate-weekly-letter.ts';
 import '@/ai/flows/generate-reengagement-note.ts';
 import '@/ai/flows/generate-day-one-welcome.ts';
+import '@/ai/flows/generate-recovery-insights.ts';
