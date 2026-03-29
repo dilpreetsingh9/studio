@@ -46,6 +46,9 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
   const progress = (currentDay / avgCycleLength) * 100;
   const isIrregular = profile?.cycleRegularity === 'irregular';
 
+  // Mock logic for transition day: typically day 1, 6, 14, or 17 in a 28 day cycle
+  const isTransitionDay = currentDay === 1 || currentDay === 6 || currentDay === 14 || currentDay === 17;
+
   const fetchCycleInsight = async () => {
     if (!profile) return;
     setIsLoading(true);
@@ -54,6 +57,7 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
         cycleDay: currentDay,
         cycleLength: avgCycleLength,
         phase: predictedPhase,
+        isTransitionDay,
         daysUntilPeriod: avgCycleLength - currentDay,
         biometrics: {
           rhr: { value: Number(patientData.vitals[0].value), trend: patientData.vitals[0].trend as any },
@@ -82,7 +86,7 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
   }, [profile, language]);
 
   return (
-    <Card className="shadow-md border-primary/5 overflow-hidden">
+    <Card className="shadow-md border-primary/5 overflow-hidden bg-white">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-bold flex items-center gap-2">
@@ -95,8 +99,8 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
         </div>
         <CardDescription>
           {isIrregular 
-            ? "Observing your unique patterns today." 
-            : "Your biometrics correlated with your hormonal phase."
+            ? "Observing today's unique biometric signals." 
+            : "Your signals correlated with your hormonal phase."
           }
         </CardDescription>
       </CardHeader>
@@ -128,7 +132,7 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-6 text-muted-foreground bg-muted/5 rounded-2xl border-2 border-dashed">
-            <Loader2 className="h-6 w-6 animate-spin mb-2 opacity-50" />
+            <Loader2 className="h-6 w-6 animate-spin mb-2 opacity-50 text-primary" />
             <p className="text-xs italic">Nitya is reading your signals...</p>
           </div>
         ) : insight && (
@@ -140,14 +144,6 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
               <p className="text-sm font-medium leading-relaxed italic text-foreground">
                 "{insight.insight}"
               </p>
-              {insight.phaseAdvice && (
-                <div className="flex items-start gap-2 pt-2 border-t border-primary/10">
-                  <AlertCircle className="h-3.5 w-3.5 text-primary mt-0.5" />
-                  <p className="text-[11px] text-muted-foreground font-medium">
-                    {insight.phaseAdvice}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -156,7 +152,7 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
           <div className="p-3 bg-secondary/10 rounded-xl border border-secondary/20 flex gap-3 items-center">
             <AlertCircle className="h-4 w-4 text-primary" />
             <p className="text-[10px] font-medium text-muted-foreground">
-              Patterns are more useful than predictions for irregular cycles. I am focusing on what your body is telling me today.
+              I am focusing on what your signals are telling me today. Patterns are more useful than predictions for irregular cycles.
             </p>
           </div>
         )}
