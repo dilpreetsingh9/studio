@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,8 +41,16 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const db = useFirestore();
   const { toast } = useToast();
 
+  // H-1 Caching: Check if already loaded in this session
+  useEffect(() => {
+    const cached = sessionStorage.getItem(`nitya_h1_${profile?.id}`);
+    if (cached) {
+      setNityaInsight(JSON.parse(cached));
+    }
+  }, [profile?.id]);
+
   const fetchNityaInsight = async () => {
-    if (!profile) return;
+    if (!profile || nityaInsight) return; // Respect session cache
     setIsLoading(true);
     try {
       let daysActive = 0;
@@ -53,7 +62,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       const userRef = doc(db, 'users', profile.id);
       const maturity = daysActive > 30 ? 'established' : (daysActive > 7 ? 'developing' : 'new');
 
-      // 1. Day One Logic
+      // Day One Logic
       if (daysActive <= 1) {
         const welcome = await generateDayOneWelcome({
           firstName: profile.firstName,
@@ -64,86 +73,35 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         });
         setDayOneNote(welcome.welcomeNote);
       } else {
-        // 2. Morning Nudge Logic (Invitation)
+        // Morning Nudge (N-1) - Never cached
         const isMorning = new Date().getHours() >= 5 && new Date().getHours() < 12;
         if (isMorning) {
           const nudgeResult = await generateMorningNudge({
             firstName: profile.firstName,
             daysActive,
             relationshipMaturity: maturity as any,
-            yesterdayTheme: 'Sleep Consistency', // Mocked from longitudinal logic
+            yesterdayTheme: 'Sleep Rhythms',
             targetLanguage: 'English'
           });
           setMorningNudge(nudgeResult.nudge);
         }
 
-        // 3. Relationship Milestone Logic (30, 60, 90...)
+        // Milestone Logic
         const milestones = [30, 60, 90, 180, 365];
         if (milestones.includes(daysActive)) {
           const milestoneResult = await generateRelationshipMilestone({
             firstName: profile.firstName,
             daysActive,
             milestoneDays: daysActive,
-            mostConsistent: 'your morning check-in habit',
-            visibleChange: 'the steady lowering of your resting heart rate patterns',
+            mostConsistent: 'your morning ritual',
+            visibleChange: 'your HRV recovery levels',
             targetLanguage: 'English'
           });
           setMilestoneNote(milestoneResult.note);
         }
-
-        // 4. Re-engagement Logic
-        let daysAway = 0;
-        if (profile.lastOpenDate) {
-          const lastDate = profile.lastOpenDate.toDate ? profile.lastOpenDate.toDate() : new Date(profile.lastOpenDate);
-          daysAway = Math.floor((new Date().getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
-        }
-
-        if (daysAway >= 3 && daysAway <= 14) {
-          const hasGapData = patientData.vitals.some(v => v.trend !== 'stable');
-          const reNote = await generateReengagementNote({
-            firstName: profile.firstName,
-            daysAway,
-            relationshipMaturity: daysActive > 30 ? 'established' : 'developing',
-            reEngagementCount: profile.reEngagementCount || 0,
-            hasGapData,
-            targetLanguage: 'English'
-          });
-          setReengagementNote(reNote.note);
-          await updateDoc(userRef, { reEngagementCount: (profile.reEngagementCount || 0) + 1 });
-        }
       }
 
-      await updateDoc(userRef, { lastOpenDate: serverTimestamp() });
-
-      // 5. Medication Gap Logic (Tier 1 Priority)
-      const medsWithGaps = (patientData.medications || []).filter(med => {
-        if (!med.lastTaken) return false;
-        const lastTakenDate = new Date(med.lastTaken);
-        const diffHrs = Math.floor((new Date().getTime() - lastTakenDate.getTime()) / (1000 * 3600));
-        return diffHrs >= 24 && diffHrs <= (7 * 24); 
-      });
-
-      if (medsWithGaps.length > 0) {
-        const targetMed = medsWithGaps[0];
-        const lastTakenDate = new Date(targetMed.lastTaken!);
-        const consecutiveMissed = Math.floor((new Date().getTime() - lastTakenDate.getTime()) / (1000 * 3600 * 24));
-        
-        const gapResult = await analyzeMedicationGap({
-          medicationName: targetMed.name,
-          consecutiveMissed,
-          priorStreak: targetMed.streak || 0,
-          targetLanguage: 'English'
-        });
-        setMedicationGapInsight(gapResult.observation);
-      }
-
-      // 6. Main Synthesis Logic
-      let daysSinceDialogue = 100;
-      if (profile.lastDialogueResponseDate) {
-        const lastDate = profile.lastDialogueResponseDate.toDate ? profile.lastDialogueResponseDate.toDate() : new Date(profile.lastDialogueResponseDate);
-        daysSinceDialogue = Math.floor((new Date().getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
-      }
-
+      // Main Synthesis (H-1)
       const result = await generateHealthRecommendations({
         clinicalData: {
           firstName: profile.firstName,
@@ -155,28 +113,24 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             rhr: { value: Number(patientData.vitals[0].value), trend: patientData.vitals[0].trend },
             sleep: { value: Number(patientData.vitals[2].value), trend: patientData.vitals[2].trend },
             hrv: { value: Number(patientData.vitals[3].value), trend: patientData.vitals[3].trend },
-            bmiStatus: 'Optimal'
           },
           logs: {
             energy: patientData.symptoms[0]?.value || 3,
             mood: patientData.symptoms[1]?.value || 3,
             journalSnippet: patientData.journalEntries?.[0]?.content,
-            missedMedsCount: medsWithGaps.length,
-            daysSinceWorkout: 1
           },
-          medicalHistory: profile.medicalHistory || patientData.medicalHistory,
+          medicalHistory: profile.medicalHistory,
         },
         relationshipState: {
           daysActive: daysActive,
-          dataRichnessScore: daysActive > 7 ? 0.4 : 0.1,
-          recentInsightThemes: [],
           relationshipMaturity: maturity as any,
-          daysSinceDialogue: daysSinceDialogue,
+          daysSinceDialogue: 3, 
           targetLanguage: 'English',
           toneMode: profile.toneMode
         }
       });
       setNityaInsight(result);
+      sessionStorage.setItem(`nitya_h1_${profile.id}`, JSON.stringify(result));
     } catch (error) {
       console.error(error);
     } finally {
@@ -192,10 +146,6 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         phase: patientData.cycleData.predictedPhase,
         energyScore: patientData.symptoms[0]?.value || 3,
         moodScore: patientData.symptoms[1]?.value || 3,
-        occupationType: 'unknown',
-        fastingToday: false,
-        culturalContext: 'none',
-        energyHistory: [3, 4, 3], 
         targetLanguage: 'English'
       });
       setPhaseGuidance(result);
@@ -212,254 +162,89 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
     try {
       const toneMode = choice === 'external' ? 'practical' : 'supportive';
       const userRef = doc(db, 'users', profile.id);
-      
-      await updateDoc(userRef, {
-        lastDialogueResponse: choice,
-        toneMode: toneMode,
-        lastDialogueResponseDate: serverTimestamp(),
-      });
-
-      const acknowledgement = choice === 'external' 
-        ? "Noted — tomorrow's read will work with that." 
-        : "Noted. Nitya will hold that gently for the next few days.";
-
-      toast({ title: "I hear you.", description: acknowledgement });
+      await updateDoc(userRef, { toneMode, lastDialogueResponseDate: serverTimestamp() });
+      toast({ title: "Noted.", description: "Tomorrow's read will reflect this." });
+      sessionStorage.removeItem(`nitya_h1_${profile.id}`); // Clear cache to allow refresh
       fetchNityaInsight();
     } catch (error) {
-      console.error('Failed to save dialogue response', error);
+      console.error(error);
     } finally {
       setIsResponding(false);
     }
   };
 
   useEffect(() => {
-    fetchNityaInsight();
-    fetchPhaseGuidance();
+    if (profile) {
+      fetchNityaInsight();
+      fetchPhaseGuidance();
+    }
   }, [profile]);
 
   return (
     <Card className="shadow-lg border-primary/10 overflow-hidden bg-white">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div className="space-y-1">
-          <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2">
-            Nitya's Daily Synthesis
-          </CardTitle>
+          <CardTitle className="text-xl font-black tracking-tight">Nitya's Daily Synthesis</CardTitle>
           <CardDescription className="flex items-center gap-1.5">
-            {morningNudge ? (
-              <span className="flex items-center gap-1 text-primary font-bold animate-in fade-in slide-in-from-left-2 duration-700">
-                <Coffee className="h-3.5 w-3.5" />
-                {morningNudge}
-              </span>
-            ) : (
-              "Small steps, achievable in under 2 minutes."
-            )}
+            {morningNudge && <span className="text-primary font-bold animate-in fade-in">{morningNudge}</span>}
           </CardDescription>
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
           <Sparkles className="h-3 w-3" />
-          {dayOneNote ? 'Our Beginning' : (reengagementNote ? 'Welcome Home' : (milestoneNote ? 'Deepening' : (medicationGapInsight ? 'Return to Rhythm' : (nityaInsight?.tierReached || 'Synthesis'))))}
+          {nityaInsight?.tierReached || 'Synthesis'}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-6">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-10 text-muted-foreground border-2 border-dashed rounded-3xl bg-muted/5">
-            <Loader2 className="h-8 w-8 animate-spin mb-3 opacity-50 text-primary" />
-            <p className="text-xs font-medium italic">Nitya is reflecting on your rhythm...</p>
+            <Loader2 className="h-8 w-8 animate-spin mb-3 text-primary opacity-50" />
+            <p className="text-xs font-medium italic">Nitya is reflecting...</p>
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Tier 1: Medication Gaps */}
-            {medicationGapInsight && (
-              <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="absolute top-0 right-0 p-4 opacity-5">
-                  <AlertCircle className="h-24 w-24 text-orange-600" />
-                </div>
-                <div className="flex items-start gap-4 relative z-10">
-                  <div className="bg-white p-3 rounded-2xl shadow-sm shrink-0 border border-orange-100">
-                    <AlertCircle className="h-6 w-6 text-orange-600" />
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-base font-medium leading-relaxed italic text-foreground">
-                      "{medicationGapInsight}"
-                    </p>
-                    <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest opacity-60">
-                      Forward-facing · Clean start
-                    </p>
-                  </div>
-                </div>
+            {milestoneNote && (
+              <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 animate-in fade-in slide-in-from-bottom-4">
+                <p className="text-base font-medium leading-relaxed italic">"{milestoneNote}"</p>
               </div>
             )}
 
-            {/* Tier 2: Welcome Back / Re-engagement */}
-            {reengagementNote && !dayOneNote && !medicationGapInsight && !milestoneNote && (
-              <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="absolute top-0 right-0 p-4 opacity-5">
-                  <Home className="h-20 w-20 text-primary" />
-                </div>
-                <div className="flex items-start gap-4 relative z-10">
-                  <div className="bg-white/80 p-3 rounded-2xl shadow-sm shrink-0">
-                    <Home className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-base font-bold text-foreground leading-tight italic">
-                      "{reengagementNote}"
-                    </p>
-                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest opacity-60">
-                      Coming back is what matters.
-                    </p>
-                  </div>
+            {nityaInsight?.dialogueMoment ? (
+              <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 text-center animate-in fade-in slide-in-from-bottom-4">
+                <p className="text-lg font-bold mb-4">{nityaInsight.dialogueMoment.question}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button variant="outline" className="rounded-2xl text-xs h-12" onClick={() => handleDialogueResponse('external')}>{nityaInsight.dialogueMoment.optionA}</Button>
+                  <Button variant="outline" className="rounded-2xl text-xs h-12" onClick={() => handleDialogueResponse('internal')}>{nityaInsight.dialogueMoment.optionB}</Button>
                 </div>
               </div>
-            )}
-
-            {/* Tier 3: Relationship Milestone */}
-            {milestoneNote && !dayOneNote && !medicationGapInsight && (
-              <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="absolute top-0 right-0 p-4 opacity-5">
-                  <CalendarHeart className="h-24 w-24 text-indigo-600" />
-                </div>
-                <div className="flex items-start gap-4 relative z-10">
-                  <div className="bg-white p-3 rounded-2xl shadow-sm shrink-0 border border-indigo-100">
-                    <CalendarHeart className="h-6 w-6 text-indigo-600" />
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-base font-medium leading-relaxed italic text-foreground">
-                      "{milestoneNote}"
-                    </p>
-                    <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest opacity-60">
-                      Compounding Effort · Known
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Standard Tiered Logic (Day One, Companion Moment, or Synthesis) */}
-            {dayOneNote && !medicationGapInsight && !milestoneNote && (
-              <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="absolute top-0 right-0 p-4 opacity-5">
-                  <HandHeart className="h-24 w-24 text-primary" />
-                </div>
-                <div className="flex items-start gap-4 relative z-10">
-                  <div className="bg-white p-3 rounded-2xl shadow-sm shrink-0 border border-primary/5">
-                    <HandHeart className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-base font-medium leading-relaxed italic text-foreground">
-                      "{dayOneNote}"
-                    </p>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
-                      Our Promise: One easy choice at a time.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!dayOneNote && !medicationGapInsight && !milestoneNote && (
-              nityaInsight?.dialogueMoment ? (
-                <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <HelpCircle className="h-20 w-20 text-primary" />
-                  </div>
-                  <div className="space-y-4 relative z-10 text-center">
-                    <div className="bg-white/50 w-fit mx-auto p-2 rounded-full mb-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                    </div>
-                    <p className="text-lg font-bold text-foreground leading-tight px-4">
-                      {nityaInsight.dialogueMoment.question}
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <Button 
-                        variant="outline" 
-                        className="h-12 rounded-2xl border-primary/20 hover:bg-primary/5 font-bold text-xs"
-                        onClick={() => handleDialogueResponse('external')}
-                        disabled={isResponding}
-                      >
-                        {isResponding ? <Loader2 className="h-3 w-3 animate-spin" /> : nityaInsight.dialogueMoment.optionA}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="h-12 rounded-2xl border-primary/20 hover:bg-primary/5 font-bold text-xs"
-                        onClick={() => handleDialogueResponse('internal')}
-                        disabled={isResponding}
-                      >
-                        {isResponding ? <Loader2 className="h-3 w-3 animate-spin" /> : nityaInsight.dialogueMoment.optionB}
-                      </Button>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground italic">
-                      I'm just curious. This helps me find the right tone for us.
-                    </p>
-                  </div>
-                </div>
-              ) : nityaInsight?.observation ? (
-                <div className={cn(
-                  "bg-primary/5 p-6 rounded-3xl border border-primary/10 relative overflow-hidden group",
-                  (reengagementNote || milestoneNote) && "opacity-80 scale-95"
-                )}>
-                  <div className="absolute top-0 right-0 p-4 opacity-5">
-                    <Sparkles className="h-20 w-20" />
-                  </div>
-                  <div className="flex flex-col gap-4 relative z-10">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-primary/10 p-3 rounded-2xl shrink-0">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="space-y-3 flex-1">
-                        <p className="text-base font-medium leading-relaxed italic text-foreground">
-                          "{nityaInsight.observation}"
-                        </p>
-                        {profile?.lastDialogueResponse && (
-                          <div className="flex gap-3 items-start mt-3 pt-4 border-t border-primary/10">
-                            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 opacity-60" />
-                            <p className="text-[10px] text-muted-foreground font-medium italic leading-tight">
-                              {profile.toneMode === 'practical' 
-                                ? "Life sounds full right now — keeping things practical today." 
-                                : "Staying quiet and supportive today as you focus inward."}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
+            ) : nityaInsight?.observation ? (
+              <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 group">
+                <div className="flex gap-4 items-start">
+                  <div className="bg-primary/10 p-3 rounded-2xl shrink-0"><Sparkles className="h-5 w-5 text-primary" /></div>
+                  <div className="space-y-3 flex-1">
+                    <p className="text-base font-medium leading-relaxed italic">"{nityaInsight.observation}"</p>
                     {nityaInsight.actionLine && (
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-between h-12 bg-white/50 hover:bg-white border-primary/5 rounded-2xl px-4 text-primary group/action"
-                      >
-                        <span className="text-sm font-bold tracking-tight">{nityaInsight.actionLine}</span>
-                        <ChevronRight className="h-4 w-4 group-hover/action:translate-x-1 transition-transform" />
+                      <Button variant="ghost" className="w-full justify-between h-12 bg-white/50 border-primary/5 rounded-2xl px-4 text-primary">
+                        <span className="text-sm font-bold">{nityaInsight.actionLine}</span>
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
                 </div>
-              ) : null
-            )}
+              </div>
+            ) : null}
           </div>
         )}
 
         <div className="grid gap-3">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Phase Invitations</p>
-            {isGuidanceLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-          </div>
-          
-          {phaseGuidance?.introMessage && (
-            <p className="text-xs text-primary font-medium italic bg-primary/5 p-2 rounded-lg border border-primary/10 mb-1">
-              {phaseGuidance.introMessage}
-            </p>
-          )}
-
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Phase Invitations</p>
           {phaseGuidance?.guidance.map((rec) => {
             const Icon = iconMap[rec.domain] || Sparkles;
             return (
-              <div key={rec.domain} className="flex gap-4 p-4 rounded-2xl bg-secondary/5 border border-secondary/10 group hover:bg-secondary/10 transition-all">
-                <div className="bg-white p-2.5 rounded-xl shadow-sm border border-secondary/20 group-hover:scale-110 transition-transform h-fit">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
+              <div key={rec.domain} className="flex gap-4 p-4 rounded-2xl bg-secondary/5 border border-secondary/10">
+                <div className="bg-white p-2.5 rounded-xl shadow-sm border border-secondary/20 h-fit"><Icon className="h-5 w-5 text-primary" /></div>
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest">{rec.domain}</p>
-                  <p className="text-sm leading-relaxed text-foreground font-semibold">{rec.invitation}</p>
+                  <p className="text-sm leading-relaxed font-semibold">{rec.invitation}</p>
                 </div>
               </div>
             );

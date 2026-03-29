@@ -2,12 +2,8 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Intelligence Flow - Generates health observations based on relationship maturity
- * and a strict Signal Priority Hierarchy and Emotional Arc.
- * 
- * Tier 4 is the "Companion Moment" — a curiosity-driven dialogue.
- * 
- * Persona: Nitya - Indian health companion.
+ * @fileOverview Nitya's H-1 Synthesis Flow - The primary daily intelligence engine.
+ * Consolidates Identity (00), Relationship (01), Hierarchy (02), and Arc (03).
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -25,52 +21,41 @@ const GenerateHealthRecommendationsInputSchema = z.object({
       sleep: z.object({ value: z.number(), trend: z.string() }).optional(),
       hrv: z.object({ value: z.number(), trend: z.string() }).optional(),
       bbt: z.object({ value: z.number(), trend: z.string() }).optional(),
-      bmiStatus: z.string().optional(),
     }),
     logs: z.object({
       energy: z.number().optional(),
       mood: z.number().optional(),
       journalSnippet: z.string().optional(),
-      daysSinceWorkout: z.number().optional(),
       missedMedsCount: z.number().optional(),
     }),
     medicalHistory: z.string().optional(),
   }),
   relationshipState: z.object({
     daysActive: z.number(),
-    dataRichnessScore: z.number().describe('0.0 (new) to 1.0 (longitudinal data)'),
-    recentInsightThemes: z.array(z.string()),
     relationshipMaturity: z.enum(['new', 'developing', 'established', 'deep']),
-    lastDialogueQuestion: z.string().optional(),
     daysSinceDialogue: z.number().optional().default(0),
     targetLanguage: z.string().optional().default('English'),
     toneMode: z.enum(['practical', 'supportive']).optional(),
   }),
 });
 
-export type GenerateHealthRecommendationsInput = z.infer<
-  typeof GenerateHealthRecommendationsInputSchema
->;
+export type GenerateHealthRecommendationsInput = z.infer<typeof GenerateHealthRecommendationsInputSchema>;
 
 const GenerateHealthRecommendationsOutputSchema = z.object({
-  observation: z.string().optional().describe('A single warm connection or invitation following the emotional arc (2-3 sentences max).'),
-  actionLine: z.string().optional().describe('A short optional suggestion. Max 8 words. Starts with a verb. No period.'),
+  observation: z.string().optional().describe('A 2-3 sentence warm connection or invitation following the emotional arc.'),
+  actionLine: z.string().optional().describe('A short optional suggestion. Max 8 words. No period.'),
   dialogueMoment: z.object({
-    question: z.string().describe('One warm specific question. Maximum 20 words.'),
-    optionA: z.string().describe('External/life framing. Maximum 6 words.'),
-    optionB: z.string().describe('Internal/body framing. Maximum 6 words.'),
-  }).optional().describe('A Tier 4 companion moment question.'),
-  theme: z.string().describe('The primary theme of this insight to avoid repetition.'),
-  tierReached: z.string().describe('The hierarchy tier that triggered this insight.'),
+    question: z.string().describe('One warm specific question. Max 20 words.'),
+    optionA: z.string().describe('External framing. Max 6 words.'),
+    optionB: z.string().describe('Internal framing. Max 6 words.'),
+  }).optional(),
+  theme: z.string().describe('Theme slug.'),
+  tierReached: z.string().describe('Hierarchy tier triggered.'),
 });
 
-export type GenerateHealthRecommendationsOutput = z.infer<
-  typeof GenerateHealthRecommendationsOutputSchema
->;
+export type GenerateHealthRecommendationsOutput = z.infer<typeof GenerateHealthRecommendationsOutputSchema>;
 
-export async function generateHealthRecommendations(
-  input: GenerateHealthRecommendationsInput
-): Promise<GenerateHealthRecommendationsOutput> {
+export async function generateHealthRecommendations(input: GenerateHealthRecommendationsInput): Promise<GenerateHealthRecommendationsOutput> {
   return generateHealthRecommendationsFlow(input);
 }
 
@@ -79,83 +64,42 @@ const prompt = ai.definePrompt({
   input: { schema: GenerateHealthRecommendationsInputSchema },
   output: { schema: GenerateHealthRecommendationsOutputSchema },
   prompt: `
-    You are Nitya — an AI health companion for Indian users.
-    
-    TONE MODE:
-    Current Mode: {{{relationshipState.toneMode}}}
-    - If toneMode is "practical": Focus on energizing, practical rhythms. Reframes should be grounded in daily capacity.
-    - If toneMode is "supportive": Focus on quiet witnessing and gentle support. Reframes should be grounded in patience and body-holding.
-    - If no toneMode: Use a balanced, warm, wise-friend tone.
+    SYSTEM:
+    PROMPT 00: IDENTITY
+    You are Nitya — a wise health companion for Indian users. Tone: warm, personal, wise-friend. Banned: clinical jargon, medical advice, "must", "should", "critical", "urgent", "danger", "abnormal". No exclamation marks. No emoji.
 
-    PHILOSOPHY:
-    - Small efforts, every day, compound into a healthy life.
-    - You make the invisible visible quietly, without judgement.
-    - Suggestions MUST be achievable in under 2 minutes.
-    - Tone: Warm, honest, specific. Like a wise friend who knows India well.
-    - You are NOT a doctor. Never diagnose, never alarm.
-    
-    EMOTIONAL ARC (Tiers 1-3) - observation field MUST follow this shape:
-    1. SEE: Reference something specific this user generated. Never generic.
-    2. CONNECT: Link it to one other signal, pattern, or context.
-    3. REFRAME: Name what it means — without fear, without alarm. Respect the current TONE MODE.
-    4. INVITE: Offer one small optional action (< 2 mins). Framed as a question.
-    5. RELEASE: End with a question mark or open framing. User decides. Always.
+    PROMPT 01: RELATIONSHIP ENGINE
+    Maturity: {{{relationshipState.relationshipMaturity}}}.
+    - New: Welcoming, curious, sets expectation.
+    - Deep: References patterns, longitudinal history, gravity.
 
-    TIER 4: THE COMPANION MOMENT (Trigger if Tiers 1-3 absent and daysSinceDialogue >= 3)
-    - Philosophy: This is where you become a companion rather than a dashboard. 
-    - The question says: "I see you. What is actually going on?"
-    - Acknowledge that life happens outside the app.
-    - Question rules:
-      - Open — not leading. Either answer equally valid.
-      - Warm and specific to recent patterns (e.g., quiet energy or steady sleep).
-      - Maximum 20 words.
-    - Options:
-      - Option A: External/life framing (e.g., "Life has been full"). Max 6 words.
-      - Option B: Internal/body framing (e.g., "Something feels off"). Max 6 words.
+    PROMPT 02: SIGNAL PRIORITY HIERARCHY
+    - Tier 1: Missed meds 2+ days, Vital deviation > 20%, Cycle transition.
+    - Tier 2: 3-day trends, Sleep < 5.5h for 3 nights, 1 missed med.
+    - Tier 3: Daily synthesis connecting 2 signals.
+    - Tier 4: Companion Moment (Dialogue) if T1-3 absent AND daysSinceDialogue >= 3.
 
-    BANNED CONSTRUCTIONS:
-    - "You should...", "Make sure you...", "It is important to...", "Never miss..."
-    - Clinical words: "must", "critical", "urgent", "risk", "danger", "optimal", "perfect", "diagnose".
+    PROMPT 03: EMOTIONAL ARC
+    1. SEE: Reference specific user data.
+    2. CONNECT: Link to another signal or pattern.
+    3. REFRAME: Name meaning without alarm. Respect toneMode: {{{relationshipState.toneMode}}}.
+    4. INVITE: Offer one tiny action (< 2 mins) as a question.
+    5. RELEASE: End with open framing.
 
-    SIGNAL PRIORITY HIERARCHY:
-    Tier 1 (Highest): Missed meds 2+ days, Vital deviation > 20%, Cycle transition today.
-    Tier 2: 3-day vital trends, Sleep < 5.5 hours for 3 nights, 1 missed med day.
-    Tier 3: Daily synthesis connecting 2 signals.
-    Tier 4 (Lowest): Dialogue Moment (only if daysSinceDialogue >= 3).
-
-    INSIGHT MODE:
-    - LOW DATA (richness < 0.2): Reflect the act of showing up. Sentence 1: Honest observation. Sentence 2: Warm question.
-    - PATTERN EMERGING (0.2-0.6): Connect 2 signals tentatively ("seems like").
-    - FULL INTELLIGENCE (> 0.6): Reference longitudinal patterns or last week.
-
-    USER CONTEXT:
+    USER DATA:
     Name: {{{clinicalData.firstName}}}
     Time: {{{clinicalData.timeOfDay}}}
     Days Active: {{{relationshipState.daysActive}}}
-    Data Richness: {{{relationshipState.dataRichnessScore}}}
-    Cycle: Day {{{clinicalData.cycleDay}}} of {{{clinicalData.cycleLength}}} ({{{clinicalData.phase}}})
-    RHR: {{{clinicalData.vitals.rhr.value}}} ({{{clinicalData.vitals.rhr.trend}}})
-    Sleep: {{{clinicalData.vitals.sleep.value}}} ({{{clinicalData.vitals.sleep.trend}}})
-    Logs: Energy {{{clinicalData.logs.energy}}}/5, Mood {{{clinicalData.logs.mood}}}/5
-    Days since dialogue: {{{relationshipState.daysSinceDialogue}}}
-    Last question: {{{relationshipState.lastDialogueQuestion}}}
-    Maturity: {{{relationshipState.relationshipMaturity}}}
-
-    OUTPUT FORMAT:
-    - Theme: A short slug to avoid repetition.
-    - tierReached: The selected tier.
-    - If Tier 4: Provide 'dialogueMoment' object ONLY. Nothing else.
-    - Otherwise: Provide 'observation' string AND 'actionLine' string.
+    {{#if clinicalData.phase}}Cycle: Day {{{clinicalData.cycleDay}}} ({{{clinicalData.phase}}}){{/if}}
+    {{#if clinicalData.vitals.rhr}}RHR: {{{clinicalData.vitals.rhr.value}}} ({{{clinicalData.vitals.rhr.trend}}}){{/if}}
+    {{#if clinicalData.vitals.sleep}}Sleep: {{{clinicalData.vitals.sleep.value}}}h{{/if}}
+    {{#if clinicalData.logs.energy}}Energy: {{{clinicalData.logs.energy}}}/5{{/if}}
+    {{#if clinicalData.logs.missedMedsCount}}Missed Meds: {{{clinicalData.logs.missedMedsCount}}} day(s){{/if}}
+    {{#if clinicalData.logs.journalSnippet}}Journal: "{{{clinicalData.logs.journalSnippet}}}"{{/if}}
     `,
 });
 
 const generateHealthRecommendationsFlow = ai.defineFlow(
-  {
-    name: 'generateHealthRecommendationsFlow',
-    inputSchema: GenerateHealthRecommendationsInputSchema,
-    outputSchema: GenerateHealthRecommendationsOutputSchema,
-  },
-  async (input) => {
-    return runWithModelFallback(prompt, input);
-  }
+  { name: 'generateHealthRecommendationsFlow', inputSchema: GenerateHealthRecommendationsInputSchema, outputSchema: GenerateHealthRecommendationsOutputSchema },
+  async (input) => runWithModelFallback(prompt, input)
 );

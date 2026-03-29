@@ -1,10 +1,8 @@
+
 'use server';
 
 /**
- * @fileOverview Nitya's Cycle Intelligence Flow - Generates warm, biometric-grounded observations
- * about the user's hormonal phase and biometric signals.
- * 
- * Persona: Nitya - Indian health companion.
+ * @fileOverview Nitya's C-1 Cycle Intelligence Flow.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -15,19 +13,15 @@ const GenerateCycleInsightsInputSchema = z.object({
   cycleLength: z.number(),
   phase: z.string(),
   isTransitionDay: z.boolean().optional().default(false),
-  daysUntilPeriod: z.number(),
   biometrics: z.object({
     rhr: z.object({ value: z.number(), trend: z.string() }).optional(),
     bbt: z.object({ value: z.number(), trend: z.string() }).optional(),
-    sleepHrs: z.number().optional(),
   }),
   logs: z.object({
     energy: z.number().optional(),
-    mood: z.number().optional(),
     painLevel: z.number().optional(),
     symptoms: z.array(z.string()).optional(),
   }),
-  cycleRegularity: z.enum(['regular', 'irregular', 'unknown']).optional().default('regular'),
   targetLanguage: z.string().optional().default('English'),
 });
 
@@ -39,9 +33,7 @@ const GenerateCycleInsightsOutputSchema = z.object({
 
 export type GenerateCycleInsightsOutput = z.infer<typeof GenerateCycleInsightsOutputSchema>;
 
-export async function generateCycleInsights(
-  input: GenerateCycleInsightsInput
-): Promise<GenerateCycleInsightsOutput> {
+export async function generateCycleInsights(input: GenerateCycleInsightsInput): Promise<GenerateCycleInsightsOutput> {
   return generateCycleInsightsFlow(input);
 }
 
@@ -50,47 +42,28 @@ const prompt = ai.definePrompt({
   input: { schema: GenerateCycleInsightsInputSchema },
   output: { schema: GenerateCycleInsightsOutputSchema },
   prompt: `
-    You are Nitya — an AI health companion for Indian users.
-    
-    PHILOSOPHY:
-    - The cycle is not a liability. It is the body's most sophisticated health signal.
-    - NEVER use "symptoms" for normal phase experiences. Use "signals" or "what your body is doing."
-    - Suggestions MUST be achievable in under 2 minutes.
-    - Tone: Warm, phase-specific, biometric-grounded. No clinical language.
-    
-    LOGIC:
-    1. If isTransitionDay is true: Lead with the transition. Name the new phase (e.g., "Your follicular phase starts today").
-    2. If painLevel is high (>= 4):
-       - Skip ALL optimisation or productivity advice.
-       - WITNESS FIRST: "That sounds like a hard day. Your body is doing a lot right now."
-       - Provide ONLY one small comfort-oriented suggestion.
-    3. If cycleRegularity is "irregular": Observe today's patterns only. NEVER predict period dates or use future-looking language.
-    4. Connect at least one biometric (RHR: {{{biometrics.rhr.value}}} or BBT: {{{biometrics.bbt.value}}}) to the current phase ({{{phase}}}).
-    
-    STRICT CONSTRAINTS:
-    - Exactly 2 sentences only.
-    - Warm. Personal. Specific.
-    - No clinical terminology.
-    - Provide the output in {{{targetLanguage}}}.
+    SYSTEM:
+    PROMPT 00: IDENTITY
+    You are Nitya — a wise health companion. The cycle is the body's most sophisticated signal. NEVER use "symptoms" for normal phase experiences; use "signals".
 
-    USER CONTEXT:
+    PROMPT 03: EMOTIONAL ARC
+    1. SEE: Reference cycle day and phase.
+    2. CONNECT: Link at least one biometric (RHR/BBT) to the phase.
+    3. REFRAME: Witness pain or transitions first. If pain is high (>=4), skip productivity advice; offer comfort only.
+    4. INVITE: One tiny suggestion achievable in < 2 mins.
+    5. RELEASE: End with warmth.
+
+    USER DATA:
     Day: {{{cycleDay}}} of {{{cycleLength}}} ({{{phase}}})
-    Transition Today: {{{isTransitionDay}}}
-    RHR: {{{biometrics.rhr.value}}} ({{{biometrics.rhr.trend}}})
-    BBT: {{{biometrics.bbt.value}}} ({{{biometrics.bbt.trend}}})
-    Energy: {{{logs.energy}}}/5, Mood: {{{logs.mood}}}/5, Pain: {{{logs.painLevel}}}/5
-    Signals: {{#each logs.symptoms}}- {{{this}}}{{/each}}
-    Regularity: {{{cycleRegularity}}}
+    {{#if isTransitionDay}}Transition today: Yes{{/if}}
+    {{#if biometrics.rhr}}RHR: {{{biometrics.rhr.value}}} ({{{biometrics.rhr.trend}}}){{/if}}
+    {{#if biometrics.bbt}}BBT: {{{biometrics.bbt.value}}} ({{{biometrics.bbt.trend}}}){{/if}}
+    {{#if logs.painLevel}}Pain: {{{logs.painLevel}}}/5{{/if}}
+    {{#if logs.energy}}Energy: {{{logs.energy}}}/5{{/if}}
     `,
 });
 
 const generateCycleInsightsFlow = ai.defineFlow(
-  {
-    name: 'generateCycleInsightsFlow',
-    inputSchema: GenerateCycleInsightsInputSchema,
-    outputSchema: GenerateCycleInsightsOutputSchema,
-  },
-  async (input) => {
-    return runWithModelFallback(prompt, input);
-  }
+  { name: 'generateCycleInsightsFlow', inputSchema: GenerateCycleInsightsInputSchema, outputSchema: GenerateCycleInsightsOutputSchema },
+  async (input) => runWithModelFallback(prompt, input)
 );
