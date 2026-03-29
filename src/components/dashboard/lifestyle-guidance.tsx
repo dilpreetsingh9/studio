@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, HelpCircle, CheckCircle2, Home, HandHeart, ChevronRight, AlertCircle } from 'lucide-react';
+import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, HelpCircle, CheckCircle2, Home, HandHeart, ChevronRight, AlertCircle, CalendarHeart } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { generateHealthRecommendations, GenerateHealthRecommendationsOutput } from '@/ai/flows/generate-health-recommendations';
 import { generatePhaseGuidance, GeneratePhaseGuidanceOutput } from '@/ai/flows/generate-phase-guidance';
 import { generateReengagementNote } from '@/ai/flows/generate-reengagement-note';
 import { generateDayOneWelcome } from '@/ai/flows/generate-day-one-welcome';
-import { analyzeMedicationGap, AnalyzeMedicationGapOutput } from '@/ai/flows/analyze-medication-gap';
+import { analyzeMedicationGap } from '@/ai/flows/analyze-medication-gap';
+import { generateRelationshipMilestone } from '@/ai/flows/generate-relationship-milestone';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [nityaInsight, setNityaInsight] = useState<GenerateHealthRecommendationsOutput | null>(null);
   const [reengagementNote, setReengagementNote] = useState<string | null>(null);
   const [dayOneNote, setDayOneNote] = useState<string | null>(null);
+  const [milestoneNote, setMilestoneNote] = useState<string | null>(null);
   const [medicationGapInsight, setMedicationGapInsight] = useState<string | null>(null);
   const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +45,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       let daysActive = 0;
       if (profile.createdAt) {
         const createdDate = profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt);
-        daysActive = Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24));
+        daysActive = Math.max(1, Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24)));
       }
 
       const userRef = doc(db, 'users', profile.id);
@@ -59,7 +61,21 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         });
         setDayOneNote(welcome.welcomeNote);
       } else {
-        // 2. Re-engagement Logic
+        // 2. Relationship Milestone Logic (30, 60, 90...)
+        const milestones = [30, 60, 90, 180, 365];
+        if (milestones.includes(daysActive)) {
+          const milestoneResult = await generateRelationshipMilestone({
+            firstName: profile.firstName,
+            daysActive,
+            milestoneDays: daysActive,
+            mostConsistent: 'your morning check-in habit',
+            visibleChange: 'the steady lowering of your resting heart rate patterns',
+            targetLanguage: 'English'
+          });
+          setMilestoneNote(milestoneResult.note);
+        }
+
+        // 3. Re-engagement Logic
         let daysAway = 0;
         if (profile.lastOpenDate) {
           const lastDate = profile.lastOpenDate.toDate ? profile.lastOpenDate.toDate() : new Date(profile.lastOpenDate);
@@ -83,12 +99,12 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
       await updateDoc(userRef, { lastOpenDate: serverTimestamp() });
 
-      // 3. Medication Gap Logic (Tier 1 Priority)
+      // 4. Medication Gap Logic (Tier 1 Priority)
       const medsWithGaps = (patientData.medications || []).filter(med => {
         if (!med.lastTaken) return false;
         const lastTakenDate = new Date(med.lastTaken);
         const diffHrs = Math.floor((new Date().getTime() - lastTakenDate.getTime()) / (1000 * 3600));
-        return diffHrs >= 24 && diffHrs <= (7 * 24); // Gap between 1 and 7 days
+        return diffHrs >= 24 && diffHrs <= (7 * 24); 
       });
 
       if (medsWithGaps.length > 0) {
@@ -105,7 +121,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         setMedicationGapInsight(gapResult.observation);
       }
 
-      // 4. Main Synthesis Logic
+      // 5. Main Synthesis Logic
       let daysSinceDialogue = 100;
       if (profile.lastDialogueResponseDate) {
         const lastDate = profile.lastDialogueResponseDate.toDate ? profile.lastDialogueResponseDate.toDate() : new Date(profile.lastDialogueResponseDate);
@@ -216,7 +232,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
           <Sparkles className="h-3 w-3" />
-          {dayOneNote ? 'Our Beginning' : (reengagementNote ? 'Welcome Home' : (medicationGapInsight ? 'Return to Rhythm' : (nityaInsight?.tierReached || 'Synthesis')))}
+          {dayOneNote ? 'Our Beginning' : (reengagementNote ? 'Welcome Home' : (milestoneNote ? 'Deepening' : (medicationGapInsight ? 'Return to Rhythm' : (nityaInsight?.tierReached || 'Synthesis'))))}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -250,7 +266,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             )}
 
             {/* Tier 2: Welcome Back / Re-engagement */}
-            {reengagementNote && !dayOneNote && !medicationGapInsight && (
+            {reengagementNote && !dayOneNote && !medicationGapInsight && !milestoneNote && (
               <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                   <Home className="h-20 w-20 text-primary" />
@@ -271,8 +287,30 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               </div>
             )}
 
+            {/* Tier 3: Relationship Milestone */}
+            {milestoneNote && !dayOneNote && !medicationGapInsight && (
+              <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="absolute top-0 right-0 p-4 opacity-5">
+                  <CalendarHeart className="h-24 w-24 text-indigo-600" />
+                </div>
+                <div className="flex items-start gap-4 relative z-10">
+                  <div className="bg-white p-3 rounded-2xl shadow-sm shrink-0 border border-indigo-100">
+                    <CalendarHeart className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div className="space-y-3">
+                    <p className="text-base font-medium leading-relaxed italic text-foreground">
+                      "{milestoneNote}"
+                    </p>
+                    <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest opacity-60">
+                      Compounding Effort · Known
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Standard Tiered Logic (Day One, Companion Moment, or Synthesis) */}
-            {dayOneNote && !medicationGapInsight && (
+            {dayOneNote && !medicationGapInsight && !milestoneNote && (
               <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                   <HandHeart className="h-24 w-24 text-primary" />
@@ -293,7 +331,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               </div>
             )}
 
-            {!dayOneNote && !medicationGapInsight && (
+            {!dayOneNote && !medicationGapInsight && !milestoneNote && (
               nityaInsight?.dialogueMoment ? (
                 <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -332,7 +370,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               ) : nityaInsight?.observation ? (
                 <div className={cn(
                   "bg-primary/5 p-6 rounded-3xl border border-primary/10 relative overflow-hidden group",
-                  reengagementNote && "opacity-80 scale-95"
+                  (reengagementNote || milestoneNote) && "opacity-80 scale-95"
                 )}>
                   <div className="absolute top-0 right-0 p-4 opacity-5">
                     <Sparkles className="h-20 w-20" />

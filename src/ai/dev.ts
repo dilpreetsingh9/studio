@@ -25,3 +25,4 @@ import '@/ai/flows/acknowledge-new-medication.ts';
 import '@/ai/flows/analyze-medication-gap.ts';
 import '@/ai/flows/synthesize-lab-markers.ts';
 import '@/ai/flows/confirm-lab-upload.ts';
+import '@/ai/flows/generate-relationship-milestone.ts';
