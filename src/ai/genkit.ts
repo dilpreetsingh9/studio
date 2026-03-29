@@ -3,8 +3,8 @@ import {googleAI} from '@genkit-ai/google-genai';
 
 export const ai = genkit({
   plugins: [googleAI()],
-  // We specify a default, but individual flows will now attempt 2.0 first.
-  model: 'googleai/gemini-1.5-flash',
+  // Using the robust 'latest' alias to avoid version-specific 404 errors
+  model: 'googleai/gemini-1.5-flash-latest',
 });
 
 /**
@@ -26,13 +26,17 @@ export async function runWithModelFallback<TInput, TOutput>(
       error.message?.toLowerCase().includes('quota') ||
       error.status === 429;
 
-    if (isQuotaError) {
-      // Fallback to 1.5 Flash
-      const { output } = await promptFn(input, { model: 'googleai/gemini-1.5-flash' });
+    const isNotFoundError = 
+      error.message?.includes('404') || 
+      error.message?.toLowerCase().includes('not found');
+
+    if (isQuotaError || isNotFoundError) {
+      // Fallback to 1.5 Flash using the 'latest' alias
+      const { output } = await promptFn(input, { model: 'googleai/gemini-1.5-flash-latest' });
       if (!output) throw new Error('AI fallback returned no output');
       return output;
     }
-    // Re-throw if it's not a quota error
+    // Re-throw if it's not a recoverable error
     throw error;
   }
 }
