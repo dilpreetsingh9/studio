@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -63,7 +64,6 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         }
 
         if (daysAway >= 3 && daysAway <= 14) {
-          // Acknowledge wearable sync during gap if RHR/Sleep trends are present
           const hasGapData = patientData.vitals.some(v => v.trend !== 'stable');
           
           const reNote = await generateReengagementNote({
@@ -118,7 +118,8 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           recentInsightThemes: [],
           relationshipMaturity: daysActive > 30 ? 'established' : (daysActive > 7 ? 'developing' : 'new'),
           daysSinceDialogue: daysSinceDialogue,
-          targetLanguage: 'English'
+          targetLanguage: 'English',
+          toneMode: profile.toneMode
         }
       });
       setNityaInsight(result);
@@ -155,15 +156,24 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
     if (!profile?.id) return;
     setIsResponding(true);
     try {
+      const toneMode = choice === 'external' ? 'practical' : 'supportive';
       const userRef = doc(db, 'users', profile.id);
+      
       await updateDoc(userRef, {
         lastDialogueResponse: choice,
+        toneMode: toneMode,
         lastDialogueResponseDate: serverTimestamp(),
       });
+
+      const acknowledgement = choice === 'external' 
+        ? "Noted — tomorrow's read will work with that." 
+        : "Noted. Nitya will hold that gently for the next few days.";
+
       toast({
         title: "I hear you.",
-        description: choice === 'external' ? "Practical rhythms for the next few days." : "Gentle support for the next few days.",
+        description: acknowledgement,
       });
+      
       fetchNityaInsight();
     } catch (error) {
       console.error('Failed to save dialogue response', error);
@@ -298,7 +308,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
                           <div className="flex gap-3 items-start mt-3 pt-4 border-t border-primary/10">
                             <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 opacity-60" />
                             <p className="text-[10px] text-muted-foreground font-medium italic leading-tight">
-                              {profile.lastDialogueResponse === 'external' 
+                              {profile.toneMode === 'practical' 
                                 ? "Life sounds full right now — keeping things practical today." 
                                 : "Staying quiet and supportive today as you focus inward."}
                             </p>

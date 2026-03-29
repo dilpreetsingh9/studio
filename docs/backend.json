@@ -62,6 +62,11 @@
           "enum": ["external", "internal"],
           "description": "The user's last response to a dialogue moment (shifts Nitya's tone for 3 days)."
         },
+        "toneMode": {
+          "type": "string",
+          "enum": ["practical", "supportive"],
+          "description": "The active tone mode based on the last dialogue response."
+        },
         "lastDialogueResponseDate": {
           "type": "string",
           "format": "date-time",
