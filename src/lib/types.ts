@@ -67,4 +67,7 @@ export type JournalEntry = {
   summary: string;
   category: string;
   tags: string[];
+  sentiment?: 'positive' | 'neutral' | 'low';
+  foodItem?: string | null;
+  flagForSynthesis?: boolean;
 };
