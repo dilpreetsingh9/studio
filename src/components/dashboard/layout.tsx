@@ -1,36 +1,16 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  SidebarTrigger,
-  SidebarInset,
-  SidebarGroup,
-} from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  Bell,
-  Calendar,
-  HeartPulse,
-  LayoutDashboard,
+import React from 'react';
+import { 
+  Sparkles, 
+  Mic, 
+  History, 
   User,
-  FileText,
-  Languages,
-  Check,
   LogOut,
-  Users,
-  UserPlus,
-  Sparkles
+  Languages,
+  Check
 } from 'lucide-react';
-import { Logo } from '@/components/icons';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -41,6 +21,7 @@ import {
 import { t } from '@/lib/translations';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { cn } from '@/lib/utils';
 
 const COMMON_LANGUAGES = [
   { name: 'English', code: 'en' },
@@ -51,7 +32,7 @@ export function DashboardLayout({
   children,
   onLanguageChange,
   currentLanguage = 'English',
-  activeTab = 'overview',
+  activeTab = 'today',
   onTabChange,
   userProfile,
 }: { 
@@ -68,114 +49,78 @@ export function DashboardLayout({
     await signOut(auth);
   };
 
-  const sidebarNav = [
-    { id: 'overview', name: t('dashboard', currentLanguage), icon: LayoutDashboard },
-    { id: 'records', name: t('healthRecords', currentLanguage), icon: FileText },
-    { id: 'vitals', name: t('vitals', currentLanguage), icon: HeartPulse },
-    { id: 'appointments', name: t('appointments', currentLanguage), icon: Calendar },
-    { id: 'profile', name: t('profile', currentLanguage), icon: User },
+  const navItems = [
+    { id: 'today', label: 'Today', icon: Sparkles },
+    { id: 'log', label: 'Log', icon: Mic },
+    { id: 'history', label: 'History', icon: History },
+    { id: 'you', label: 'You', icon: User },
   ];
 
   return (
-    <SidebarProvider>
-      <Sidebar collapsible="icon" className="border-r-0">
-        <SidebarHeader className="h-14 flex justify-center px-4 pt-[env(safe-area-inset-top)]">
-          <div className="flex items-center gap-2">
-            <Sparkles className="size-6 text-primary shrink-0" />
-            <span className="text-xl font-bold tracking-tight text-primary group-data-[collapsible=icon]:hidden">NITYA</span>
-          </div>
-        </SidebarHeader>
-        <SidebarContent className="pt-2">
-          <SidebarGroup>
-            <SidebarMenu className="px-2">
-              {sidebarNav.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    isActive={activeTab === item.id || (activeTab === 'records' && item.id === 'records')}
-                    tooltip={item.name}
-                    className="h-10 transition-all hover:bg-primary/5 active:scale-95"
-                    onClick={() => onTabChange?.(item.id === 'records' ? 'records' : 'overview')}
-                  >
-                    <item.icon className="size-5" />
-                    <span className="font-medium">{item.name}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+    <div className="flex flex-col h-svh bg-background overflow-hidden">
+      {/* Header */}
+      <header className="flex h-14 items-center justify-between border-b bg-white/80 backdrop-blur-md sticky top-0 z-30 px-4 shrink-0 pt-[env(safe-area-inset-top)]">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-5 text-primary" />
+          <span className="text-lg font-black tracking-tight text-primary">NITYA</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 gap-2 rounded-full border-primary/10 bg-primary/5 text-primary hover:bg-primary/10 transition-all px-3">
+                <Languages className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-black uppercase tracking-widest">{currentLanguage}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-xl">
+              {COMMON_LANGUAGES.map((lang) => (
+                <DropdownMenuItem key={lang.code} onClick={() => onLanguageChange?.(lang.name)} className="justify-between text-xs font-bold">
+                  {lang.name} {currentLanguage === lang.name && <Check className="h-3 w-3 text-primary" />}
+                </DropdownMenuItem>
               ))}
-            </SidebarMenu>
-          </SidebarGroup>
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive font-bold text-xs">
+                <LogOut className="h-3 w-3 mr-2" /> Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Avatar className="size-8 border-2 border-primary/10">
+            <AvatarFallback className="bg-primary/5 text-primary font-black text-[10px]">
+              {userProfile?.firstName?.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      </header>
 
-          <SidebarGroup className="mt-4 border-t pt-4">
-            <SidebarMenu className="px-2">
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip={t('shareWithFamily', currentLanguage)} className="h-10 hover:bg-primary/5">
-                  <Users className="size-5" />
-                  <span>{t('shareWithFamily', currentLanguage)}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter className="p-2 pb-[env(safe-area-inset-bottom)]">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip={t('profile', currentLanguage)} className="h-12 hover:bg-primary/5">
-                <Avatar className="size-8 border">
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                    {userProfile?.firstName?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col gap-0.5 leading-none overflow-hidden">
-                  <span className="font-bold text-sm truncate">{userProfile?.firstName}</span>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">A Balanced Life</span>
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                tooltip="Logout" 
-                className="h-10 hover:bg-destructive/5 text-destructive mt-1"
-                onClick={handleLogout}
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto bg-[#FAFAFA] pb-24">
+        <div className="max-w-md mx-auto p-4 md:p-6 space-y-6">
+          {children}
+        </div>
+      </main>
+
+      {/* Bottom Tab Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[rgba(0,0,0,0.08)] z-50 pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-center justify-around h-[56px] max-w-md mx-auto px-4">
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => onTabChange?.(item.id)}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-[3px] w-16 transition-colors duration-200",
+                  isActive ? "text-[#0A0A0A]" : "text-[#999999]"
+                )}
               >
-                <LogOut className="size-5" />
-                <span>Sign Out</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset className="overflow-hidden flex flex-col h-svh">
-        <header className="flex h-14 items-center justify-between border-b bg-background/80 backdrop-blur-md sticky top-0 z-30 px-4 shrink-0 pt-[env(safe-area-inset-top)]">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger className="h-9 w-9" />
-            <div className="md:hidden flex items-center gap-1.5 ml-1">
-              <Sparkles className="size-5 text-primary" />
-              <span className="text-lg font-bold tracking-tight text-primary">NITYA</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 gap-2 rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all px-3">
-                  <Languages className="h-3.5 w-3.5" />
-                  <span className="text-xs font-bold">{currentLanguage}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {COMMON_LANGUAGES.map((lang) => (
-                  <DropdownMenuItem key={lang.code} onClick={() => onLanguageChange?.(lang.name)} className="justify-between">
-                    {lang.name} {currentLanguage === lang.name && <Check className="h-4 w-4 text-primary" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary/10 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {children}
-          </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+                <item.icon className={cn("size-[20px]", isActive && "fill-current")} />
+                <span className="text-[10px] font-bold leading-none">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
   );
 }

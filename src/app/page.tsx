@@ -11,11 +11,8 @@ import HealthRecords from '@/components/dashboard/health-records';
 import LabResults from '@/components/dashboard/lab-results';
 import MedicationReminder from '@/components/dashboard/medication-reminder';
 import HealthJournal from '@/components/dashboard/health-journal';
-import QuickActions from '@/components/dashboard/quick-actions';
 import WeeklyInsightLetter from '@/components/dashboard/weekly-insight-letter';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalRecord } from '@/lib/types';
-import { FileText, Sparkles } from 'lucide-react';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { LoginScreen } from '@/components/auth/login-screen';
@@ -33,7 +30,7 @@ export default function Home() {
   const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
 
   const [records, setRecords] = useState<MedicalRecord[]>([]);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('today');
   const [language, setLanguage] = useState('English');
 
   if (isUserLoading || (user && isProfileLoading)) {
@@ -59,6 +56,59 @@ export default function Home() {
 
   const isMale = profile?.gender === 'Male';
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'today':
+        return (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {/* Nitya's Daily Synthesis HERO Card */}
+            <LifestyleGuidance profile={profile} />
+
+            {/* Weekly Insight Letter */}
+            <WeeklyInsightLetter profile={profile} language={language} />
+
+            {/* Intelligence Card */}
+            {!isMale ? (
+              <CycleIntelligence language={language} profile={profile} />
+            ) : (
+              <RecoveryIntelligence language={language} profile={profile} />
+            )}
+          </div>
+        );
+      
+      case 'log':
+        return (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <HealthJournal language={language} profile={profile} />
+            <SymptomTracker />
+          </div>
+        );
+
+      case 'history':
+        return (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <HealthRecords 
+              records={records} 
+              onRecordScanned={handleRecordScanned}
+              language={language}
+            />
+          </div>
+        );
+
+      case 'you':
+        return (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <PatientProfile language={language} profile={profile} />
+            <MedicationReminder language={language} />
+            <LabResults language={language} />
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <DashboardLayout 
       onLanguageChange={setLanguage} 
@@ -67,67 +117,7 @@ export default function Home() {
       onTabChange={setActiveTab}
       userProfile={profile}
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="flex items-center justify-between">
-          <TabsList className="bg-muted/50 border shadow-none p-1 rounded-2xl">
-            <TabsTrigger value="overview" className="gap-2 rounded-xl data-[state=active]:shadow-md">
-              <Sparkles className="h-4 w-4" />
-              Intelligence
-            </TabsTrigger>
-            <TabsTrigger value="records" className="gap-2 rounded-xl data-[state=active]:shadow-md">
-              <FileText className="h-4 w-4" />
-              Clinical
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value="overview" className="space-y-6 mt-0">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="space-y-6 lg:col-span-2">
-              {/* Nitya's Daily Synthesis HERO Card */}
-              <LifestyleGuidance profile={profile} />
-
-              {/* Weekly Insight Letter - New Retention Component */}
-              <WeeklyInsightLetter profile={profile} language={language} />
-
-              <PatientProfile language={language} profile={profile} />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {!isMale ? (
-                  <CycleIntelligence language={language} profile={profile} />
-                ) : (
-                  <RecoveryIntelligence language={language} profile={profile} />
-                )}
-                <SymptomTracker />
-              </div>
-
-              <QuickActions 
-                onRecordScanned={handleRecordScanned} 
-                onNavigateToRecords={() => setActiveTab('records')}
-                language={language}
-              />
-
-              <div id="medication-section">
-                <MedicationReminder language={language} />
-              </div>
-              
-              <HealthJournal language={language} />
-            </div>
-            
-            <div className="space-y-6 lg:col-span-1">
-              <LabResults language={language} />
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="records" className="mt-0">
-          <HealthRecords 
-            records={records} 
-            onRecordScanned={handleRecordScanned}
-            language={language}
-          />
-        </TabsContent>
-      </Tabs>
+      {renderTabContent()}
     </DashboardLayout>
   );
 }
