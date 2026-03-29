@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import PatientProfile from '@/components/dashboard/patient-profile';
 import CycleIntelligence from '@/components/dashboard/cycle-intelligence';
@@ -12,6 +12,7 @@ import LabResults from '@/components/dashboard/lab-results';
 import MedicationReminder from '@/components/dashboard/medication-reminder';
 import HealthJournal from '@/components/dashboard/health-journal';
 import WeeklyInsightLetter from '@/components/dashboard/weekly-insight-letter';
+import VitalsMonitor from '@/components/dashboard/vitals-monitor';
 import { MedicalRecord } from '@/lib/types';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -32,6 +33,13 @@ export default function Home() {
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [activeTab, setActiveTab] = useState('today');
   const [language, setLanguage] = useState('English');
+
+  const daysWithNitya = useMemo(() => {
+    if (!profile?.createdAt) return 1;
+    const createdDate = profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt);
+    const diffMs = new Date().getTime() - createdDate.getTime();
+    return Math.max(1, Math.floor(diffMs / (1000 * 3600 * 24)));
+  }, [profile?.createdAt]);
 
   if (isUserLoading || (user && isProfileLoading)) {
     return <ECGLoader />;
@@ -60,19 +68,31 @@ export default function Home() {
     switch (activeTab) {
       case 'today':
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {/* Nitya's Daily Synthesis HERO Card */}
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
+            {/* Header Identity strip */}
+            <div className="px-1 space-y-0.5">
+              <h1 className="text-2xl font-black tracking-tight">{profile?.firstName}</h1>
+              <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">With Nitya for {daysWithNitya} days</p>
+            </div>
+
+            {/* 1. SYNTHESIS CARD (Black Card) */}
             <LifestyleGuidance profile={profile} />
 
-            {/* Weekly Insight Letter */}
-            <WeeklyInsightLetter profile={profile} language={language} />
+            {/* 2. VITALS CARD (3-tile strip) */}
+            <VitalsMonitor language={language} isStrip />
 
-            {/* Intelligence Card */}
+            {/* 3. CYCLE/RECOVERY CARD */}
             {!isMale ? (
               <CycleIntelligence language={language} profile={profile} />
             ) : (
               <RecoveryIntelligence language={language} profile={profile} />
             )}
+
+            {/* 4. CHECK-IN CARD (Always last) */}
+            <SymptomTracker />
+
+            {/* Weekly Insight Letter (Contextual addition) */}
+            <WeeklyInsightLetter profile={profile} language={language} />
           </div>
         );
       
@@ -80,7 +100,6 @@ export default function Home() {
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <HealthJournal language={language} profile={profile} />
-            <SymptomTracker />
           </div>
         );
 
@@ -97,7 +116,7 @@ export default function Home() {
 
       case 'you':
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
             <PatientProfile language={language} profile={profile} />
             <MedicationReminder language={language} />
             <LabResults language={language} />

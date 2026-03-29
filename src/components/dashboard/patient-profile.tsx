@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,31 +10,24 @@ import {
   RefreshCw, 
   Smartphone,
   ClipboardList,
-  Scale,
-  ArrowUp,
-  ArrowDown,
-  ArrowRight,
-  Settings2
+  Settings2,
+  UserCircle,
+  LogOut
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { patientData } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-
-const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
-  const className = "h-4 w-4 text-muted-foreground";
-  if (trend === 'up') return <ArrowUp className={className} />;
-  if (trend === 'down') return <ArrowDown className={className} />;
-  return <ArrowRight className={className} />;
-};
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function PatientProfile({ language = 'English', profile }: { language?: string; profile?: any }) {
   const [lifeStage, setLifeStage] = useState<LifeStage>(profile?.lifeStage || 'Regular');
   const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
+  const auth = useAuth();
 
-  const saherImage = PlaceHolderImages.find(img => img.id === 'patient-saher');
+  const avatarImage = PlaceHolderImages.find(img => img.id === 'patient-saher');
 
   const handleSync = () => {
     setIsSyncing(true);
@@ -47,122 +40,111 @@ export default function PatientProfile({ language = 'English', profile }: { lang
     }, 2000);
   };
 
-  const bmi = useMemo(() => {
-    if (profile?.height && profile?.weight) {
-      const heightInMeters = profile.height / 100;
-      return (profile.weight / (heightInMeters * heightInMeters)).toFixed(1);
-    }
-    return null;
-  }, [profile]);
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
 
   return (
-    <Card className="shadow-md border-primary/5 overflow-hidden bg-white">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <Avatar className="h-16 w-16 border-2 border-primary/10 shrink-0 overflow-hidden relative">
-              {saherImage && (
+    <Card className="shadow-md border-primary/5 overflow-hidden bg-white rounded-[2rem]">
+      <CardHeader className="pb-6">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-20 w-20 border-4 border-primary/10 shrink-0 overflow-hidden relative shadow-inner">
+              {avatarImage && (
                 <Image 
-                  src={saherImage.imageUrl}
+                  src={avatarImage.imageUrl}
                   alt={`${profile?.firstName} portrait`}
                   fill
                   className="object-cover"
                   priority
-                  sizes="64px"
-                  data-ai-hint={saherImage.imageHint}
+                  sizes="80px"
+                  data-ai-hint={avatarImage.imageHint}
                 />
               )}
-              <AvatarFallback className="text-xl font-bold">{profile?.firstName?.charAt(0)}</AvatarFallback>
+              <AvatarFallback className="text-2xl font-black">{profile?.firstName?.charAt(0)}</AvatarFallback>
             </Avatar>
-            <div className="flex-1">
+            <div className="flex-1 space-y-1">
               <CardTitle className="text-2xl font-black tracking-tight">{profile?.firstName} {profile?.lastName}</CardTitle>
-              <CardDescription className="text-sm font-medium text-muted-foreground">
-                {profile?.dateOfBirth ? `${new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()} years` : '...'} · {profile?.gender}
-              </CardDescription>
-              {profile?.gender !== 'Male' && (
-                <div className="mt-2">
-                  <Select value={lifeStage} onValueChange={(v) => setLifeStage(v as LifeStage)}>
-                    <SelectTrigger className="h-7 w-[160px] text-[10px] uppercase font-bold tracking-wider rounded-full bg-secondary/20 border-transparent">
-                      <Settings2 className="h-3 w-3 mr-1" />
-                      <SelectValue placeholder="Select Life Stage" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Regular">Regular Intelligence</SelectItem>
-                      <SelectItem value="TTC">Trying to Conceive</SelectItem>
-                      <SelectItem value="Pregnancy">Pregnancy Support</SelectItem>
-                      <SelectItem value="Perimenopause">Perimenopause Tracking</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-black px-2 py-0.5">
+                  {profile?.gender}
+                </Badge>
+                <span className="text-xs font-bold text-muted-foreground">
+                  {profile?.dateOfBirth ? `${new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()} years` : '...'}
+                </span>
+              </div>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className={cn(
-              "h-9 gap-2 rounded-2xl border-primary/10 transition-all shrink-0",
-              isSyncing && "bg-secondary/20 animate-pulse"
-            )}
-            onClick={handleSync}
-            disabled={isSyncing}
-          >
-            {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
-            <span className="text-xs font-bold">Sync Wearables</span>
-          </Button>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Button 
+              variant="outline" 
+              className={cn(
+                "h-12 gap-2 rounded-2xl border-primary/10 shadow-sm transition-all",
+                isSyncing && "bg-primary/5 animate-pulse"
+              )}
+              onClick={handleSync}
+              disabled={isSyncing}
+            >
+              {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin text-primary" /> : <Smartphone className="h-4 w-4 text-primary" />}
+              <span className="text-xs font-black uppercase tracking-widest">Sync Patterns</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-12 gap-2 rounded-2xl border-destructive/10 text-destructive hover:bg-destructive/5 transition-all shadow-sm"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="text-xs font-black uppercase tracking-widest">Sign Out</span>
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        <div className="bg-muted/30 p-4 rounded-2xl border border-muted">
-          <h4 className="font-bold text-xs mb-1.5 flex items-center gap-2 uppercase tracking-widest text-muted-foreground">
-            <ClipboardList className="h-3.5 w-3.5" />
-            Medical History Summary
-          </h4>
-          <p className="text-sm text-foreground leading-relaxed italic">
-            "{profile?.allergies?.length ? `Allergic to: ${profile.allergies.join(', ')}. ` : ''} Blood Type: ${profile?.bloodType}. Focus on overall wellness and biometric monitoring."
-          </p>
-        </div>
+        <div className="bg-muted/20 p-5 rounded-3xl border border-muted/30 space-y-4">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
+              <Settings2 className="h-3 w-3" />
+              Identity Mode
+            </label>
+            <Select value={lifeStage} onValueChange={(v) => setLifeStage(v as LifeStage)}>
+              <SelectTrigger className="h-12 rounded-2xl border-primary/5 bg-white shadow-sm font-bold text-sm">
+                <SelectValue placeholder="Select Mode" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl">
+                <SelectItem value="Regular">Regular Intelligence</SelectItem>
+                <SelectItem value="TTC">Trying to Conceive</SelectItem>
+                <SelectItem value="Pregnancy">Pregnancy Support</SelectItem>
+                <SelectItem value="Perimenopause">Perimenopause Tracking</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          {patientData.vitals.map((vital) => (
-            <div key={vital.name} className="flex flex-col justify-between p-3 rounded-2xl border bg-secondary/5 hover:bg-secondary/10 transition-all group relative">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{vital.name}</span>
-                <vital.icon className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
-              </div>
-              <div>
-                <div className="flex items-baseline gap-0.5">
-                  <span className="text-lg font-black">{vital.value}</span>
-                  <span className="text-[9px] text-muted-foreground font-bold">{vital.unit}</span>
-                </div>
-                <div className="flex items-center mt-0.5">
-                  <TrendIcon trend={vital.trend} />
-                  <span className="text-[9px] ml-1 text-muted-foreground capitalize">{vital.trend}</span>
-                </div>
-              </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
+              <ClipboardList className="h-3 w-3" />
+              Medical Context
+            </label>
+            <div className="bg-white p-4 rounded-2xl border border-primary/5 text-sm italic text-foreground leading-relaxed shadow-sm">
+              "{profile?.allergies?.length ? `Sensitivities: ${profile.allergies.join(', ')}. ` : ''} 
+              Type ${profile?.bloodType}. Focus: ${profile?.healthFocus || 'General balance'}."
             </div>
-          ))}
-          {bmi && (
-            <div className="flex flex-col justify-between p-3 rounded-2xl border bg-accent/20 hover:bg-accent/30 transition-all group">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">BMI</span>
-                <Scale className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
-              </div>
-              <div>
-                <div className="flex items-baseline gap-0.5">
-                  <span className="text-lg font-black">{bmi}</span>
-                  <span className="text-[9px] text-muted-foreground font-bold">kg/m²</span>
-                </div>
-                <div className="flex items-center mt-0.5">
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[9px] ml-1 text-muted-foreground">Optimal</span>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function Badge({ children, variant, className }: { children: React.ReactNode, variant?: any, className?: string }) {
+  return (
+    <div className={cn(
+      "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors",
+      variant === 'secondary' ? "border-transparent bg-secondary text-secondary-foreground" : "border-foreground",
+      className
+    )}>
+      {children}
+    </div>
+  )
 }

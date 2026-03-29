@@ -3,20 +3,16 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Smile, Zap, Activity, Ghost, Heart, Droplets, Brain, AlertCircle, Plus, Loader2 } from 'lucide-react';
+import { Smile, Zap, AlertCircle, Ghost, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { confirmLogEntry } from '@/ai/flows/confirm-log-entry';
 
-const symptoms = [
+const checkInSymptoms = [
   { type: 'Mood', icon: Smile, color: 'text-yellow-600 bg-yellow-100' },
   { type: 'Energy', icon: Zap, color: 'text-emerald-600 bg-emerald-100' },
   { type: 'Pain', icon: AlertCircle, color: 'text-red-600 bg-red-100' },
-  { type: 'Acne', icon: Activity, color: 'text-orange-600 bg-orange-100' },
-  { type: 'Libido', icon: Heart, color: 'text-pink-600 bg-pink-100' },
-  { type: 'Sleep', icon: Brain, color: 'text-indigo-600 bg-indigo-100' },
   { type: 'Stress', icon: Ghost, color: 'text-purple-600 bg-purple-100' },
-  { type: 'Digestion', icon: Droplets, color: 'text-blue-600 bg-blue-100' },
 ];
 
 export default function SymptomTracker() {
@@ -36,13 +32,11 @@ export default function SymptomTracker() {
     
     try {
       const primarySymptom = selected[0];
-      
-      // Get warm confirmation from Nitya
       const response = await confirmLogEntry({
         logType: primarySymptom,
         logValue: 4,
-        logStreak: 1, // Mocked streak
-        isFirstLog: false, // Mocked logic
+        logStreak: 1, 
+        isFirstLog: false,
         targetLanguage: 'English'
       });
 
@@ -64,39 +58,34 @@ export default function SymptomTracker() {
   };
 
   return (
-    <Card className="shadow-md border-primary/5">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Daily Vitals & Symptoms</CardTitle>
-            <CardDescription>Track how you feel throughout your cycle.</CardDescription>
-          </div>
-          <Button size="icon" variant="ghost" className="rounded-full">
-            <Plus className="h-5 w-5" />
-          </Button>
+    <Card className="shadow-md border-primary/5 rounded-[2rem] bg-white overflow-hidden">
+      <CardHeader className="pb-4">
+        <div className="space-y-1">
+          <CardTitle className="text-xl font-black tracking-tight">How are you feeling?</CardTitle>
+          <CardDescription className="text-xs font-medium">A quick check-in for Nitya to note your state.</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-4 gap-3 mb-6">
-          {symptoms.map((s) => (
+          {checkInSymptoms.map((s) => (
             <button
               key={s.type}
               onClick={() => toggleSymptom(s.type)}
               className={cn(
-                "flex flex-col items-center gap-2 p-3 rounded-2xl transition-all border",
+                "flex flex-col items-center gap-2 p-3 rounded-3xl transition-all border",
                 selected.includes(s.type) 
-                  ? "bg-primary border-primary scale-95" 
-                  : "bg-card border-muted hover:border-primary/50"
+                  ? "bg-primary border-primary scale-95 shadow-inner" 
+                  : "bg-card border-muted hover:border-primary/20"
               )}
             >
               <div className={cn(
-                "p-2 rounded-xl transition-colors",
+                "p-2.5 rounded-2xl transition-colors",
                 selected.includes(s.type) ? "bg-white/20 text-white" : s.color
               )}>
                 <s.icon className="h-5 w-5" />
               </div>
               <span className={cn(
-                "text-[10px] font-bold uppercase tracking-tighter",
+                "text-[10px] font-black uppercase tracking-tight",
                 selected.includes(s.type) ? "text-white" : "text-muted-foreground"
               )}>
                 {s.type}
@@ -105,16 +94,16 @@ export default function SymptomTracker() {
           ))}
         </div>
         <Button 
-          className="w-full h-12 rounded-2xl font-bold tracking-tight" 
+          className="w-full h-14 rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg hover:shadow-xl transition-all" 
           disabled={selected.length === 0 || isLogging}
           onClick={handleLog}
         >
           {isLogging ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : selected.length > 0 ? (
-            `Log ${selected.length} Symptoms`
+            `Log ${selected.length} Patterns`
           ) : (
-            'Select to Log'
+            'Tap to Select'
           )}
         </Button>
       </CardContent>

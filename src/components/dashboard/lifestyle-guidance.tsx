@@ -1,21 +1,17 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, HelpCircle, CheckCircle2, Home, HandHeart, ChevronRight, AlertCircle, CalendarHeart, Coffee } from 'lucide-react';
+import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, ChevronRight, BrainCircuit } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { generateHealthRecommendations, GenerateHealthRecommendationsOutput } from '@/ai/flows/generate-health-recommendations';
 import { generatePhaseGuidance, GeneratePhaseGuidanceOutput } from '@/ai/flows/generate-phase-guidance';
-import { generateReengagementNote } from '@/ai/flows/generate-reengagement-note';
 import { generateDayOneWelcome } from '@/ai/flows/generate-day-one-welcome';
-import { analyzeMedicationGap } from '@/ai/flows/analyze-medication-gap';
 import { generateRelationshipMilestone } from '@/ai/flows/generate-relationship-milestone';
 import { generateMorningNudge } from '@/ai/flows/generate-morning-nudge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
@@ -28,20 +24,25 @@ const iconMap: Record<string, any> = {
 };
 
 export default function LifestyleGuidance({ profile }: { profile: any }) {
+  const db = useFirestore();
+  const { toast } = useToast();
+
+  const synthesisRef = useMemoFirebase(() => {
+    return profile?.id ? doc(db, 'users', profile.id, 'synthesis', 'today') : null;
+  }, [profile?.id, db]);
+
+  const { data: firestoreSynthesis, isLoading: isFSLoding } = useDoc(synthesisRef);
+
   const [nityaInsight, setNityaInsight] = useState<GenerateHealthRecommendationsOutput | null>(null);
-  const [reengagementNote, setReengagementNote] = useState<string | null>(null);
   const [dayOneNote, setDayOneNote] = useState<string | null>(null);
   const [milestoneNote, setMilestoneNote] = useState<string | null>(null);
   const [morningNudge, setMorningNudge] = useState<string | null>(null);
-  const [medicationGapInsight, setMedicationGapInsight] = useState<string | null>(null);
   const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
   const [isResponding, setIsResponding] = useState(false);
-  const db = useFirestore();
-  const { toast } = useToast();
 
-  // H-1 Caching: Check if already loaded in this session
+  // Use session cache for AI generated fallback
   useEffect(() => {
     const cached = sessionStorage.getItem(`nitya_h1_${profile?.id}`);
     if (cached) {
@@ -50,30 +51,22 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   }, [profile?.id]);
 
   const fetchNityaInsight = async () => {
-    if (!profile || nityaInsight) return; // Respect session cache
+    if (!profile || nityaInsight || firestoreSynthesis) return; 
     setIsLoading(true);
     try {
-      let daysActive = 0;
-      if (profile.createdAt) {
-        const createdDate = profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt);
-        daysActive = Math.max(1, Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24)));
-      }
-
-      const userRef = doc(db, 'users', profile.id);
+      const createdDate = profile.createdAt?.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt || Date.now());
+      const daysActive = Math.max(1, Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24)));
       const maturity = daysActive > 30 ? 'established' : (daysActive > 7 ? 'developing' : 'new');
 
-      // Day One Logic
       if (daysActive <= 1) {
         const welcome = await generateDayOneWelcome({
           firstName: profile.firstName,
           healthFocus: profile.healthFocus || 'overall balance',
           timeOfDay: new Date().getHours() < 12 ? 'Morning' : 'Afternoon',
-          cityTier: profile.cityTier || 'unknown',
           targetLanguage: 'English'
         });
         setDayOneNote(welcome.welcomeNote);
       } else {
-        // Morning Nudge (N-1) - Never cached
         const isMorning = new Date().getHours() >= 5 && new Date().getHours() < 12;
         if (isMorning) {
           const nudgeResult = await generateMorningNudge({
@@ -86,8 +79,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           setMorningNudge(nudgeResult.nudge);
         }
 
-        // Milestone Logic
-        const milestones = [30, 60, 90, 180, 365];
+        const milestones = [30, 60, 90];
         if (milestones.includes(daysActive)) {
           const milestoneResult = await generateRelationshipMilestone({
             firstName: profile.firstName,
@@ -101,32 +93,27 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         }
       }
 
-      // Main Synthesis (H-1)
       const result = await generateHealthRecommendations({
         clinicalData: {
           firstName: profile.firstName,
           timeOfDay: new Date().getHours() < 12 ? 'Morning' : 'Afternoon',
           cycleDay: patientData.cycleData.currentDay,
-          cycleLength: patientData.cycleData.avgCycleLength,
           phase: patientData.cycleData.predictedPhase,
           vitals: {
-            rhr: { value: Number(patientData.vitals[0].value), trend: patientData.vitals[0].trend },
-            sleep: { value: Number(patientData.vitals[2].value), trend: patientData.vitals[2].trend },
-            hrv: { value: Number(patientData.vitals[3].value), trend: patientData.vitals[3].trend },
+            rhr: { value: 64, trend: 'stable' },
+            sleep: { value: 7.2, trend: 'up' },
+            hrv: { value: 55, trend: 'up' },
           },
           logs: {
-            energy: patientData.symptoms[0]?.value || 3,
-            mood: patientData.symptoms[1]?.value || 3,
-            journalSnippet: patientData.journalEntries?.[0]?.content,
+            energy: 3,
+            mood: 4,
           },
-          medicalHistory: profile.medicalHistory,
         },
         relationshipState: {
           daysActive: daysActive,
           relationshipMaturity: maturity as any,
-          daysSinceDialogue: 3, 
           targetLanguage: 'English',
-          toneMode: profile.toneMode
+          toneMode: profile.toneMode || 'supportive'
         }
       });
       setNityaInsight(result);
@@ -144,8 +131,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
     try {
       const result = await generatePhaseGuidance({
         phase: patientData.cycleData.predictedPhase,
-        energyScore: patientData.symptoms[0]?.value || 3,
-        moodScore: patientData.symptoms[1]?.value || 3,
+        energyScore: 3,
         targetLanguage: 'English'
       });
       setPhaseGuidance(result);
@@ -163,8 +149,8 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       const toneMode = choice === 'external' ? 'practical' : 'supportive';
       const userRef = doc(db, 'users', profile.id);
       await updateDoc(userRef, { toneMode, lastDialogueResponseDate: serverTimestamp() });
-      toast({ title: "Noted.", description: "Tomorrow's read will reflect this." });
-      sessionStorage.removeItem(`nitya_h1_${profile.id}`); // Clear cache to allow refresh
+      toast({ title: "Noted.", description: "Nitya will reflect this in tomorrow's synthesis." });
+      sessionStorage.removeItem(`nitya_h1_${profile.id}`);
       fetchNityaInsight();
     } catch (error) {
       console.error(error);
@@ -178,78 +164,100 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       fetchNityaInsight();
       fetchPhaseGuidance();
     }
-  }, [profile]);
+  }, [profile, firestoreSynthesis]);
+
+  const displayObservation = firestoreSynthesis?.content || nityaInsight?.observation || dayOneNote;
+  const isReturn = profile?.reEngagementCount > 0 && !displayObservation;
 
   return (
-    <Card className="shadow-lg border-primary/10 overflow-hidden bg-white">
+    <Card className="shadow-xl border-none bg-[#0A0A0A] text-white overflow-hidden rounded-[2rem]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div className="space-y-1">
-          <CardTitle className="text-xl font-black tracking-tight">Nitya's Daily Synthesis</CardTitle>
-          <CardDescription className="flex items-center gap-1.5">
-            {morningNudge && <span className="text-primary font-bold animate-in fade-in">{morningNudge}</span>}
+          <CardTitle className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Nitya's Daily Read
+          </CardTitle>
+          <CardDescription className="text-white/60 font-medium">
+            {morningNudge || "Listening to your patterns"}
           </CardDescription>
         </div>
-        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
-          <Sparkles className="h-3 w-3" />
+        <Badge variant="outline" className="bg-white/10 text-white border-white/20 gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
           {nityaInsight?.tierReached || 'Synthesis'}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-6">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-10 text-muted-foreground border-2 border-dashed rounded-3xl bg-muted/5">
+        {isLoading || isFSLoding ? (
+          <div className="flex flex-col items-center justify-center py-10 text-white/40 border-2 border-dashed border-white/10 rounded-3xl bg-white/5">
             <Loader2 className="h-8 w-8 animate-spin mb-3 text-primary opacity-50" />
-            <p className="text-xs font-medium italic">Nitya is reflecting...</p>
+            <p className="text-xs font-medium italic">Finding the threads...</p>
           </div>
         ) : (
           <div className="space-y-6">
             {milestoneNote && (
-              <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 animate-in fade-in slide-in-from-bottom-4">
-                <p className="text-base font-medium leading-relaxed italic">"{milestoneNote}"</p>
+              <div className="bg-primary/20 p-5 rounded-3xl border border-primary/20 animate-in fade-in slide-in-from-bottom-4">
+                <p className="text-sm font-medium leading-relaxed italic text-primary-foreground">"{milestoneNote}"</p>
               </div>
             )}
 
-            {nityaInsight?.dialogueMoment ? (
-              <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 text-center animate-in fade-in slide-in-from-bottom-4">
+            {isReturn && (
+              <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
+                <p className="text-base font-medium leading-relaxed italic text-white/90">
+                  "Welcome back. The body keeps its rhythm even when we aren't watching. Ready to check in?"
+                </p>
+              </div>
+            )}
+
+            {!displayObservation && !milestoneNote && !isReturn && (
+              <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-col items-center text-center gap-3">
+                <BrainCircuit className="h-8 w-8 text-white/20" />
+                <p className="text-sm font-medium text-white/60 italic">
+                  "Our patterns are still quiet. Share a thought in your journal to help Nitya learn your rhythm today."
+                </p>
+              </div>
+            )}
+
+            {nityaInsight?.dialogueMoment && (
+              <div className="bg-primary/10 p-6 rounded-3xl border border-primary/20 text-center animate-in fade-in slide-in-from-bottom-4">
                 <p className="text-lg font-bold mb-4">{nityaInsight.dialogueMoment.question}</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="rounded-2xl text-xs h-12" onClick={() => handleDialogueResponse('external')}>{nityaInsight.dialogueMoment.optionA}</Button>
-                  <Button variant="outline" className="rounded-2xl text-xs h-12" onClick={() => handleDialogueResponse('internal')}>{nityaInsight.dialogueMoment.optionB}</Button>
+                  <Button variant="outline" className="rounded-2xl text-xs h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('external')}>{nityaInsight.dialogueMoment.optionA}</Button>
+                  <Button variant="outline" className="rounded-2xl text-xs h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('internal')}>{nityaInsight.dialogueMoment.optionB}</Button>
                 </div>
               </div>
-            ) : nityaInsight?.observation ? (
-              <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 group">
-                <div className="flex gap-4 items-start">
-                  <div className="bg-primary/10 p-3 rounded-2xl shrink-0"><Sparkles className="h-5 w-5 text-primary" /></div>
-                  <div className="space-y-3 flex-1">
-                    <p className="text-base font-medium leading-relaxed italic">"{nityaInsight.observation}"</p>
-                    {nityaInsight.actionLine && (
-                      <Button variant="ghost" className="w-full justify-between h-12 bg-white/50 border-primary/5 rounded-2xl px-4 text-primary">
-                        <span className="text-sm font-bold">{nityaInsight.actionLine}</span>
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
+            )}
+
+            {displayObservation && !nityaInsight?.dialogueMoment && (
+              <div className="space-y-4 animate-in fade-in duration-700">
+                <p className="text-lg font-medium leading-relaxed italic text-white/90 pr-4">
+                  "{displayObservation}"
+                </p>
+                {nityaInsight?.actionLine && (
+                  <Button variant="ghost" className="w-full justify-between h-14 bg-white/10 border-white/5 hover:bg-white/20 rounded-3xl px-5 text-primary-foreground group">
+                    <span className="text-sm font-black uppercase tracking-widest">{nityaInsight.actionLine}</span>
+                    <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                )}
               </div>
-            ) : null}
+            )}
           </div>
         )}
 
-        <div className="grid gap-3">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Phase Invitations</p>
-          {phaseGuidance?.guidance.map((rec) => {
-            const Icon = iconMap[rec.domain] || Sparkles;
-            return (
-              <div key={rec.domain} className="flex gap-4 p-4 rounded-2xl bg-secondary/5 border border-secondary/10">
-                <div className="bg-white p-2.5 rounded-xl shadow-sm border border-secondary/20 h-fit"><Icon className="h-5 w-5 text-primary" /></div>
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest">{rec.domain}</p>
-                  <p className="text-sm leading-relaxed font-semibold">{rec.invitation}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {phaseGuidance && (
+          <div className="pt-4 border-t border-white/10 space-y-3">
+            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] px-1">Phase Invitations</p>
+            <div className="grid grid-cols-2 gap-2">
+              {phaseGuidance.guidance.slice(0, 2).map((rec) => {
+                const Icon = iconMap[rec.domain] || Sparkles;
+                return (
+                  <div key={rec.domain} className="p-4 rounded-3xl bg-white/5 border border-white/10 flex flex-col gap-2">
+                    <Icon className="h-4 w-4 text-primary" />
+                    <p className="text-[11px] leading-snug font-bold text-white/80">{rec.invitation}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
