@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -17,13 +16,14 @@ const GenerateReengagementNoteInputSchema = z.object({
   lastTheme: z.string().optional().describe('The primary theme of the last insight before absence.'),
   relationshipMaturity: z.enum(['new', 'developing', 'established', 'deep']).default('new'),
   reEngagementCount: z.number().optional().default(0),
+  hasGapData: z.boolean().optional().default(false).describe('Whether wearable data was synced during the absence.'),
   targetLanguage: z.string().optional().default('English'),
 });
 
 export type GenerateReengagementNoteInput = z.infer<typeof GenerateReengagementNoteInputSchema>;
 
 const GenerateReengagementNoteOutputSchema = z.object({
-  note: z.string().describe('A 1-2 sentence warm, guilt-free welcome back note with a tiny invitation.'),
+  note: z.string().describe('A strictly 2-sentence warm, guilt-free welcome back note.'),
 });
 
 export type GenerateReengagementNoteOutput = z.infer<typeof GenerateReengagementNoteOutputSchema>;
@@ -48,14 +48,15 @@ const prompt = ai.definePrompt({
     
     LOGIC:
     1. If daysAway is 3–5: Light acknowledgement. Life happened. No drama.
-    2. If daysAway is 6–10: Warm welcome back. Reference that the body kept going without the app.
+    2. If daysAway is 6–10: Warm welcome back. Reference that the body kept going. If hasGapData is true, mention that you noticed their biometrics stayed steady (or whatever the data shows).
     3. If daysAway is 11–14: Honest acknowledgement. Offer the lowest possible re-entry point.
     4. If reEngagementCount >= 3: Acknowledge the pattern gently ("You always come back...").
     
-    CONSTRAINTS:
-    - Exactly 2 sentences maximum.
-    - Warm. Zero guilt.
-    - End with one tiny optional re-entry invitation (e.g., "Worth checking your heart rate for a moment?").
+    STRICT OUTPUT CONSTRAINTS:
+    - Exactly 2 sentences maximum. No more.
+    - Sentence 1: warm acknowledgement of the return.
+    - Sentence 2: one single tiny optional re-entry invitation (e.g., "Worth checking your heart rate for a moment?").
+    - Warm. Zero guilt. Zero catch-up pressure.
     - Provide the output in {{{targetLanguage}}}.
 
     USER CONTEXT:
@@ -64,6 +65,7 @@ const prompt = ai.definePrompt({
     Last theme: {{{lastTheme}}}
     Maturity: {{{relationshipMaturity}}}
     Return count: {{{reEngagementCount}}}
+    Synced data during gap: {{{hasGapData}}}
     `,
 });
 

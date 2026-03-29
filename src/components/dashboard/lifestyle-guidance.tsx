@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -45,6 +44,8 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         daysActive = Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24));
       }
 
+      const userRef = doc(db, 'users', profile.id);
+
       if (daysActive <= 1) {
         const welcome = await generateDayOneWelcome({
           firstName: profile.firstName,
@@ -62,24 +63,25 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         }
 
         if (daysAway >= 3 && daysAway <= 14) {
+          // Acknowledge wearable sync during gap if RHR/Sleep trends are present
+          const hasGapData = patientData.vitals.some(v => v.trend !== 'stable');
+          
           const reNote = await generateReengagementNote({
             firstName: profile.firstName,
             daysAway,
-            relationshipMaturity: 'developing',
+            relationshipMaturity: daysActive > 30 ? 'established' : 'developing',
             reEngagementCount: profile.reEngagementCount || 0,
+            hasGapData,
             targetLanguage: 'English'
           });
           setReengagementNote(reNote.note);
           
-          const userRef = doc(db, 'users', profile.id);
           await updateDoc(userRef, { 
-            reEngagementCount: (profile.reEngagementCount || 0) + 1,
-            lastOpenDate: serverTimestamp()
+            reEngagementCount: (profile.reEngagementCount || 0) + 1
           });
         }
       }
 
-      const userRef = doc(db, 'users', profile.id);
       await updateDoc(userRef, { lastOpenDate: serverTimestamp() });
 
       let daysSinceDialogue = 100;
