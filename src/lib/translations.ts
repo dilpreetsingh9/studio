@@ -75,6 +75,7 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     proTipContent: "Tell me about your tea, your lunch, or how you slept. It all matters.",
     transcribing: "Reflecting...",
     transcriptionFailed: "Try again later",
+    weeklyLetterInvite: "Your week, in Nitya's words. Ready when you are.",
   }
 };
 

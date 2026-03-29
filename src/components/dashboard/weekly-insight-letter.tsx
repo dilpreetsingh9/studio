@@ -9,6 +9,7 @@ import { patientData } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { t } from '@/lib/translations';
 
 export default function WeeklyInsightLetter({ profile, language = 'English' }: { profile: any; language?: string }) {
   const [letter, setLetter] = useState<GenerateWeeklyLetterOutput | null>(null);
@@ -111,7 +112,7 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
                 <p className="text-sm text-muted-foreground font-medium italic">
                   {isMonthMilestone 
                     ? 'Thirty days. A moment to look at the larger pattern.' 
-                    : (isThinWeek ? 'A small note on a quiet week.' : 'A quiet look back at the last seven days.')}
+                    : (isThinWeek ? 'A small note on a quiet week.' : t('weeklyLetterInvite', language))}
                 </p>
               </div>
             </div>
