@@ -11,9 +11,10 @@ import LabResults from '@/components/dashboard/lab-results';
 import MedicationReminder from '@/components/dashboard/medication-reminder';
 import HealthJournal from '@/components/dashboard/health-journal';
 import QuickActions from '@/components/dashboard/quick-actions';
+import WeeklyInsightLetter from '@/components/dashboard/weekly-insight-letter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MedicalRecord } from '@/lib/types';
-import { FileText, Sparkles } from 'lucide-react';
+import { FileText, Sparkles, Mail } from 'lucide-react';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { LoginScreen } from '@/components/auth/login-screen';
@@ -84,6 +85,9 @@ export default function Home() {
             <div className="space-y-6 lg:col-span-2">
               {/* Nitya's Daily Synthesis HERO Card */}
               <LifestyleGuidance profile={profile} />
+
+              {/* Weekly Insight Letter - New Retention Component */}
+              <WeeklyInsightLetter profile={profile} language={language} />
 
               <PatientProfile language={language} profile={profile} />
               
