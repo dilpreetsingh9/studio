@@ -1,14 +1,14 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, HelpCircle, CheckCircle2, Home, HandHeart, ChevronRight } from 'lucide-react';
+import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, HelpCircle, CheckCircle2, Home, HandHeart, ChevronRight, AlertCircle } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { generateHealthRecommendations, GenerateHealthRecommendationsOutput } from '@/ai/flows/generate-health-recommendations';
 import { generatePhaseGuidance, GeneratePhaseGuidanceOutput } from '@/ai/flows/generate-phase-guidance';
-import { generateReengagementNote, GenerateReengagementNoteOutput } from '@/ai/flows/generate-reengagement-note';
-import { generateDayOneWelcome, GenerateDayOneWelcomeOutput } from '@/ai/flows/generate-day-one-welcome';
+import { generateReengagementNote } from '@/ai/flows/generate-reengagement-note';
+import { generateDayOneWelcome } from '@/ai/flows/generate-day-one-welcome';
+import { analyzeMedicationGap, AnalyzeMedicationGapOutput } from '@/ai/flows/analyze-medication-gap';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [nityaInsight, setNityaInsight] = useState<GenerateHealthRecommendationsOutput | null>(null);
   const [reengagementNote, setReengagementNote] = useState<string | null>(null);
   const [dayOneNote, setDayOneNote] = useState<string | null>(null);
+  const [medicationGapInsight, setMedicationGapInsight] = useState<string | null>(null);
   const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
@@ -47,6 +48,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
       const userRef = doc(db, 'users', profile.id);
 
+      // 1. Day One Logic
       if (daysActive <= 1) {
         const welcome = await generateDayOneWelcome({
           firstName: profile.firstName,
@@ -57,6 +59,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         });
         setDayOneNote(welcome.welcomeNote);
       } else {
+        // 2. Re-engagement Logic
         let daysAway = 0;
         if (profile.lastOpenDate) {
           const lastDate = profile.lastOpenDate.toDate ? profile.lastOpenDate.toDate() : new Date(profile.lastOpenDate);
@@ -65,7 +68,6 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
         if (daysAway >= 3 && daysAway <= 14) {
           const hasGapData = patientData.vitals.some(v => v.trend !== 'stable');
-          
           const reNote = await generateReengagementNote({
             firstName: profile.firstName,
             daysAway,
@@ -75,15 +77,35 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             targetLanguage: 'English'
           });
           setReengagementNote(reNote.note);
-          
-          await updateDoc(userRef, { 
-            reEngagementCount: (profile.reEngagementCount || 0) + 1
-          });
+          await updateDoc(userRef, { reEngagementCount: (profile.reEngagementCount || 0) + 1 });
         }
       }
 
       await updateDoc(userRef, { lastOpenDate: serverTimestamp() });
 
+      // 3. Medication Gap Logic (Tier 1 Priority)
+      const medsWithGaps = (patientData.medications || []).filter(med => {
+        if (!med.lastTaken) return false;
+        const lastTakenDate = new Date(med.lastTaken);
+        const diffHrs = Math.floor((new Date().getTime() - lastTakenDate.getTime()) / (1000 * 3600));
+        return diffHrs >= 24 && diffHrs <= (7 * 24); // Gap between 1 and 7 days
+      });
+
+      if (medsWithGaps.length > 0) {
+        const targetMed = medsWithGaps[0];
+        const lastTakenDate = new Date(targetMed.lastTaken!);
+        const consecutiveMissed = Math.floor((new Date().getTime() - lastTakenDate.getTime()) / (1000 * 3600 * 24));
+        
+        const gapResult = await analyzeMedicationGap({
+          medicationName: targetMed.name,
+          consecutiveMissed,
+          priorStreak: targetMed.streak || 0,
+          targetLanguage: 'English'
+        });
+        setMedicationGapInsight(gapResult.observation);
+      }
+
+      // 4. Main Synthesis Logic
       let daysSinceDialogue = 100;
       if (profile.lastDialogueResponseDate) {
         const lastDate = profile.lastDialogueResponseDate.toDate ? profile.lastDialogueResponseDate.toDate() : new Date(profile.lastDialogueResponseDate);
@@ -107,7 +129,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             energy: patientData.symptoms[0]?.value || 3,
             mood: patientData.symptoms[1]?.value || 3,
             journalSnippet: patientData.journalEntries?.[0]?.content,
-            missedMedsCount: 0,
+            missedMedsCount: medsWithGaps.length,
             daysSinceWorkout: 1
           },
           medicalHistory: profile.medicalHistory || patientData.medicalHistory,
@@ -169,11 +191,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         ? "Noted — tomorrow's read will work with that." 
         : "Noted. Nitya will hold that gently for the next few days.";
 
-      toast({
-        title: "I hear you.",
-        description: acknowledgement,
-      });
-      
+      toast({ title: "I hear you.", description: acknowledgement });
       fetchNityaInsight();
     } catch (error) {
       console.error('Failed to save dialogue response', error);
@@ -198,7 +216,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
           <Sparkles className="h-3 w-3" />
-          {dayOneNote ? 'Our Beginning' : (reengagementNote ? 'Welcome Home' : (nityaInsight?.tierReached || 'Synthesis'))}
+          {dayOneNote ? 'Our Beginning' : (reengagementNote ? 'Welcome Home' : (medicationGapInsight ? 'Return to Rhythm' : (nityaInsight?.tierReached || 'Synthesis')))}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -209,28 +227,30 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           </div>
         ) : (
           <div className="space-y-6">
-            {dayOneNote && (
-              <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Tier 1: Medication Gaps */}
+            {medicationGapInsight && (
+              <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
-                  <HandHeart className="h-24 w-24 text-primary" />
+                  <AlertCircle className="h-24 w-24 text-orange-600" />
                 </div>
                 <div className="flex items-start gap-4 relative z-10">
-                  <div className="bg-white p-3 rounded-2xl shadow-sm shrink-0 border border-primary/5">
-                    <HandHeart className="h-6 w-6 text-primary" />
+                  <div className="bg-white p-3 rounded-2xl shadow-sm shrink-0 border border-orange-100">
+                    <AlertCircle className="h-6 w-6 text-orange-600" />
                   </div>
                   <div className="space-y-3">
                     <p className="text-base font-medium leading-relaxed italic text-foreground">
-                      "{dayOneNote}"
+                      "{medicationGapInsight}"
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
-                      Our Promise: One easy choice at a time.
+                    <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest opacity-60">
+                      Forward-facing · Clean start
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            {reengagementNote && !dayOneNote && (
+            {/* Tier 2: Welcome Back / Re-engagement */}
+            {reengagementNote && !dayOneNote && !medicationGapInsight && (
               <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                   <Home className="h-20 w-20 text-primary" />
@@ -251,7 +271,29 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               </div>
             )}
 
-            {!dayOneNote && (
+            {/* Standard Tiered Logic (Day One, Companion Moment, or Synthesis) */}
+            {dayOneNote && !medicationGapInsight && (
+              <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="absolute top-0 right-0 p-4 opacity-5">
+                  <HandHeart className="h-24 w-24 text-primary" />
+                </div>
+                <div className="flex items-start gap-4 relative z-10">
+                  <div className="bg-white p-3 rounded-2xl shadow-sm shrink-0 border border-primary/5">
+                    <HandHeart className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="space-y-3">
+                    <p className="text-base font-medium leading-relaxed italic text-foreground">
+                      "{dayOneNote}"
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
+                      Our Promise: One easy choice at a time.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!dayOneNote && !medicationGapInsight && (
               nityaInsight?.dialogueMoment ? (
                 <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
