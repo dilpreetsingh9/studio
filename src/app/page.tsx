@@ -34,7 +34,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('today');
   const [language, setLanguage] = useState('English');
 
-  const daysWithNitya = useMemo(() => {
+  const daysWithJeiva = useMemo(() => {
     if (!profile?.createdAt) return 1;
     const createdDate = profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt);
     const diffMs = new Date().getTime() - createdDate.getTime();
@@ -72,10 +72,10 @@ export default function Home() {
             {/* Header Identity strip */}
             <div className="px-1 space-y-0.5">
               <h1 className="text-2xl font-black tracking-tight">{profile?.firstName}</h1>
-              <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">With Nitya for {daysWithNitya} days</p>
+              <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">With Jeiva for {daysWithJeiva} days</p>
             </div>
 
-            {/* 1. SYNTHESIS CARD (Black Card) */}
+            {/* 1. SYNTHESIS CARD (Indigo Card) */}
             <LifestyleGuidance profile={profile} />
 
             {/* 2. VITALS CARD (3-tile strip) */}

@@ -19,7 +19,7 @@ export function ECGLoader() {
         </svg>
       </div>
       <div className="space-y-2 text-center">
-        <h2 className="text-xl font-bold tracking-tight text-primary">Healthea</h2>
+        <h2 className="text-xl font-bold tracking-tight text-primary">Jeiva</h2>
         <p className="text-sm text-muted-foreground animate-pulse">Initializing Hormone Intelligence...</p>
       </div>
       <svg className="absolute bottom-20 w-64 h-20 opacity-20" viewBox="0 0 100 20">

@@ -30,7 +30,7 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     priority: "Importance",
     frequency: "Frequency",
     reminderTime: "Daily Time",
-    aiSuggest: "Nitya's Insight",
+    aiSuggest: "Jeiva's Insight",
     share: "Share",
     motivate: "Breathe",
     translateTo: "Read in",
@@ -40,7 +40,7 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     noRecords: "No stories saved yet.",
     startScan: "Save First Story",
     report: "Summary",
-    aiAnalysis: "Nitya's Observation",
+    aiAnalysis: "Jeiva's Observation",
     syncHealth: "Sync Patterns",
     connecting: "Connecting...",
     synced: "Connected",
@@ -58,7 +58,7 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     referralCopied: "Link ready to share.",
     sharingProgress: "Sharing your rhythm with family...",
     missed: "Paused",
-    safetyAlert: "Nitya's Thought",
+    safetyAlert: "Jeiva's Thought",
     actionPlan: "A Gentle Step",
     enablePush: "Enable Soft Reminders",
     healthJournal: "Daily Journal",
@@ -74,7 +74,7 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     proTipContent: "Tell me about your tea, your lunch, or how you slept. It all matters.",
     transcribing: "Reflecting...",
     transcriptionFailed: "Try again later",
-    weeklyLetterInvite: "Your week, in Nitya's words. Ready when you are.",
+    weeklyLetterInvite: "Your week, in Jeiva's words. Ready when you are.",
   }
 };
 

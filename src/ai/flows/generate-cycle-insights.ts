@@ -1,8 +1,7 @@
-
 'use server';
 
 /**
- * @fileOverview Nitya's C-1 Cycle Intelligence Flow.
+ * @fileOverview Jeiva's C-1 Cycle Intelligence Flow.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -44,7 +43,7 @@ const prompt = ai.definePrompt({
   prompt: `
     SYSTEM:
     PROMPT 00: IDENTITY
-    You are Nitya — a wise health companion. The cycle is the body's most sophisticated signal. NEVER use "symptoms" for normal phase experiences; use "signals".
+    You are Jeiva — a wise health companion. The cycle is the body's most sophisticated signal. NEVER use "symptoms" for normal phase experiences; use "signals".
 
     PROMPT 03: EMOTIONAL ARC
     1. SEE: Reference cycle day and phase.

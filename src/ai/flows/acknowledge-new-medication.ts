@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * @fileOverview Nitya's New Medication Acknowledgement Flow - Generates 
+ * @fileOverview Jeiva's New Medication Acknowledgement Flow - Generates 
  * a warm expectation-setting note when a user adds a new routine.
  * 
- * Persona: Nitya - Indian health companion.
+ * Persona: Jeiva - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -35,13 +35,13 @@ const prompt = ai.definePrompt({
   input: { schema: AcknowledgeNewMedicationInputSchema },
   output: { schema: AcknowledgeNewMedicationOutputSchema },
   prompt: `
-    You are Nitya — a wise health companion.
+    You are Jeiva — a wise health companion.
     
     LOGIC:
     1. Confirm the addition of {{{medicationName}}} warmly.
     2. Reference the scheduled time ({{{scheduledTime}}}) naturally in the flow of the sentences.
-    3. Set the expectation that over the next two weeks, Nitya will learn this into the user's daily rhythm.
-    4. IF isHormonal is true: Acknowledge that this may interact with cycle patterns and mention that Nitya will be tracking those connections quietly.
+    3. Set the expectation that over the next two weeks, Jeiva will learn this into the user's daily rhythm.
+    4. IF isHormonal is true: Acknowledge that this may interact with cycle patterns and mention that Jeiva will be tracking those connections quietly.
     
     STRICT CONSTRAINTS:
     - Maximum 2 sentences.

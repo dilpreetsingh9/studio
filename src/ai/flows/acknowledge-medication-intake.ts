@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Medication Intake Acknowledgement Flow - Generates 
+ * @fileOverview Jeiva's Medication Intake Acknowledgement Flow - Generates 
  * immediate, warm witnessing when a user takes their routine.
  * 
- * Persona: Nitya - Indian health companion.
+ * Persona: Jeiva - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -34,7 +34,7 @@ const prompt = ai.definePrompt({
   input: { schema: AcknowledgeMedicationInputSchema },
   output: { schema: AcknowledgeMedicationOutputSchema },
   prompt: `
-    You are Nitya — a wise health companion.
+    You are Jeiva — a wise health companion.
     
     PHILOSOPHY:
     - Witness, don't perform.

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -28,7 +27,6 @@ export function LoginScreen() {
     setIsLoading(true);
     setAuthError(null);
     const provider = new GoogleAuthProvider();
-    // Prompting for account selection can help avoid silent failures
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
@@ -191,7 +189,7 @@ export function LoginScreen() {
 
       <p className="text-center text-xs text-muted-foreground mt-4">
         {mode === 'email-signin' ? (
-          <>New to Healthea? <button type="button" className="text-primary font-bold hover:underline" onClick={() => setMode('email-signup')}>Create an account</button></>
+          <>New to Jeiva? <button type="button" className="text-primary font-bold hover:underline" onClick={() => setMode('email-signup')}>Create an account</button></>
         ) : (
           <>Already have an account? <button type="button" className="text-primary font-bold hover:underline" onClick={() => setMode('email-signin')}>Sign in here</button></>
         )}
@@ -209,7 +207,7 @@ export function LoginScreen() {
             </div>
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-3xl font-black tracking-tight text-primary">Healthea</CardTitle>
+            <CardTitle className="text-3xl font-black tracking-tight text-primary">Jeiva</CardTitle>
             <CardDescription className="text-base font-medium">
               Hormone Intelligence & Health Navigator
             </CardDescription>

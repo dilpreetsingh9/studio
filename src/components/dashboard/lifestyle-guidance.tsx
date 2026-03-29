@@ -33,7 +33,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
   const { data: firestoreSynthesis, isLoading: isFSLoding } = useDoc(synthesisRef);
 
-  const [nityaInsight, setNityaInsight] = useState<GenerateHealthRecommendationsOutput | null>(null);
+  const [jeivaInsight, setJeivaInsight] = useState<GenerateHealthRecommendationsOutput | null>(null);
   const [dayOneNote, setDayOneNote] = useState<string | null>(null);
   const [milestoneNote, setMilestoneNote] = useState<string | null>(null);
   const [morningNudge, setMorningNudge] = useState<string | null>(null);
@@ -44,14 +44,14 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
   // Use session cache for AI generated fallback
   useEffect(() => {
-    const cached = sessionStorage.getItem(`nitya_h1_${profile?.id}`);
+    const cached = sessionStorage.getItem(`jeiva_h1_${profile?.id}`);
     if (cached) {
-      setNityaInsight(JSON.parse(cached));
+      setJeivaInsight(JSON.parse(cached));
     }
   }, [profile?.id]);
 
-  const fetchNityaInsight = async () => {
-    if (!profile || nityaInsight || firestoreSynthesis) return; 
+  const fetchJeivaInsight = async () => {
+    if (!profile || jeivaInsight || firestoreSynthesis) return; 
     setIsLoading(true);
     try {
       const createdDate = profile.createdAt?.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt || Date.now());
@@ -116,8 +116,8 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           toneMode: profile.toneMode || 'supportive'
         }
       });
-      setNityaInsight(result);
-      sessionStorage.setItem(`nitya_h1_${profile.id}`, JSON.stringify(result));
+      setJeivaInsight(result);
+      sessionStorage.setItem(`jeiva_h1_${profile.id}`, JSON.stringify(result));
     } catch (error) {
       console.error(error);
     } finally {
@@ -149,9 +149,9 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       const toneMode = choice === 'external' ? 'practical' : 'supportive';
       const userRef = doc(db, 'users', profile.id);
       await updateDoc(userRef, { toneMode, lastDialogueResponseDate: serverTimestamp() });
-      toast({ title: "Noted.", description: "Nitya will reflect this in tomorrow's synthesis." });
-      sessionStorage.removeItem(`nitya_h1_${profile.id}`);
-      fetchNityaInsight();
+      toast({ title: "Noted.", description: "Jeiva will reflect this in tomorrow's synthesis." });
+      sessionStorage.removeItem(`jeiva_h1_${profile.id}`);
+      fetchJeivaInsight();
     } catch (error) {
       console.error(error);
     } finally {
@@ -161,12 +161,12 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
   useEffect(() => {
     if (profile) {
-      fetchNityaInsight();
+      fetchJeivaInsight();
       fetchPhaseGuidance();
     }
   }, [profile, firestoreSynthesis]);
 
-  const displayObservation = firestoreSynthesis?.content || nityaInsight?.observation || dayOneNote;
+  const displayObservation = firestoreSynthesis?.content || jeivaInsight?.observation || dayOneNote;
   const isReturn = profile?.reEngagementCount > 0 && !displayObservation;
 
   return (
@@ -175,14 +175,14 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         <div className="space-y-1">
           <CardTitle className="text-xl font-black tracking-tight text-white flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-secondary" />
-            Nitya's Daily Read
+            Jeiva's Daily Read
           </CardTitle>
           <CardDescription className="text-white/60 font-medium">
             {morningNudge || "Listening to your patterns"}
           </CardDescription>
         </div>
         <Badge variant="outline" className="bg-white/10 text-white border-white/20 gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
-          {nityaInsight?.tierReached || 'Synthesis'}
+          {jeivaInsight?.tierReached || 'Synthesis'}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -211,29 +211,29 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-col items-center text-center gap-3">
                 <BrainCircuit className="h-8 w-8 text-white/20" />
                 <p className="text-sm font-medium text-white/60 italic">
-                  "Our patterns are still quiet. Share a thought in your journal to help Nitya learn your rhythm today."
+                  "Our patterns are still quiet. Share a thought in your journal to help Jeiva learn your rhythm today."
                 </p>
               </div>
             )}
 
-            {nityaInsight?.dialogueMoment && (
+            {jeivaInsight?.dialogueMoment && (
               <div className="bg-white/10 p-6 rounded-3xl border border-white/20 text-center animate-in fade-in slide-in-from-bottom-4">
-                <p className="text-lg font-bold mb-4">{nityaInsight.dialogueMoment.question}</p>
+                <p className="text-lg font-bold mb-4">{jeivaInsight.dialogueMoment.question}</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="rounded-2xl text-xs h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('external')}>{nityaInsight.dialogueMoment.optionA}</Button>
-                  <Button variant="outline" className="rounded-2xl text-xs h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('internal')}>{nityaInsight.dialogueMoment.optionB}</Button>
+                  <Button variant="outline" className="rounded-2xl text-xs h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('external')}>{jeivaInsight.dialogueMoment.optionA}</Button>
+                  <Button variant="outline" className="rounded-2xl text-xs h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('internal')}>{jeivaInsight.dialogueMoment.optionB}</Button>
                 </div>
               </div>
             )}
 
-            {displayObservation && !nityaInsight?.dialogueMoment && (
+            {displayObservation && !jeivaInsight?.dialogueMoment && (
               <div className="space-y-4 animate-in fade-in duration-700">
                 <p className="text-lg font-medium leading-relaxed italic text-white/90 pr-4">
                   "{displayObservation}"
                 </p>
-                {nityaInsight?.actionLine && (
+                {jeivaInsight?.actionLine && (
                   <Button variant="ghost" className="w-full justify-between h-14 bg-white/10 border-white/5 hover:bg-white/20 rounded-3xl px-5 text-white group">
-                    <span className="text-sm font-black uppercase tracking-widest">{nityaInsight.actionLine}</span>
+                    <span className="text-sm font-black uppercase tracking-widest">{jeivaInsight.actionLine}</span>
                     <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 )}

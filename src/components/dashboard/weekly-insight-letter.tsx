@@ -31,12 +31,9 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
         const diffDays = Math.floor(diffMs / (1000 * 3600 * 24));
         weekNumber = Math.ceil((diffDays + 1) / 7);
         
-        // Mocking days active for demonstration based on journal and vitals
-        // In a real app, this would be a query count for the current week
         const activityCount = (patientData.journalEntries?.length || 0) + (patientData.medications?.filter(m => m.streak! > 0).length || 0);
         daysActive = Math.min(Math.max(activityCount, 1), 7);
 
-        // Check if it's a month milestone (Week 4, 8, 12)
         if (weekNumber % 4 === 0) {
           monthNumber = weekNumber / 4;
         }
@@ -88,8 +85,6 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
 
   const currentWeek = profile?.createdAt ? Math.ceil((new Date().getTime() - (profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt)).getTime()) / (1000 * 3600 * 24 * 7)) : 1;
   const isMonthMilestone = currentWeek > 0 && currentWeek % 4 === 0;
-
-  // For UI demo, we'll assume "thin data" if journal entries are zero
   const isThinWeek = (patientData.journalEntries?.length || 0) < 2 && currentWeek > 1;
 
   return (
@@ -172,7 +167,7 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
                   </p>
                   <div className="mt-6 flex items-center gap-2">
                     <div className="h-0.5 w-8 bg-primary/20" />
-                    <span className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em]">Nitya</span>
+                    <span className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em]">Jeiva</span>
                   </div>
                 </div>
               </div>

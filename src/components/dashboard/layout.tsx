@@ -62,7 +62,7 @@ export function DashboardLayout({
       <header className="flex h-14 items-center justify-between border-b bg-white/80 backdrop-blur-md sticky top-0 z-30 px-4 shrink-0 pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-2">
           <Sparkles className="size-5 text-primary" />
-          <span className="text-lg font-black tracking-tight text-primary">NITYA</span>
+          <span className="text-lg font-black tracking-tight text-primary">JEIVA</span>
         </div>
         
         <div className="flex items-center gap-2">

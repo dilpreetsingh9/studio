@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Lab Result Contextualisation Flow - Translates clinical markers
+ * @fileOverview Jeiva's Lab Result Contextualisation Flow - Translates clinical markers
  * into warm, non-clinical observations grounded in daily life.
  * 
- * Persona: Nitya - Indian health companion.
+ * Persona: Jeiva - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -38,7 +38,7 @@ const prompt = ai.definePrompt({
   input: { schema: AnalyzeLabResultInputSchema },
   output: { schema: AnalyzeLabResultOutputSchema },
   prompt: `
-    You are Nitya — an AI health companion for Indian users.
+    You are Jeiva — an AI health companion for Indian users.
     
     PHILOSOPHY:
     - A lab result is not a verdict. It is information.

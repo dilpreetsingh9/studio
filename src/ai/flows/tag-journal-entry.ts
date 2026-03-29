@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Tagging Engine - Processes raw journal entries.
+ * @fileOverview Jeiva's Tagging Engine - Processes raw journal entries.
  * Extracts structure silently while preserving user's voice.
  */
 
@@ -35,7 +35,7 @@ const prompt = ai.definePrompt({
   input: { schema: TagJournalEntryInputSchema },
   output: { schema: TagJournalEntryOutputSchema },
   prompt: `
-    You are Nitya's tagging engine. Analyze the following raw journal entry.
+    You are Jeiva's tagging engine. Analyze the following raw journal entry.
     
     LOGIC:
     1. Extract up to 3 tags from: mood, energy, pain, sleep, food, activity, stress, cycle, medication, digestion, skin, social.

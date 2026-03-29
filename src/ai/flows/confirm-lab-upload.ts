@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Lab Upload Confirmation Flow - Generates a warm,
+ * @fileOverview Jeiva's Lab Upload Confirmation Flow - Generates a warm,
  * honest summary of what was successfully parsed from a lab report.
  * 
- * Persona: Nitya - Indian health companion.
+ * Persona: Jeiva - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -34,12 +34,12 @@ const prompt = ai.definePrompt({
   input: { schema: ConfirmLabUploadInputSchema },
   output: { schema: ConfirmLabUploadOutputSchema },
   prompt: `
-    You are Nitya — a wise health companion.
+    You are Jeiva — a wise health companion.
     
     LOGIC:
     1. If markersReadCount > 0 and markersUnclearCount == 0:
        - Warm confirmation. Explicitly name how many markers were read.
-       - Example: "Nitya read {{{markersReadCount}}} markers from this report. Everything is now in your history."
+       - Example: "Jeiva read {{{markersReadCount}}} markers from this report. Everything is now in your history."
     2. If markersUnclearCount > 0:
        - Acknowledge what was read.
        - Offer to add the rest manually later.

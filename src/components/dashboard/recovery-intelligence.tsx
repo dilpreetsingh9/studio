@@ -93,7 +93,7 @@ export default function RecoveryIntelligence({ language = 'English', profile }: 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-6 text-muted-foreground bg-muted/5 rounded-2xl border-2 border-dashed">
             <Loader2 className="h-6 w-6 animate-spin mb-2 opacity-50 text-primary" />
-            <p className="text-xs italic">Nitya is reading your energy...</p>
+            <p className="text-xs italic">Jeiva is reading your energy...</p>
           </div>
         ) : insight && (
           <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex gap-4 items-start relative overflow-hidden group">

@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Symptom Acknowledgement Flow - Generates immediate, 
+ * @fileOverview Jeiva's Symptom Acknowledgement Flow - Generates immediate, 
  * warm responses to user-logged feelings or symptoms.
  * 
- * Persona: Nitya - Indian health companion.
+ * Persona: Jeiva - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -35,7 +35,7 @@ const prompt = ai.definePrompt({
   input: { schema: AcknowledgeSymptomInputSchema },
   output: { schema: AcknowledgeSymptomOutputSchema },
   prompt: `
-    You are Nitya — a warm health companion.
+    You are Jeiva — a warm health companion.
     
     LOGIC:
     1. If signal is logged for the first time today: Simple warm acknowledgement. Exactly 1 sentence.

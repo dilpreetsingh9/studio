@@ -349,7 +349,7 @@ export default function MedicationReminder({
                         disabled={analyzingMedId === med.id}
                       >
                         {analyzingMedId === med.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
-                        Nitya
+                        Jeiva
                       </Button>
                       <Button 
                         variant="ghost" 

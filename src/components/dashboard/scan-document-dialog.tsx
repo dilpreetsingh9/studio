@@ -130,8 +130,7 @@ export default function ScanDocumentDialog({
       });
       setAnalysis(result);
 
-      // Call Nitya's confirmation flow
-      // We mock the counts based on parsed key findings for this MVP
+      // Call Jeiva's confirmation flow
       const markersFound = result.keyFindings?.length || 0;
       const unclearCount = markersFound === 0 ? 1 : 0; 
 

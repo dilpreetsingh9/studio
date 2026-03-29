@@ -1,17 +1,17 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Pattern Nudge Flow - Generates curious, non-alarming 
+ * @fileOverview Jeiva's Pattern Nudge Flow - Generates curious, non-alarming 
  * notification text when a 3-day pattern is detected.
  * 
- * Persona: Nitya - Indian health companion.
+ * Persona: Jeiva - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const PatternNudgeInputSchema = z.object({
-  patternDescription: z.string().describe('The specific pattern Nitya detected (e.g., lower HRV, consistent late sleep).'),
+  patternDescription: z.string().describe('The specific pattern Jeiva detected (e.g., lower HRV, consistent late sleep).'),
   signalTier: z.number().describe('The priority tier (1 for prompt/intriguing, 2 for soft/curious).'),
   targetLanguage: z.string().optional().default('English'),
 });
@@ -33,15 +33,15 @@ const prompt = ai.definePrompt({
   input: { schema: PatternNudgeInputSchema },
   output: { schema: PatternNudgeOutputSchema },
   prompt: `
-    You are Nitya — a wise health companion.
+    You are Jeiva — a wise health companion.
     
     TASK:
     Write a curious, non-alarming notification sentence for a user.
-    Nitya has noticed something interesting about the user's data over the last 3+ days.
+    Jeiva has noticed something interesting about the user's data over the last 3+ days.
     
     LOGIC:
     1. If signalTier is 1: Prompt and intriguing. 
-       Example spirit: "Nitya noticed something about your past few days."
+       Example spirit: "Jeiva noticed something about your past few days."
     2. If signalTier is 2: Softer. Curious, not urgent.
        Example spirit: "I've been reflecting on your rhythm this week."
     

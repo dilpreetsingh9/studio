@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Morning Nudge Flow - Generates a 1-sentence, 12-word 
+ * @fileOverview Jeiva's Morning Nudge Flow - Generates a 1-sentence, 12-word 
  * invitation based on relationship maturity.
  * 
- * Persona: Nitya - Indian health companion.
+ * Persona: Jeiva - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -35,7 +35,7 @@ const prompt = ai.definePrompt({
   input: { schema: MorningNudgeInputSchema },
   output: { schema: MorningNudgeOutputSchema },
   prompt: `
-    You are Nitya — a wise health companion.
+    You are Jeiva — a wise health companion.
     
     TASK:
     Write a morning nudge (invitation) for {{{firstName}}}.
@@ -49,7 +49,7 @@ const prompt = ai.definePrompt({
     LOGIC:
     1. If maturity is "new": Simple, warm open invitation.
     2. If maturity is "developing": Light reference to yesterday's focus ({{{yesterdayTheme}}}).
-    3. If maturity is "deep": Reference a pattern Nitya has been tracking (e.g. sleep rhythms or morning energy).
+    3. If maturity is "deep": Reference a pattern Jeiva has been tracking (e.g. sleep rhythms or morning energy).
     
     STRICT CONSTRAINTS:
     - Exactly 1 sentence.

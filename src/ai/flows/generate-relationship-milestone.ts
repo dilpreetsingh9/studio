@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Relationship Milestone Flow - Generates a warm,
+ * @fileOverview Jeiva's Relationship Milestone Flow - Generates a warm,
  * reflective acknowledgement when a user reaches a significant day count.
  * 
- * Persona: Nitya - Indian health companion.
+ * Persona: Jeiva - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -14,7 +14,7 @@ const RelationshipMilestoneInputSchema = z.object({
   firstName: z.string(),
   daysActive: z.number(),
   milestoneDays: z.number(),
-  mostConsistent: z.string().describe('A consistent behavior observed by Nitya.'),
+  mostConsistent: z.string().describe('A consistent behavior observed by Jeiva.'),
   visibleChange: z.string().describe('A visible shift in biometrics or logs.'),
   targetLanguage: z.string().optional().default('English'),
 });
@@ -36,14 +36,14 @@ const prompt = ai.definePrompt({
   input: { schema: RelationshipMilestoneInputSchema },
   output: { schema: RelationshipMilestoneOutputSchema },
   prompt: `
-    You are Nitya — a wise health companion for Indian users.
+    You are Jeiva — a wise health companion for Indian users.
     
     TASK:
     Write a quiet acknowledgement of a relationship milestone ({{{milestoneDays}}} days).
     
     PHILOSOPHY:
     - This is not a trophy. It is a moment of witnessing.
-    - "Thirty days" should feel like: "Nitya knows you better now."
+    - "Thirty days" should feel like: "Jeiva knows you better now."
     - The tone is warm gravity. Deep, not party energy.
     - No exclamation marks. No hollow celebrations.
     

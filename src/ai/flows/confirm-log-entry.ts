@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Logging Confirmation Flow - Generates a single-sentence,
+ * @fileOverview Jeiva's Logging Confirmation Flow - Generates a single-sentence,
  * warm confirmation after a user logs data.
  * 
- * Persona: Nitya - Indian health companion.
+ * Persona: Jeiva - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -34,13 +34,13 @@ const prompt = ai.definePrompt({
   input: { schema: ConfirmLogInputSchema },
   output: { schema: ConfirmLogOutputSchema },
   prompt: `
-    You are Nitya — a warm health companion.
+    You are Jeiva — a warm health companion.
     Confirm that a log was received in exactly 1 sentence (max 12 words).
     
     LOGIC:
     1. If isFirstLog is true: "First one is always the most important. Noted."
     2. If logType is "food" and detectedItem is present (especially Indian food like Dal, Roti, Chawal): 
-       "{{{detectedItem}}} noted. Nitya will remember that."
+       "{{{detectedItem}}} noted. Jeiva will remember that."
     3. If logStreak is 7: Acknowledge the week milestone naturally (e.g. "Seven days of showing up. It adds up.").
     4. If logStreak is 30: Acknowledge the month milestone warmly.
     5. Standard log: Simple, warm confirmation. Never hollow.
