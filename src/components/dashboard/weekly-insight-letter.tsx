@@ -20,7 +20,6 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
     if (!profile) return;
     setIsLoading(true);
     try {
-      // Logic to determine week number and days active
       let daysActive = 7;
       let weekNumber = 1;
       
@@ -51,11 +50,11 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
         dominantEnergy: 'Steady',
         notableEvents: ['Family dinner', 'Late work night'],
         biggestImprovement: weekNumber === 1 
-          ? 'Your rhythm of showing up for your daily journal' 
-          : 'Your resting heart rate has been settling beautifully',
+          ? 'your steady rhythm of showing up for your daily journal' 
+          : 'the way your resting heart rate has been settling beautifully',
         biggestWatch: weekNumber === 1 
-          ? 'How your sleep duration shifted slightly mid-week' 
-          : 'A slight dip in sleep duration toward the weekend',
+          ? 'how your sleep duration shifted slightly mid-week' 
+          : 'a slight dip in sleep duration toward the weekend',
         targetLanguage: language
       });
       setLetter(result);
@@ -101,7 +100,7 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
             <div className="flex items-center justify-between">
               <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em]">
                 <Calendar className="h-3.5 w-3.5" />
-                Review: Week 1
+                Review: Week {letter ? (profile.createdAt ? Math.ceil((new Date().getTime() - (profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt)).getTime()) / (1000 * 3600 * 24 * 7)) : 1) : '...'}
               </Badge>
               <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} className="h-8 text-[10px] font-bold text-muted-foreground uppercase hover:bg-primary/5">
                 Close Letter
@@ -114,20 +113,20 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
           
           <CardContent className="space-y-6 relative z-10">
             {letter ? (
-              <div className="space-y-6">
-                <div className="prose prose-sm max-w-none">
+              <div className="space-y-8">
+                <div className="space-y-6">
                   {letter.letterContent.split('\n\n').map((para, i) => (
-                    <p key={i} className="text-base leading-relaxed text-foreground/90 font-medium italic mb-4 last:mb-0">
+                    <p key={i} className="text-base leading-relaxed text-foreground/90 font-medium italic">
                       {para}
                     </p>
                   ))}
                 </div>
                 
                 <div className="pt-8 border-t border-primary/10">
-                  <p className="text-lg font-bold text-primary italic leading-tight">
+                  <p className="text-xl font-bold text-primary italic leading-tight pr-8">
                     {letter.closingLine}
                   </p>
-                  <div className="mt-4 flex items-center gap-2">
+                  <div className="mt-6 flex items-center gap-2">
                     <div className="h-0.5 w-8 bg-primary/20" />
                     <span className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em]">Nitya</span>
                   </div>
