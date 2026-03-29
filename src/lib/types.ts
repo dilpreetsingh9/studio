@@ -24,6 +24,7 @@ export type Patient = {
   labResults: LabResult[];
   symptoms: SymptomLog[];
   journalEntries?: JournalEntry[];
+  medications?: Medication[];
 };
 
 export type SymptomLog = {
@@ -70,4 +71,15 @@ export type JournalEntry = {
   foodItem?: string | null;
   foodConnection?: string;
   flagForSynthesis?: boolean;
+};
+
+export type Medication = {
+  id: string;
+  name: string;
+  dosage: string;
+  frequency: string;
+  priority: 'Essential' | 'Supportive' | 'Occasional';
+  reminderTime: string;
+  streak?: number;
+  lastTaken?: string; // ISO date string
 };

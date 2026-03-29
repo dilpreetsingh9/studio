@@ -14,7 +14,8 @@ import {
   BellOff,
   Loader2,
   Wind,
-  Sparkles
+  Sparkles,
+  CheckCircle2
 } from 'lucide-react';
 import { 
   Select, 
@@ -40,6 +41,7 @@ import { cn } from '@/lib/utils';
 import { t } from '@/lib/translations';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeMissedMedication, AnalyzeMissedMedicationOutput } from '@/ai/flows/analyze-missed-medication';
+import { acknowledgeMedicationIntake } from '@/ai/flows/acknowledge-medication-intake';
 
 interface MedicationReminderProps {
   language?: string;
@@ -50,10 +52,14 @@ export default function MedicationReminder({
   language = 'English',
   relationshipMaturity = 'developing'
 }: MedicationReminderProps) {
-  const [meds, setMeds] = useState<Medication[]>(patientData.medications || []);
+  const [meds, setMeds] = useState<Medication[]>(patientData.medications || [
+    { id: '1', name: 'Vitamin D3', dosage: '2000 IU', frequency: 'Daily', priority: 'Supportive', reminderTime: '08:00 AM', streak: 5 },
+    { id: '2', name: 'Magnesium', dosage: '250 mg', frequency: 'Daily', priority: 'Supportive', reminderTime: '09:00 PM', streak: 13 }
+  ]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
   const [analyzingMedId, setAnalyzingMedId] = useState<string | null>(null);
+  const [processingIntakeId, setProcessingIntakeId] = useState<string | null>(null);
   const [nudges, setNudges] = useState<Record<string, AnalyzeMissedMedicationOutput>>({});
   const { toast } = useToast();
   
@@ -91,6 +97,7 @@ export default function MedicationReminder({
         frequency: newMed.frequency || 'Daily',
         priority: newMed.priority as any || 'Essential',
         reminderTime: newMed.reminderTime || '09:00 AM',
+        streak: 0
       };
       setMeds([...meds, med]);
       setNewMed({ priority: 'Essential' });
@@ -107,8 +114,8 @@ export default function MedicationReminder({
     try {
       const result = await analyzeMissedMedication({
         medicationName: med.name,
-        missedCount: 1, // Mocked for now, would come from real longitudinal data
-        streakDays: 5,   // Mocked for now
+        missedCount: 1, 
+        streakDays: med.streak || 0,
         relationshipMaturity,
         targetLanguage: language
       });
@@ -120,8 +127,49 @@ export default function MedicationReminder({
     }
   };
 
+  const handleConfirmIntake = async (med: Medication) => {
+    setProcessingIntakeId(med.id);
+    try {
+      const newStreak = (med.streak || 0) + 1;
+      const milestones = [7, 14, 30, 60, 90];
+      const isMilestone = milestones.includes(newStreak);
+
+      const result = await acknowledgeMedicationIntake({
+        medicationName: med.name,
+        newStreak,
+        isMilestone,
+        targetLanguage: language
+      });
+
+      // Update local state (mock)
+      setMeds(prev => prev.map(m => m.id === med.id ? { 
+        ...m, 
+        streak: newStreak, 
+        lastTaken: new Date().toISOString() 
+      } : m));
+
+      toast({
+        title: "Routine witnessed",
+        description: result.acknowledgement,
+      });
+    } catch (error) {
+      console.error('Failed to acknowledge intake', error);
+    } finally {
+      setProcessingIntakeId(null);
+    }
+  };
+
   const removeMed = (id: string) => {
     setMeds(meds.filter(m => m.id !== id));
+  };
+
+  const isTakenToday = (med: Medication) => {
+    if (!med.lastTaken) return false;
+    const lastTaken = new Date(med.lastTaken);
+    const today = new Date();
+    return lastTaken.getDate() === today.getDate() &&
+           lastTaken.getMonth() === today.getMonth() &&
+           lastTaken.getFullYear() === today.getFullYear();
   };
 
   return (
@@ -212,8 +260,11 @@ export default function MedicationReminder({
                 <div key={med.id} className="space-y-2">
                   <div className="flex items-center justify-between p-3 rounded-xl border bg-card hover:shadow-sm transition-all group">
                     <div className="flex gap-3 items-start">
-                      <div className="mt-1 bg-primary/10 p-2 rounded-lg">
-                        <Pill className="h-4 w-4 text-primary" />
+                      <div className={cn(
+                        "mt-1 p-2 rounded-lg transition-colors",
+                        isTakenToday(med) ? "bg-emerald-100 text-emerald-600" : "bg-primary/10 text-primary"
+                      )}>
+                        {isTakenToday(med) ? <CheckCircle2 className="h-4 w-4" /> : <Pill className="h-4 w-4" />}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -221,6 +272,11 @@ export default function MedicationReminder({
                           <Badge variant="outline" className="text-[10px] px-1.5 h-4 bg-primary/5 text-primary border-primary/20">
                             {med.priority}
                           </Badge>
+                          {med.streak && med.streak > 0 && (
+                            <Badge variant="secondary" className="text-[9px] px-1.5 h-4 bg-orange-50 text-orange-600 border-orange-100 font-bold">
+                              {med.streak} day streak
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground">{med.dosage} · {med.frequency}</p>
                         <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1">
@@ -230,6 +286,22 @@ export default function MedicationReminder({
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
+                      {!isTakenToday(med) ? (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 text-[10px] text-emerald-600 hover:bg-emerald-50 rounded-full font-bold"
+                          onClick={() => handleConfirmIntake(med)}
+                          disabled={processingIntakeId === med.id}
+                        >
+                          {processingIntakeId === med.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Mark Taken"}
+                        </Button>
+                      ) : (
+                        <span className="text-[10px] font-bold text-emerald-600/60 px-3 py-1 bg-emerald-50 rounded-full">
+                          Done
+                        </span>
+                      )}
+                      
                       <Button 
                         variant="ghost" 
                         size="sm" 
