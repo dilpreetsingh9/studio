@@ -13,8 +13,8 @@ import {
   Bell,
   BellOff,
   Loader2,
-  XCircle,
-  Wind
+  Wind,
+  Sparkles
 } from 'lucide-react';
 import { 
   Select, 
@@ -33,7 +33,7 @@ import {
   DialogTrigger 
 } from '@/components/ui/dialog';
 import { patientData } from '@/lib/data';
-import { Medication, MedicationPriority } from '@/lib/types';
+import { Medication } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -43,14 +43,18 @@ import { analyzeMissedMedication, AnalyzeMissedMedicationOutput } from '@/ai/flo
 
 interface MedicationReminderProps {
   language?: string;
+  relationshipMaturity?: 'new' | 'developing' | 'established' | 'deep';
 }
 
-export default function MedicationReminder({ language = 'English' }: MedicationReminderProps) {
+export default function MedicationReminder({ 
+  language = 'English',
+  relationshipMaturity = 'developing'
+}: MedicationReminderProps) {
   const [meds, setMeds] = useState<Medication[]>(patientData.medications || []);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
   const [analyzingMedId, setAnalyzingMedId] = useState<string | null>(null);
-  const [missedAnalysis, setMissedAnalysis] = useState<Record<string, AnalyzeMissedMedicationOutput>>({});
+  const [nudges, setNudges] = useState<Record<string, AnalyzeMissedMedicationOutput>>({});
   const { toast } = useToast();
   
   const [newMed, setNewMed] = useState<Partial<Medication>>({
@@ -98,16 +102,17 @@ export default function MedicationReminder({ language = 'English' }: MedicationR
     }
   };
 
-  const handleMarkMissed = async (med: Medication) => {
+  const handleGetNudge = async (med: Medication) => {
     setAnalyzingMedId(med.id);
     try {
-      const analysis = await analyzeMissedMedication({
+      const result = await analyzeMissedMedication({
         medicationName: med.name,
-        dosage: med.dosage,
-        medicalHistory: patientData.medicalHistory,
+        missedCount: 1, // Mocked for now, would come from real longitudinal data
+        streakDays: 5,   // Mocked for now
+        relationshipMaturity,
         targetLanguage: language
       });
-      setMissedAnalysis(prev => ({ ...prev, [med.id]: analysis }));
+      setNudges(prev => ({ ...prev, [med.id]: result }));
     } catch (error) {
       console.error(error);
     } finally {
@@ -198,8 +203,9 @@ export default function MedicationReminder({ language = 'English' }: MedicationR
         <ScrollArea className="h-[350px] pr-4">
           <div className="space-y-4">
             {meds.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground italic text-sm">
-                No routines added yet.
+              <div className="text-center py-10 text-muted-foreground italic text-sm border-2 border-dashed rounded-2xl bg-muted/5">
+                 <Wind className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                 No routines added yet.
               </div>
             ) : (
               meds.map((med) => (
@@ -227,12 +233,12 @@ export default function MedicationReminder({ language = 'English' }: MedicationR
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-8 text-[10px] text-muted-foreground hover:text-primary"
-                        onClick={() => handleMarkMissed(med)}
+                        className="h-8 text-[10px] text-primary hover:bg-primary/5 rounded-full"
+                        onClick={() => handleGetNudge(med)}
                         disabled={analyzingMedId === med.id}
                       >
-                        {analyzingMedId === med.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5 mr-1" />}
-                        Paused
+                        {analyzingMedId === med.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+                        Nitya
                       </Button>
                       <Button 
                         variant="ghost" 
@@ -245,31 +251,31 @@ export default function MedicationReminder({ language = 'English' }: MedicationR
                     </div>
                   </div>
 
-                  {missedAnalysis[med.id] && (
-                    <div className="p-3 rounded-xl border bg-secondary/5 text-xs animate-in slide-in-from-top-2">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <Wind className="h-3.5 w-3.5 text-primary" />
-                        <span className="font-bold uppercase tracking-wider">Nitya's Thought</span>
+                  {nudges[med.id] && (
+                    <div className="p-4 rounded-xl border bg-primary/5 text-xs animate-in slide-in-from-top-2 flex gap-3 items-start relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-3 opacity-5">
+                         <Sparkles className="h-10 w-10" />
                       </div>
-                      <p className="mb-2 text-muted-foreground leading-relaxed">
-                        {missedAnalysis[med.id].consequences}
-                      </p>
-                      <div className="bg-white/50 p-2 rounded border border-black/5">
-                        <p className="font-bold text-foreground">A Gentle Step:</p>
-                        <p className="text-muted-foreground italic">{missedAnalysis[med.id].actionPlan}</p>
+                      <div className="bg-white p-2 rounded-lg border shadow-sm shrink-0">
+                         <Wind className="h-4 w-4 text-primary" />
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-6 w-full mt-2 text-[10px]" 
-                        onClick={() => setMissedAnalysis(prev => {
-                          const updated = { ...prev };
-                          delete updated[med.id];
-                          return updated;
-                        })}
-                      >
-                        Dismiss
-                      </Button>
+                      <div className="space-y-2 flex-1">
+                        <p className="text-sm font-medium leading-relaxed italic text-foreground pr-6">
+                          "{nudges[med.id].nudge}"
+                        </p>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-fit text-[10px] text-muted-foreground hover:text-primary px-0" 
+                          onClick={() => setNudges(prev => {
+                            const updated = { ...prev };
+                            delete updated[med.id];
+                            return updated;
+                          })}
+                        >
+                          Release
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
