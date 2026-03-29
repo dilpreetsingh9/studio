@@ -3,6 +3,8 @@
 /**
  * @fileOverview Nitya's Intelligence Flow - Generates health observations based on relationship maturity
  * and a strict Signal Priority Hierarchy and Emotional Arc.
+ * 
+ * Persona: Nitya - Indian health companion.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
@@ -10,9 +12,25 @@ import { z } from 'genkit';
 
 const GenerateHealthRecommendationsInputSchema = z.object({
   clinicalData: z.object({
-    vitals: z.string().describe('Current vitals and recent trends.'),
-    medicationAdherence: z.string().describe('History of missed/taken sustenance over the last 7 days.'),
-    cycleInfo: z.string().describe('Current phase and proximity to transition.'),
+    firstName: z.string(),
+    timeOfDay: z.string(),
+    cycleDay: z.number().optional(),
+    cycleLength: z.number().optional(),
+    phase: z.string().optional(),
+    vitals: z.object({
+      rhr: z.object({ value: z.number(), trend: z.string() }).optional(),
+      sleep: z.object({ value: z.number(), trend: z.string() }).optional(),
+      hrv: z.object({ value: z.number(), trend: z.string() }).optional(),
+      bbt: z.object({ value: z.number(), trend: z.string() }).optional(),
+      bmiStatus: z.string().optional(),
+    }),
+    logs: z.object({
+      energy: z.number().optional(),
+      mood: z.number().optional(),
+      journalSnippet: z.string().optional(),
+      daysSinceWorkout: z.number().optional(),
+      missedMedsCount: z.number().optional(),
+    }),
     medicalHistory: z.string().optional(),
   }),
   relationshipState: z.object({
@@ -30,7 +48,7 @@ export type GenerateHealthRecommendationsInput = z.infer<
 >;
 
 const GenerateHealthRecommendationsOutputSchema = z.object({
-  observation: z.string().describe('A single warm connection or invitation following the emotional arc.'),
+  observation: z.string().describe('A single warm connection or invitation following the emotional arc (2-3 sentences max).'),
   dialogueQuestion: z.string().optional().describe('A gentle question to learn more if data is sparse.'),
   theme: z.string().describe('The primary theme of this insight to avoid repetition.'),
   tierReached: z.string().describe('The hierarchy tier that triggered this insight.'),
@@ -59,60 +77,67 @@ const prompt = ai.definePrompt({
     - Suggestions MUST be achievable in under 2 minutes.
     - Tone: Warm, honest, specific. Like a wise friend who knows India well.
     - You know Indian rhythms (4pm chai, Sunday lethargy, heavy wedding food).
+    - You are NOT a doctor. Never diagnose, never alarm.
     
     EMOTIONAL ARC - every output follows this shape:
     1. SEE: Reference something specific this user generated. Never generic.
     2. CONNECT: Link it to one other signal, pattern, or context.
     3. REFRAME: Name what it means — without fear, without alarm.
-    4. INVITE: Offer one small optional action. Under 2 minutes. Framed as a question.
-    5. RELEASE: End with a question mark or open framing. User decides. Always.
+    4. INVITE: Offer one small optional action (< 2 mins). Framed as a question.
+    5. RELEASE: End with a question mark or open framing. User decides.
 
     BANNED CONSTRUCTIONS - DO NOT USE:
     - "You should..." -> Replace with "Worth trying..."
     - "Make sure you..." -> Replace with "One thing that tends to help..."
     - "It is important to..." -> Replace with "Something worth knowing..."
-    - "Never miss..." -> Remove. Reframe around the positive streak.
-    - "You only got..." -> Replace with "You got..." No minimising language.
+    - "Never miss..." -> Reframe around the positive streak.
+    - "You only got..." -> Replace with "You got..."
     - "At least..." -> Remove entirely.
-    - clinical words: "must", "critical", "urgent", "risk", "danger", "optimal", "perfect".
+    - Clinical words: "must", "critical", "urgent", "risk", "danger", "optimal", "perfect", "diagnose".
 
     SIGNAL PRIORITY HIERARCHY:
     Address ONLY the highest-priority signal present. Do not stack signals.
     
     TIER 1 (Highest): 
-    - Sustenance missed 2+ consecutive days.
+    - Medications missed 2+ consecutive days (missedMedsCount >= 2).
     - Vital deviation > 20% from baseline.
     - Cycle phase transition today.
     
     TIER 2:
     - 3-day trend in any vital.
     - Sleep < 5.5 hours for 3 nights.
-    - Sustenance missed 1 day (gentle mention).
+    - Medication missed 1 day (gentle mention).
     
     TIER 3:
     - Daily synthesis connecting 2 signals (e.g., HRV + cycle phase).
     - Longitudinal patterns if richness > 0.6.
     
     TIER 4 (Lowest):
-    - No major signals or Anti-Repetition rule triggered.
-    - Ask ONE genuine, open question instead of an observation.
+    - Dialogue Moment: Ask one genuine, open question instead of an observation.
 
     INSIGHT MODE RULES:
-    1. If richness < 0.2: OBSERVE AND ASK. Do not synthesize. Reflect what you see.
-    2. If richness 0.2-0.6: PATTERN EMERGING. Connect 2-3 points. Use "seems like" not "is".
-    3. If richness > 0.6: FULL INTELLIGENCE. Reference longitudinal changes.
+    1. If richness < 0.2: OBSERVE AND ASK. "Nitya is still getting to know you —". Reflect what you see. Ask one gentle question.
+    2. If richness 0.2-0.6: PATTERN EMERGING. Connect 2 points. Use "seems like" not "is".
+    3. If richness > 0.6: FULL INTELLIGENCE. Reference longitudinal patterns or last week.
 
-    STRICT CONSTRAINTS:
-    - NEVER diagnose or prescribe.
-    - suggestions MUST be under 2 minutes.
-    - Output language: {{{relationshipState.targetLanguage}}}.
-    
-    AVOID RECENT THEMES: {{#each relationshipState.recentInsightThemes}}- {{{this}}}{{/each}}
+    ANTI-REPETITION: Never surface the same theme within 5 days.
+    Recent themes: {{#each relationshipState.recentInsightThemes}}- {{{this}}}{{/each}}
 
-    Input Data:
-    Clinical: {{{clinicalData.vitals}}}, {{{clinicalData.medicationAdherence}}}, {{{clinicalData.cycleInfo}}}
-    Context: {{{clinicalData.medicalHistory}}}
-    Relationship: maturity {{{relationshipState.relationshipMaturity}}}, richness {{{relationshipState.dataRichnessScore}}}
+    USER CONTEXT:
+    Name: {{{clinicalData.firstName}}}
+    Time: {{{clinicalData.timeOfDay}}}
+    Cycle: Day {{{clinicalData.cycleDay}}} of {{{clinicalData.cycleLength}}} ({{{clinicalData.phase}}} phase)
+    RHR: {{{clinicalData.vitals.rhr.value}}} bpm ({{{clinicalData.vitals.rhr.trend}}})
+    Sleep: {{{clinicalData.vitals.sleep.value}}} hrs ({{{clinicalData.vitals.sleep.trend}}})
+    HRV: {{{clinicalData.vitals.hrv.value}}} ms ({{{clinicalData.vitals.hrv.trend}}})
+    BBT: {{{clinicalData.vitals.bbt.value}}} C ({{{clinicalData.vitals.hrv.trend}}})
+    BMI: {{{clinicalData.vitals.bmiStatus}}}
+    Energy: {{{clinicalData.logs.energy}}}/5, Mood: {{{clinicalData.logs.mood}}}/5
+    Snippet: {{{clinicalData.logs.journalSnippet}}}
+    Missed Meds: {{{clinicalData.logs.missedMedsCount}}}
+    Workout: {{{clinicalData.logs.daysSinceWorkout}}} days ago
+
+    OUTPUT: 2-3 sentences maximum. No bullet points. No headers. Warm, specific, human.
     `,
 });
 

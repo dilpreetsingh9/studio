@@ -82,6 +82,9 @@ export default function Home() {
         <TabsContent value="overview" className="space-y-6 mt-0">
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
+              {/* Nitya's Daily Synthesis HERO Card */}
+              <LifestyleGuidance profile={profile} />
+
               <PatientProfile language={language} profile={profile} />
               
               {!isMale && (
@@ -96,8 +99,6 @@ export default function Home() {
                 onNavigateToRecords={() => setActiveTab('records')}
                 language={language}
               />
-
-              {!isMale && <LifestyleGuidance />}
 
               <div id="medication-section">
                 <MedicationReminder language={language} />
