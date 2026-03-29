@@ -22,6 +22,7 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
     try {
       let daysActive = 7;
       let weekNumber = 1;
+      let monthNumber = undefined;
       
       if (profile.createdAt) {
         const createdDate = profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt);
@@ -29,11 +30,17 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
         const diffDays = Math.floor(diffMs / (1000 * 3600 * 24));
         weekNumber = Math.ceil((diffDays + 1) / 7);
         daysActive = Math.min(diffDays + 1, 7);
+
+        // Check if it's a month milestone (Week 4, 8, 12)
+        if (weekNumber % 4 === 0) {
+          monthNumber = weekNumber / 4;
+        }
       }
 
       const result = await generateWeeklyLetter({
         firstName: profile.firstName,
         weekNumber: weekNumber,
+        monthNumber: monthNumber,
         daysActive: daysActive,
         healthFocus: profile.healthFocus,
         avgSleep: 7.2,
@@ -55,6 +62,10 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
         biggestWatch: weekNumber === 1 
           ? 'how your sleep duration shifted slightly mid-week' 
           : 'a slight dip in sleep duration toward the weekend',
+        // Monthly specific observations (Mocked for MVP)
+        monthDelta: monthNumber ? 'the gradual lowering of your baseline stress signals over these thirty days' : undefined,
+        mostConsistent: monthNumber ? 'your morning routine of checking in before the day gets full' : undefined,
+        stillEmerging: monthNumber ? 'the connection between your sleep quality and your late-evening tea' : undefined,
         targetLanguage: language
       });
       setLetter(result);
@@ -71,18 +82,28 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
     }
   };
 
+  const currentWeek = profile?.createdAt ? Math.ceil((new Date().getTime() - (profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt)).getTime()) / (1000 * 3600 * 24 * 7)) : 1;
+  const isMonthMilestone = currentWeek > 0 && currentWeek % 4 === 0;
+
   return (
     <div className="space-y-4">
       {!isOpen ? (
-        <Card className="shadow-md border-primary/10 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group" onClick={fetchWeeklyLetter}>
+        <Card className={cn(
+          "shadow-md border-primary/10 transition-all cursor-pointer group",
+          isMonthMilestone ? "bg-accent/5 hover:bg-accent/10 border-accent/20" : "bg-primary/5 hover:bg-primary/10"
+        )} onClick={fetchWeeklyLetter}>
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="bg-white p-3 rounded-2xl shadow-sm border group-hover:scale-110 transition-transform">
-                <Mail className="h-6 w-6 text-primary" />
+                <Mail className={cn("h-6 w-6", isMonthMilestone ? "text-accent" : "text-primary")} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-primary">Your Weekly Reflection</h3>
-                <p className="text-sm text-muted-foreground font-medium italic">A quiet look back at the last seven days.</p>
+                <h3 className={cn("text-lg font-bold", isMonthMilestone ? "text-accent" : "text-primary")}>
+                  {isMonthMilestone ? 'A Monthly Reflection' : 'Your Weekly Reflection'}
+                </h3>
+                <p className="text-sm text-muted-foreground font-medium italic">
+                  {isMonthMilestone ? 'Thirty days. A moment to look at the larger pattern.' : 'A quiet look back at the last seven days.'}
+                </p>
               </div>
             </div>
             <Button variant="ghost" size="icon" className="rounded-full group-hover:translate-x-1 transition-transform" disabled={isLoading}>
@@ -98,9 +119,12 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
           
           <CardHeader className="pb-4 relative z-10 border-b border-primary/5 mb-6">
             <div className="flex items-center justify-between">
-              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em]">
+              <Badge variant="outline" className={cn(
+                "gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em]",
+                isMonthMilestone ? "bg-accent/5 text-accent border-accent/20" : "bg-primary/5 text-primary border-primary/20"
+              )}>
                 <Calendar className="h-3.5 w-3.5" />
-                Review: Week {letter ? (profile.createdAt ? Math.ceil((new Date().getTime() - (profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt)).getTime()) / (1000 * 3600 * 24 * 7)) : 1) : '...'}
+                {isMonthMilestone ? `Milestone: Month ${currentWeek / 4}` : `Review: Week ${currentWeek}`}
               </Badge>
               <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} className="h-8 text-[10px] font-bold text-muted-foreground uppercase hover:bg-primary/5">
                 Close Letter
@@ -135,7 +159,7 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin mb-4 opacity-50 text-primary" />
-                <p className="text-xs font-medium italic">Reflecting on your week...</p>
+                <p className="text-xs font-medium italic">Reflecting on your journey...</p>
               </div>
             )}
             
