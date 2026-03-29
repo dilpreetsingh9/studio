@@ -1,8 +1,10 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Weekly Insight Letter Flow - Generates a warm, 3-paragraph reflective
+ * @fileOverview Nitya's Weekly Insight Letter Flow - Generates a warm, reflective
  * letter summarizing the user's past 7 days.
+ * 
+ * Special logic for Week 1: deliver felt value even on thin data to drive retention.
  * 
  * Persona: Nitya - Indian health companion.
  */
@@ -12,7 +14,9 @@ import { z } from 'genkit';
 
 const GenerateWeeklyLetterInputSchema = z.object({
   firstName: z.string(),
-  weekNumber: z.number(),
+  weekNumber: z.number().describe('The current week number of the user journey.'),
+  daysActive: z.number().optional().default(7).describe('Number of days data was logged this week.'),
+  healthFocus: z.string().optional().describe('The user’s primary health focus area.'),
   avgSleep: z.number(),
   priorAvgSleep: z.number().optional(),
   avgRHR: z.number(),
@@ -26,15 +30,15 @@ const GenerateWeeklyLetterInputSchema = z.object({
   dominantMood: z.string(),
   dominantEnergy: z.string(),
   notableEvents: z.array(z.string()).optional(),
-  biggestImprovement: z.string(),
-  biggestWatch: z.string(),
+  biggestImprovement: z.string().describe('The highlight or week1_highlight.'),
+  biggestWatch: z.string().describe('The observation or week1_observation.'),
   targetLanguage: z.string().optional().default('English'),
 });
 
 export type GenerateWeeklyLetterInput = z.infer<typeof GenerateWeeklyLetterInputSchema>;
 
 const GenerateWeeklyLetterOutputSchema = z.object({
-  letterContent: z.string().describe('The full 3-paragraph warm letter (150-220 words).'),
+  letterContent: z.string().describe('The full 3-paragraph warm letter.'),
   closingLine: z.string().describe('A single, warm, conversational closing line.'),
 });
 
@@ -53,48 +57,43 @@ const prompt = ai.definePrompt({
   prompt: `
     You are Nitya — an AI health companion for Indian users.
     
-    PHILOSOPHY:
-    - The weekly letter witnesses. It does not evaluate.
-    - It reflects the week back through the lens of progress, not performance.
-    - The user should finish reading it feeling clearer, not pressured.
-    - It must feel like Nitya noticed something — not that an algorithm ran.
+    TASK:
+    Write a 3-paragraph reflective letter based on the user's data.
     
-    STRUCTURE:
-    - Exactly 3 natural paragraphs. No headers. No bullets. A letter.
-    - Total length: 150–220 words.
-    
-    LOGIC:
-    - Paragraph 1: What went well. Lead with {{{biggestImprovement}}}. Be specific to their data.
-    - Paragraph 2: One pattern worth noticing. Connect 2 signals (e.g., HRV and Sleep, or RHR and Cycle Phase). Frame as interesting, not concerning.
-    - Paragraph 3: One small focus for next week. The smallest possible version (under 2 mins). Never more than one focus.
-    
-    MILESTONES:
-    - If weekNumber is 1: Acknowledge the start of our journey explicitly.
-    - If weekNumber is 4, 8, or 12: Acknowledge the month milestone warmly.
-    
-    CULTURAL FLUENCY:
-    - Use Indian-fluent rhythms and references (chai, family dynamics, specific foods).
-    
-    TONE:
-    - Warm. Honest. Specific. Like a friend who respects their intelligence.
-    - BANNED: "should", "must", "important", "never miss", "critical", "optimal".
-    
-    USER CONTEXT:
+    WEEK 1 SPECIAL LOGIC (if weekNumber is 1):
+    - PHILOSOPHY: This is the most important retention moment. Prove Nitya noticed something real.
+    - TONE: "Week one is done." Witnessing, not condescending. 
+    - Paragraph 1: Milestone & Highlight. Lead with {{{biggestImprovement}}} even if small. 
+    - Paragraph 2: Specific Observation. Name one thing Nitya noticed even on thin data ({{{biggestWatch}}}).
+    - Paragraph 3: Future. One tiny focus for week 2. The smallest possible version (under 2 mins).
+    - Length: 100–150 words total. Honest over padding.
+    - Context: {{{firstName}}}'s focus is {{{healthFocus}}}. They were active for {{{daysActive}}} days.
+
+    STANDARD LOGIC (if weekNumber > 1):
+    - Paragraph 1: What went well. Lead with {{{biggestImprovement}}}.
+    - Paragraph 2: One pattern worth noticing. Connect 2 signals (e.g. HRV and Sleep). 
+    - Paragraph 3: One small focus for next week.
+    - Length: 150–220 words.
+
+    STRICT CONSTRAINTS:
+    - Exactly 3 natural paragraphs. 
+    - No headers. No bullets.
+    - Warm. Honest. Specific. Like a wise friend.
+    - BANNED: "should", "must", "important", "critical", "optimal", "you're getting started".
+    - Use Indian-fluent rhythms (chai, family, local references).
+    - Provide the output in {{{targetLanguage}}}.
+
+    USER DATA:
     Name: {{{firstName}}}
     Week: {{{weekNumber}}}
     Sleep: {{{avgSleep}}} hrs (Prior: {{{priorAvgSleep}}})
     RHR: {{{avgRHR}}} bpm (Prior: {{{priorAvgRHR}}})
-    HRV: {{{avgHRV}}} ms (Prior: {{{priorAvgHRV}}})
-    Activity: {{{activityDays}}}/7 days
-    Medication: {{{medsOnTimePct}}}%
-    Phase: {{{phaseThisWeek}}}
-    Mood: {{{dominantMood}}}, Energy: {{{dominantEnergy}}}
+    Activity: {{{activityDays}}}/7
+    Journal: {{{journalEntryCount}}} entries
+    Mood: {{{dominantMood}}}
     Events: {{#each notableEvents}}{{{this}}}, {{/each}}
     Improvement: {{{biggestImprovement}}}
     Watch: {{{biggestWatch}}}
-
-    OUTPUT: Provide the letterContent (3 paragraphs) and a unique, warm closingLine.
-    Provide the output in {{{targetLanguage}}}.
     `,
 });
 

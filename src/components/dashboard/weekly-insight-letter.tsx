@@ -20,9 +20,23 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
     if (!profile) return;
     setIsLoading(true);
     try {
+      // Logic to determine week number and days active
+      let daysActive = 7;
+      let weekNumber = 1;
+      
+      if (profile.createdAt) {
+        const createdDate = profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt);
+        const diffMs = new Date().getTime() - createdDate.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 3600 * 24));
+        weekNumber = Math.ceil((diffDays + 1) / 7);
+        daysActive = Math.min(diffDays + 1, 7);
+      }
+
       const result = await generateWeeklyLetter({
         firstName: profile.firstName,
-        weekNumber: 1, // Mocked for now
+        weekNumber: weekNumber,
+        daysActive: daysActive,
+        healthFocus: profile.healthFocus,
         avgSleep: 7.2,
         priorAvgSleep: 6.8,
         avgRHR: 65,
@@ -32,12 +46,16 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
         activityDays: 4,
         medsOnTimePct: 92,
         phaseThisWeek: patientData.cycleData.predictedPhase,
-        journalEntryCount: 3,
+        journalEntryCount: (patientData.journalEntries?.length || 0),
         dominantMood: 'Balanced',
         dominantEnergy: 'Steady',
         notableEvents: ['Family dinner', 'Late work night'],
-        biggestImprovement: 'Your resting heart rate has been settling beautifully',
-        biggestWatch: 'A slight dip in sleep duration toward the weekend',
+        biggestImprovement: weekNumber === 1 
+          ? 'Your rhythm of showing up for your daily journal' 
+          : 'Your resting heart rate has been settling beautifully',
+        biggestWatch: weekNumber === 1 
+          ? 'How your sleep duration shifted slightly mid-week' 
+          : 'A slight dip in sleep duration toward the weekend',
         targetLanguage: language
       });
       setLetter(result);
@@ -127,7 +145,7 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
                  { label: 'Sleep', value: '7.2h', color: 'bg-indigo-50' },
                  { label: 'RHR', value: '65bpm', color: 'bg-rose-50' },
                  { label: 'Activity', value: '4/7', color: 'bg-emerald-50' },
-                 { label: 'Journal', value: '3 entries', color: 'bg-amber-50' }
+                 { label: 'Journal', value: `${patientData.journalEntries?.length || 0} entries`, color: 'bg-amber-50' }
                ].map((stat) => (
                  <div key={stat.label} className={cn("p-3 rounded-2xl border border-transparent hover:border-primary/10 transition-colors", stat.color)}>
                    <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-1">{stat.label}</p>
