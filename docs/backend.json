@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -21,7 +20,7 @@
         },
         "email": {
           "type": "string",
-          "description": "The user's primary email address, typically obtained from a login provider like Google.",
+          "description": "The user's primary email address.",
           "format": "email"
         },
         "dateOfBirth": {
@@ -31,7 +30,7 @@
         },
         "gender": {
           "type": "string",
-          "description": "The user's gender, used for conditional display of modules (e.g., cycle intelligence)."
+          "description": "The user's gender."
         },
         "bloodType": {
           "type": "string",
@@ -39,56 +38,30 @@
         },
         "allergies": {
           "type": "array",
-          "description": "A list of known allergies for the user.",
+          "description": "A list of known allergies.",
           "items": {
             "type": "string"
           }
         },
         "healthFocus": {
           "type": "string",
-          "description": "The user's primary health focus area (e.g., 'Hormone balance', 'Energy levels')."
-        },
-        "cityTier": {
-          "type": "string",
-          "enum": ["metro", "tier2", "tier3", "unknown"],
-          "description": "The tier of the city the user lives in."
-        },
-        "languagePreference": {
-          "type": "string",
-          "description": "The preferred language for the user interface and communications."
-        },
-        "lastDialogueResponse": {
-          "type": "string",
-          "enum": ["external", "internal"],
-          "description": "The user's last response to a dialogue moment (shifts Nitya's tone for 3 days)."
+          "description": "Primary health focus area."
         },
         "toneMode": {
           "type": "string",
           "enum": ["practical", "supportive"],
-          "description": "The active tone mode based on the last dialogue response."
-        },
-        "lastDialogueResponseDate": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the user last responded to a dialogue moment."
-        },
-        "lastOpenDate": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the user last opened the application."
+          "description": "The active tone mode for AI synthesis."
         },
         "reEngagementCount": {
           "type": "number",
-          "description": "How many times the user has returned after an absence of 3+ days."
+          "description": "Count of times returning after absence."
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp when the user profile was created.",
           "format": "date-time"
         },
         "updatedAt": {
           "type": "string",
-          "description": "Timestamp when the user profile was last updated.",
           "format": "date-time"
         }
       },
@@ -98,143 +71,51 @@
         "lastName",
         "email",
         "dateOfBirth",
-        "gender",
-        "bloodType",
-        "allergies"
+        "gender"
       ]
     },
     "MedicalRecord": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "MedicalRecord",
       "type": "object",
-      "description": "Represents an aggregated medical record entry from various sources for a patient.",
+      "description": "Represents an aggregated medical record entry.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the MedicalRecord entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the UserProfile this medical record belongs to. (Relationship: UserProfile 1:N MedicalRecord)"
-        },
-        "recordType": {
-          "type": "string",
-          "description": "The type of medical record (e.g., 'Lab Result', 'Diagnosis', 'Medication', 'Procedure', 'VisitNote')."
-        },
-        "source": {
-          "type": "string",
-          "description": "The source system or institution from which the record was obtained (e.g., 'Hospital A', 'Lab B')."
-        },
-        "recordDate": {
-          "type": "string",
-          "description": "The date when the medical record event occurred or was recorded.",
-          "format": "date"
-        },
-        "title": {
-          "type": "string",
-          "description": "A brief title or summary for the medical record."
-        },
-        "description": {
-          "type": "string",
-          "description": "Detailed description or content of the medical record."
-        },
-        "documentUri": {
-          "type": "string",
-          "description": "Optional URI to an external document or report related to this record.",
-          "format": "uri"
-        },
-        "tags": {
-          "type": "array",
-          "description": "Keywords or categories to help organize and search medical records.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the medical record was added to the system.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the medical record was last updated in the system.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "recordType": { "type": "string" },
+        "source": { "type": "string" },
+        "recordDate": { "type": "string", "format": "date" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "userId",
-        "recordType",
-        "source",
-        "recordDate",
-        "title",
-        "description"
-      ]
+      "required": ["id", "userId", "recordType", "source", "recordDate", "title", "description"]
     },
     "Insight": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Insight",
       "type": "object",
-      "description": "Stores AI-powered insights and personalized recommendations generated from patient medical data.",
+      "description": "AI-powered insights generated from medical data.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Insight entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the UserProfile this insight is for. (Relationship: UserProfile 1:N Insight)"
-        },
-        "generatedDate": {
-          "type": "string",
-          "description": "The date and time when the insight was generated.",
-          "format": "date-time"
-        },
-        "title": {
-          "type": "string",
-          "description": "A concise title summarizing the insight."
-        },
-        "content": {
-          "type": "string",
-          "description": "The detailed explanation or reasoning behind the AI-generated insight."
-        },
-        "riskCategory": {
-          "type": "string",
-          "description": "The categorized risk level associated with the insight (e.g., 'Low', 'Medium', 'High', 'Critical')."
-        },
-        "recommendations": {
-          "type": "array",
-          "description": "A list of actionable recommendations based on the insight.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "relatedMedicalRecordIds": {
-          "type": "array",
-          "description": "References to MedicalRecords that contributed to generating this insight. (Relationship: MedicalRecord N:N Insight)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the insight was recorded in the system.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the insight was last updated (e.g., if re-evaluated).",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "generatedDate": { "type": "string", "format": "date-time" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "riskCategory": { "type": "string" }
       },
-      "required": [
-        "id",
-        "userId",
-        "generatedDate",
-        "title",
-        "content",
-        "riskCategory"
-      ]
+      "required": ["id", "userId", "generatedDate", "title", "content", "riskCategory"]
+    },
+    "Synthesis": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Synthesis",
+      "type": "object",
+      "description": "Daily AI-generated health synthesis summary.",
+      "properties": {
+        "content": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content"]
     }
   },
   "auth": {
@@ -252,13 +133,7 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores core demographic and health information for each authenticated user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user, matching `request.auth.uid`."
-            }
-          ]
+          "description": "Core demographic and health information."
         }
       },
       {
@@ -268,17 +143,7 @@
           "schema": {
             "$ref": "#/backend/entities/MedicalRecord"
           },
-          "description": "Stores individual medical record entries.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The user ID."
-            },
-            {
-              "name": "medicalRecordId",
-              "description": "The record ID."
-            }
-          ]
+          "description": "Individual medical record entries."
         }
       },
       {
@@ -288,17 +153,17 @@
           "schema": {
             "$ref": "#/backend/entities/Insight"
           },
-          "description": "Stores AI-generated insights.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The user ID."
-            },
-            {
-              "name": "insightId",
-              "description": "The insight ID."
-            }
-          ]
+          "description": "AI-generated insights."
+        }
+      },
+      {
+        "path": "users/{userId}/synthesis/today",
+        "definition": {
+          "entityName": "Synthesis",
+          "schema": {
+            "$ref": "#/backend/entities/Synthesis"
+          },
+          "description": "Current daily AI synthesis summary."
         }
       }
     ]
