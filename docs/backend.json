@@ -14,7 +14,6 @@
         "firstName": {
           "type": "string",
           "description": "The user's first name."
-"
         },
         "lastName": {
           "type": "string",
@@ -58,6 +57,15 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp when the user last responded to a dialogue moment."
+        },
+        "lastOpenDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the user last opened the application."
+        },
+        "reEngagementCount": {
+          "type": "number",
+          "description": "How many times the user has returned after an absence of 3+ days."
         },
         "createdAt": {
           "type": "string",
@@ -772,7 +780,7 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores core demographic and health information for each authenticated user. The document ID (`userId`) must match `request.auth.uid` for ownership.",
+          "description": "Stores core demographic and health information for each authenticated user.",
           "params": [
             {
               "name": "userId",
@@ -788,15 +796,15 @@
           "schema": {
             "$ref": "#/backend/entities/MedicalRecord"
           },
-          "description": "Stores individual medical record entries for a specific patient. Includes denormalized `userId` matching the parent path for authorization independence.",
+          "description": "Stores individual medical record entries.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the patient, matching the parent user's ID."
+              "description": "The user ID."
             },
             {
               "name": "medicalRecordId",
-              "description": "The unique identifier for the specific medical record."
+              "description": "The record ID."
             }
           ]
         }
@@ -808,188 +816,19 @@
           "schema": {
             "$ref": "#/backend/entities/Insight"
           },
-          "description": "Stores AI-generated insights and recommendations specific to a patient. Includes denormalized `userId` matching the parent path for authorization independence.",
+          "description": "Stores AI-generated insights.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the patient, matching the parent user's ID."
+              "description": "The user ID."
             },
             {
               "name": "insightId",
-              "description": "The unique identifier for the specific insight."
-            }
-          ]
-        }
-      },
-      {
-        "path": "specialists/{specialistId}",
-        "definition": {
-          "entityName": "Specialist",
-          "schema": {
-            "$ref": "#/backend/entities/Specialist"
-          },
-          "description": "A global directory of healthcare specialists. This collection is likely publicly readable by authenticated users and managed by administrators.",
-          "params": [
-            {
-              "name": "specialistId",
-              "description": "The unique identifier for the specialist."
-            }
-          ]
-        }
-      },
-      {
-        "path": "users/{userId}/appointments/{appointmentId}",
-        "definition": {
-          "entityName": "Appointment",
-          "schema": {
-            "$ref": "#/backend/entities/Appointment"
-          },
-          "description": "Stores appointment details for a patient. Includes denormalized `userId` matching the parent path for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the patient, matching the parent user's ID."
-            },
-            {
-              "name": "appointmentId",
-              "description": "The unique identifier for the specific appointment."
-            }
-          ]
-        }
-      },
-      {
-        "path": "users/{userId}/referrals/{referralId}",
-        "definition": {
-          "entityName": "Referral",
-          "schema": {
-            "$ref": "#/backend/entities/Referral"
-          },
-          "description": "Manages referrals issued for a patient. Includes denormalized `userId` matching the parent path for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the patient, matching the parent user's ID."
-            },
-            {
-              "name": "referralId",
-              "description": "The unique identifier for the specific referral."
-            }
-          ]
-        }
-      },
-      {
-        "path": "users/{userId}/healthGoals/{healthGoalId}",
-        "definition": {
-          "entityName": "HealthGoal",
-          "schema": {
-            "$ref": "#/backend/entities/HealthGoal"
-          },
-          "description": "Tracks personal health goals and progress for a patient. Includes denormalized `userId` matching the parent path for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the patient, matching the parent user's ID."
-            },
-            {
-              "name": "healthGoalId",
-              "description": "The unique identifier for the specific health goal."
-            }
-          ]
-        }
-      },
-      {
-        "path": "users/{userId}/notifications/{notificationId}",
-        "definition": {
-          "entityName": "Notification",
-          "schema": {
-            "$ref": "#/backend/entities/Notification"
-          },
-          "description": "Stores notifications specific to a user. Includes denormalized `userId` matching the parent path for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the patient, matching the parent user's ID."
-            },
-            {
-              "name": "notificationId",
-              "description": "The unique identifier for the specific notification."
-            }
-          ]
-        }
-      },
-      {
-        "path": "conversations/{conversationId}",
-        "definition": {
-          "entityName": "Conversation",
-          "schema": {
-            "$ref": "#/backend/entities/Conversation"
-          },
-          "description": "Represents a secure communication thread. Access is controlled by the `participantIds` array denormalized within the document, ensuring Authorization Independence for read/write. `request.auth.uid` must be in `participantIds`.",
-          "params": [
-            {
-              "name": "conversationId",
-              "description": "The unique identifier for the conversation."
-            }
-          ]
-        }
-      },
-      {
-        "path": "conversations/{conversationId}/messages/{messageId}",
-        "definition": {
-          "entityName": "Message",
-          "schema": {
-            "$ref": "#/backend/entities/Message"
-          },
-          "description": "Individual messages within a conversation. To maintain Authorization Independence and avoid `get()` calls to the parent, the `participantIds` array from the parent `Conversation` MUST be denormalized into each `Message` document.",
-          "params": [
-            {
-              "name": "conversationId",
-              "description": "The unique identifier of the parent conversation."
-            },
-            {
-              "name": "messageId",
-              "description": "The unique identifier for the specific message."
-            }
-          ]
-        }
-      },
-      {
-        "path": "users/{patientUserId}/familyMembers/{familyMemberId}",
-        "definition": {
-          "entityName": "FamilyMember",
-          "schema": {
-            "$ref": "#/backend/entities/FamilyMember"
-          },
-          "description": "Associates family members with a primary patient for coordinated care. The `patientUserId` in the document MUST match the parent path for authorization independence.",
-          "params": [
-            {
-              "name": "patientUserId",
-              "description": "The unique identifier of the patient (UserProfile) this family member is associated with."
-            },
-            {
-              "name": "familyMemberId",
-              "description": "The unique identifier for the specific family member record."
-            }
-          ]
-        }
-      },
-      {
-        "path": "careProviders/{careProviderId}",
-        "definition": {
-          "entityName": "CareProvider",
-          "schema": {
-            "$ref": "#/backend/entities/CareProvider"
-          },
-          "description": "A global directory of healthcare providers. Documents contain a `patientUserIds` array for membership-based access, allowing users to find their associated providers through queries (`where('patientUserIds', 'array-contains', request.auth.uid)`).",
-          "params": [
-            {
-              "name": "careProviderId",
-              "description": "The unique identifier for the care provider."
+              "description": "The insight ID."
             }
           ]
         }
       }
-    ],
-    "reasoning": "The recommended Firestore data structure adheres to the core design principles by prioritizing Authorization Independence, Structural Segregation, and Access Modeling. All user-specific data is organized under a top-level `users/{userId}` collection, leveraging path-based ownership for simple and robust security rules.\n\n**Authorization Independence:**\nCritical to this design is the denormalization of authorization context. For all subcollections (`medicalRecords`, `insights`, `appointments`, `referrals`, `healthGoals`, `notifications`, `familyMembers`), the `userId` (or `patientUserId` for `familyMembers`) is explicitly included in the document's data. This allows security rules to evaluate access by comparing `request.auth.uid` to the `userId` in the path and/or the `userId` field within the `resource.data` document, without needing to perform `get()` calls to parent documents. This ensures atomic operations and simplifies rule debugging. For instance, a `MedicalRecord` document will contain `userId: '...'`, matching `users/{userId}/medicalRecords/{medicalRecordId}`, preventing hierarchical authorization dependencies.\n\nFor collaborative entities like `Conversation` and `Message`, the `participantIds` array is denormalized within the `Conversation` document. Crucially, to strictly adhere to the mandate of avoiding `get()` calls for subcollections that depend on parent attributes, the `participantIds` array from the parent `Conversation` *must also be denormalized into each `Message` document*. This allows security rules for `Message` documents to be evaluated independently by checking `request.auth.uid in resource.data.participantIds` rather than `get()`ing the parent `Conversation`.\n\n`CareProvider` documents also contain a `patientUserIds` array, allowing direct membership checks without `get()` calls.\n\n**QAPs (Queryable Authorization Patterns):**\n1.  **User-Owned Subcollections:** For paths like `users/{userId}/medicalRecords/{medicalRecordId}`, `list` operations are inherently secure. A client can only query their own data (e.g., `db.collection('users').doc(auth.uid).collection('medicalRecords')`), and security rules can easily enforce `allow list: if request.auth.uid == userId;`. The path itself acts as the filter, fulfilling the QAP.\n2.  **Collaborative Data (`conversations`):** Users can query for conversations they are a part of by using `db.collection('conversations').where('participantIds', 'array-contains', request.auth.uid)`. This query is directly supported by Firestore indices and allows security rules to permit `list` operations only when `request.auth.uid` is present in the `participantIds` array within the query's filter, thereby maintaining QAP compliance.\n3.  **Shared Resources (`careProviders`):** Similarly, to find their associated care providers, a user can query `db.collection('careProviders').where('patientUserIds', 'array-contains', request.auth.uid)`. This also adheres to QAP, allowing efficient and secure listing of relevant providers.\n\n**Structural Segregation and Access Modeling:**\n*   `UserProfile` and all its `1:N` related entities (`MedicalRecord`, `Insight`, `Appointment`, `Referral`, `HealthGoal`, `Notification`, `FamilyMember`) are housed under `users/{userId}`. This ensures that personal data is strictly isolated and accessible only by the owning user (or authorized family members/care providers via explicit permissions or shared conversations, which are handled via membership maps).\n*   `Specialist` entities are placed in a top-level collection `specialists/{specialistId}`. This collection represents a global directory, likely read-only for all authenticated users and managed by administrators, thus having a homogeneous security posture.\n*   `CareProvider` entities are also in a top-level collection `careProviders/{careProviderId}`. This global collection facilitates N:N relationships with `UserProfile`s via the `patientUserIds` array, allowing users to discover and manage their linked providers while maintaining data integrity and segregation.\n*   `Conversation` and `Message` entities are structured to support secure multi-party communication using denormalized `participantIds` for authorization."
+    ]
   }
 }

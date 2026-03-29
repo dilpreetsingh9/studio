@@ -3,10 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users, HelpCircle, CheckCircle2, Home } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { generateHealthRecommendations, GenerateHealthRecommendationsOutput } from '@/ai/flows/generate-health-recommendations';
 import { generatePhaseGuidance, GeneratePhaseGuidanceOutput } from '@/ai/flows/generate-phase-guidance';
+import { generateReengagementNote, GenerateReengagementNoteOutput } from '@/ai/flows/generate-reengagement-note';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ const iconMap: Record<string, any> = {
 
 export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [nityaInsight, setNityaInsight] = useState<GenerateHealthRecommendationsOutput | null>(null);
+  const [reengagementNote, setReengagementNote] = useState<string | null>(null);
   const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
@@ -35,8 +37,35 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
     if (!profile) return;
     setIsLoading(true);
     try {
-      // Calculate days since last dialogue
-      let daysSinceDialogue = 100; // Default to large number
+      // Calculate absence and re-engagement
+      let daysAway = 0;
+      if (profile.lastOpenDate) {
+        const lastDate = profile.lastOpenDate.toDate ? profile.lastOpenDate.toDate() : new Date(profile.lastOpenDate);
+        daysAway = Math.floor((new Date().getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
+      }
+
+      // 1. Update lastOpenDate and re-engagement count immediately
+      const userRef = doc(db, 'users', profile.id);
+      const updates: any = { lastOpenDate: serverTimestamp() };
+      
+      if (daysAway >= 3 && daysAway <= 14) {
+        updates.reEngagementCount = (profile.reEngagementCount || 0) + 1;
+        
+        // 2. Fetch Re-engagement note instead of/before standard synthesis
+        const reNote = await generateReengagementNote({
+          firstName: profile.firstName,
+          daysAway,
+          relationshipMaturity: 'developing',
+          reEngagementCount: profile.reEngagementCount || 0,
+          targetLanguage: 'English'
+        });
+        setReengagementNote(reNote.note);
+      }
+      
+      await updateDoc(userRef, updates);
+
+      // 3. Fetch standard synthesis (or dialogue)
+      let daysSinceDialogue = 100;
       if (profile.lastDialogueResponseDate) {
         const lastDate = profile.lastDialogueResponseDate.toDate ? profile.lastDialogueResponseDate.toDate() : new Date(profile.lastDialogueResponseDate);
         daysSinceDialogue = Math.floor((new Date().getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
@@ -116,7 +145,6 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         title: "I hear you.",
         description: choice === 'external' ? "Practical rhythms for the next few days." : "Gentle support for the next few days.",
       });
-      // Refresh insight
       fetchNityaInsight();
     } catch (error) {
       console.error('Failed to save dialogue response', error);
@@ -141,7 +169,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
           <Sparkles className="h-3 w-3" />
-          {nityaInsight?.tierReached || 'Synthesis'}
+          {reengagementNote ? 'Welcome Home' : (nityaInsight?.tierReached || 'Synthesis')}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -150,68 +178,98 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             <Loader2 className="h-8 w-8 animate-spin mb-3 opacity-50 text-primary" />
             <p className="text-xs font-medium italic">Nitya is reflecting on your rhythm...</p>
           </div>
-        ) : nityaInsight?.dialogueMoment ? (
-          <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="absolute top-0 right-0 p-4 opacity-10">
-              <HelpCircle className="h-20 w-20 text-primary" />
-            </div>
-            <div className="space-y-4 relative z-10 text-center">
-              <div className="bg-white/50 w-fit mx-auto p-2 rounded-full mb-2">
-                 <Sparkles className="h-5 w-5 text-primary" />
-              </div>
-              <p className="text-lg font-bold text-foreground leading-tight px-4">
-                {nityaInsight.dialogueMoment.question}
-              </p>
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <Button 
-                  variant="outline" 
-                  className="h-12 rounded-2xl border-primary/20 hover:bg-primary/5 font-bold text-xs"
-                  onClick={() => handleDialogueResponse('external')}
-                  disabled={isResponding}
-                >
-                  {isResponding ? <Loader2 className="h-3 w-3 animate-spin" /> : nityaInsight.dialogueMoment.optionA}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-12 rounded-2xl border-primary/20 hover:bg-primary/5 font-bold text-xs"
-                  onClick={() => handleDialogueResponse('internal')}
-                  disabled={isResponding}
-                >
-                  {isResponding ? <Loader2 className="h-3 w-3 animate-spin" /> : nityaInsight.dialogueMoment.optionB}
-                </Button>
-              </div>
-              <p className="text-[10px] text-muted-foreground italic">
-                I'm just curious. This helps me find the right tone for us.
-              </p>
-            </div>
-          </div>
-        ) : nityaInsight?.observation ? (
-          <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <Sparkles className="h-20 w-20" />
-            </div>
-            <div className="flex items-start gap-4 relative z-10">
-              <div className="bg-primary/10 p-3 rounded-2xl shrink-0">
-                <Sparkles className="h-5 w-5 text-primary" />
-              </div>
-              <div className="space-y-3 flex-1">
-                <p className="text-base font-medium leading-relaxed italic text-foreground">
-                  "{nityaInsight.observation}"
-                </p>
-                {profile?.lastDialogueResponse && (
-                  <div className="flex gap-3 items-start mt-3 pt-4 border-t border-primary/10">
-                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 opacity-60" />
-                    <p className="text-[10px] text-muted-foreground font-medium italic leading-tight">
-                      {profile.lastDialogueResponse === 'external' 
-                        ? "Life sounds full right now — keeping things practical today." 
-                        : "Staying quiet and supportive today as you focus inward."}
+        ) : (
+          <div className="space-y-6">
+            {/* Re-engagement Note (Primary if away) */}
+            {reengagementNote && (
+              <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="absolute top-0 right-0 p-4 opacity-5">
+                  <Home className="h-20 w-20 text-primary" />
+                </div>
+                <div className="flex items-start gap-4 relative z-10">
+                  <div className="bg-white/80 p-3 rounded-2xl shadow-sm shrink-0">
+                    <Home className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-base font-bold text-foreground leading-tight italic">
+                      "{reengagementNote}"
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest opacity-60">
+                      Coming back is what matters.
                     </p>
                   </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Standard Synthesis or Dialogue */}
+            {nityaInsight?.dialogueMoment ? (
+              <div className="bg-accent/10 p-6 rounded-3xl border border-accent/20 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <HelpCircle className="h-20 w-20 text-primary" />
+                </div>
+                <div className="space-y-4 relative z-10 text-center">
+                  <div className="bg-white/50 w-fit mx-auto p-2 rounded-full mb-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <p className="text-lg font-bold text-foreground leading-tight px-4">
+                    {nityaInsight.dialogueMoment.question}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <Button 
+                      variant="outline" 
+                      className="h-12 rounded-2xl border-primary/20 hover:bg-primary/5 font-bold text-xs"
+                      onClick={() => handleDialogueResponse('external')}
+                      disabled={isResponding}
+                    >
+                      {isResponding ? <Loader2 className="h-3 w-3 animate-spin" /> : nityaInsight.dialogueMoment.optionA}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="h-12 rounded-2xl border-primary/20 hover:bg-primary/5 font-bold text-xs"
+                      onClick={() => handleDialogueResponse('internal')}
+                      disabled={isResponding}
+                    >
+                      {isResponding ? <Loader2 className="h-3 w-3 animate-spin" /> : nityaInsight.dialogueMoment.optionB}
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic">
+                    I'm just curious. This helps me find the right tone for us.
+                  </p>
+                </div>
+              </div>
+            ) : nityaInsight?.observation ? (
+              <div className={cn(
+                "bg-primary/5 p-6 rounded-3xl border border-primary/10 relative overflow-hidden group",
+                reengagementNote && "opacity-80 scale-95"
+              )}>
+                <div className="absolute top-0 right-0 p-4 opacity-5">
+                  <Sparkles className="h-20 w-20" />
+                </div>
+                <div className="flex items-start gap-4 relative z-10">
+                  <div className="bg-primary/10 p-3 rounded-2xl shrink-0">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="space-y-3 flex-1">
+                    <p className="text-base font-medium leading-relaxed italic text-foreground">
+                      "{nityaInsight.observation}"
+                    </p>
+                    {profile?.lastDialogueResponse && (
+                      <div className="flex gap-3 items-start mt-3 pt-4 border-t border-primary/10">
+                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 opacity-60" />
+                        <p className="text-[10px] text-muted-foreground font-medium italic leading-tight">
+                          {profile.lastDialogueResponse === 'external' 
+                            ? "Life sounds full right now — keeping things practical today." 
+                            : "Staying quiet and supportive today as you focus inward."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        )}
 
         <div className="grid gap-3">
           <div className="flex items-center justify-between mb-1">
