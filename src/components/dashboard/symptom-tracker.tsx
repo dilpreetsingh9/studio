@@ -3,22 +3,28 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Smile, Zap, AlertCircle, Ghost, Loader2 } from 'lucide-react';
+import { Smile, Zap, AlertCircle, Ghost, Loader2, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { confirmLogEntry } from '@/ai/flows/confirm-log-entry';
 
-const checkInSymptoms = [
-  { type: 'Mood', icon: Smile, color: 'text-yellow-600 bg-yellow-100' },
-  { type: 'Energy', icon: Zap, color: 'text-emerald-600 bg-emerald-100' },
-  { type: 'Pain', icon: AlertCircle, color: 'text-red-600 bg-red-100' },
-  { type: 'Stress', icon: Ghost, color: 'text-purple-600 bg-purple-100' },
-];
-
-export default function SymptomTracker() {
+export default function SymptomTracker({ profile }: { profile?: any }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [isLogging, setIsLogging] = useState(false);
   const { toast } = useToast();
+
+  const isMale = profile?.gender === 'Male';
+
+  const checkInSymptoms = [
+    { type: 'Mood', icon: Smile, color: 'text-yellow-600 bg-yellow-100' },
+    { type: 'Energy', icon: Zap, color: 'text-emerald-600 bg-emerald-100' },
+    { 
+      type: isMale ? 'Focus' : 'Pain', 
+      icon: isMale ? Target : AlertCircle, 
+      color: isMale ? 'text-blue-600 bg-blue-100' : 'text-red-600 bg-red-100' 
+    },
+    { type: 'Stress', icon: Ghost, color: 'text-purple-600 bg-purple-100' },
+  ];
 
   const toggleSymptom = (type: string) => {
     setSelected(prev => 
@@ -62,7 +68,7 @@ export default function SymptomTracker() {
       <CardHeader className="pb-4">
         <div className="space-y-1">
           <CardTitle className="text-xl font-black tracking-tight">How are you feeling?</CardTitle>
-          <CardDescription className="text-xs font-medium">A quick check-in for Nitya to note your state.</CardDescription>
+          <CardDescription className="text-xs font-medium">A quick check-in for Jeiva to note your state.</CardDescription>
         </div>
       </CardHeader>
       <CardContent>

@@ -89,7 +89,7 @@ export default function Home() {
             )}
 
             {/* 4. CHECK-IN CARD (Always last) */}
-            <SymptomTracker />
+            <SymptomTracker profile={profile} />
 
             {/* Weekly Insight Letter (Contextual addition) */}
             <WeeklyInsightLetter profile={profile} language={language} />
