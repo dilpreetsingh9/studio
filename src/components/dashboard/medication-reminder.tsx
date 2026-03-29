@@ -42,6 +42,7 @@ import { t } from '@/lib/translations';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeMissedMedication, AnalyzeMissedMedicationOutput } from '@/ai/flows/analyze-missed-medication';
 import { acknowledgeMedicationIntake } from '@/ai/flows/acknowledge-medication-intake';
+import { acknowledgeNewMedication } from '@/ai/flows/acknowledge-new-medication';
 
 interface MedicationReminderProps {
   language?: string;
@@ -57,6 +58,7 @@ export default function MedicationReminder({
     { id: '2', name: 'Magnesium', dosage: '250 mg', frequency: 'Daily', priority: 'Supportive', reminderTime: '09:00 PM', streak: 13 }
   ]);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
   const [analyzingMedId, setAnalyzingMedId] = useState<string | null>(null);
   const [processingIntakeId, setProcessingIntakeId] = useState<string | null>(null);
@@ -65,6 +67,7 @@ export default function MedicationReminder({
   
   const [newMed, setNewMed] = useState<Partial<Medication>>({
     priority: 'Essential',
+    reminderTime: '09:00 AM'
   });
 
   const handleToggleNotifications = async () => {
@@ -88,24 +91,50 @@ export default function MedicationReminder({
     }
   };
 
-  const handleAddMed = () => {
+  const handleAddMed = async () => {
     if (newMed.name && newMed.dosage) {
-      const med: Medication = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: newMed.name,
-        dosage: newMed.dosage,
-        frequency: newMed.frequency || 'Daily',
-        priority: newMed.priority as any || 'Essential',
-        reminderTime: newMed.reminderTime || '09:00 AM',
-        streak: 0
-      };
-      setMeds([...meds, med]);
-      setNewMed({ priority: 'Essential' });
-      setIsAddOpen(false);
-      toast({
-        title: "Routine Updated",
-        description: `${med.name} is now part of our rhythm.`,
-      });
+      setIsAdding(true);
+      try {
+        const med: Medication = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: newMed.name,
+          dosage: newMed.dosage,
+          frequency: newMed.frequency || 'Daily',
+          priority: newMed.priority as any || 'Essential',
+          reminderTime: newMed.reminderTime || '09:00 AM',
+          streak: 0
+        };
+
+        const isHormonal = med.name.toLowerCase().includes('pill') || 
+                          med.name.toLowerCase().includes('estrogen') || 
+                          med.name.toLowerCase().includes('progesterone');
+
+        const result = await acknowledgeNewMedication({
+          medicationName: med.name,
+          medicationType: med.priority,
+          scheduledTime: med.reminderTime,
+          isHormonal,
+          targetLanguage: language
+        });
+
+        setMeds([...meds, med]);
+        setNewMed({ priority: 'Essential', reminderTime: '09:00 AM' });
+        setIsAddOpen(false);
+        
+        toast({
+          title: "Routine Updated",
+          description: result.acknowledgement,
+        });
+      } catch (error) {
+        console.error('Failed to add medication', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "I couldn't add that routine right now. Please try again.",
+        });
+      } finally {
+        setIsAdding(false);
+      }
     }
   };
 
@@ -141,7 +170,6 @@ export default function MedicationReminder({
         targetLanguage: language
       });
 
-      // Update local state (mock)
       setMeds(prev => prev.map(m => m.id === med.id ? { 
         ...m, 
         streak: newStreak, 
@@ -239,9 +267,20 @@ export default function MedicationReminder({
                     </Select>
                   </div>
                 </div>
+                <div className="grid gap-2">
+                  <Label>Time</Label>
+                  <Input 
+                    type="time"
+                    value={newMed.reminderTime || '09:00'} 
+                    onChange={e => setNewMed({...newMed, reminderTime: e.target.value})}
+                  />
+                </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleAddMed} className="w-full">Save to Routine</Button>
+                <Button onClick={handleAddMed} className="w-full" disabled={isAdding}>
+                  {isAdding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Save to Routine
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
