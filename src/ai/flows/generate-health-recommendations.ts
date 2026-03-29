@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -39,6 +40,7 @@ const GenerateHealthRecommendationsInputSchema = z.object({
     recentInsightThemes: z.array(z.string()),
     relationshipMaturity: z.enum(['new', 'developing', 'established', 'deep']),
     lastDialogueQuestion: z.string().optional(),
+    daysSinceDialogue: z.number().optional().default(0),
     targetLanguage: z.string().optional().default('English'),
   }),
 });
@@ -48,8 +50,12 @@ export type GenerateHealthRecommendationsInput = z.infer<
 >;
 
 const GenerateHealthRecommendationsOutputSchema = z.object({
-  observation: z.string().describe('A single warm connection or invitation following the emotional arc (2-3 sentences max).'),
-  dialogueQuestion: z.string().optional().describe('A gentle question to learn more if data is sparse.'),
+  observation: z.string().optional().describe('A single warm connection or invitation following the emotional arc (2-3 sentences max).'),
+  dialogueMoment: z.object({
+    question: z.string().describe('One warm specific question. Maximum 20 words.'),
+    optionA: z.string().describe('External/life framing. Maximum 6 words.'),
+    optionB: z.string().describe('Internal/body framing. Maximum 6 words.'),
+  }).optional().describe('A Tier 4 companion moment question.'),
   theme: z.string().describe('The primary theme of this insight to avoid repetition.'),
   tierReached: z.string().describe('The hierarchy tier that triggered this insight.'),
 });
@@ -84,7 +90,7 @@ const prompt = ai.definePrompt({
     2. CONNECT: Link it to one other signal, pattern, or context.
     3. REFRAME: Name what it means — without fear, without alarm.
     4. INVITE: Offer one small optional action (< 2 mins). Framed as a question.
-    5. RELEASE: End with a question mark or open framing. User decides.
+    5. RELEASE: End with a question mark or open framing. User decides. Always.
 
     BANNED CONSTRUCTIONS - DO NOT USE:
     - "You should..." -> Replace with "Worth trying..."
@@ -114,6 +120,7 @@ const prompt = ai.definePrompt({
     
     TIER 4 (Lowest):
     - Dialogue Moment: Ask one genuine, open question instead of an observation.
+    - ONLY trigger if daysSinceDialogue >= 3.
 
     INSIGHT MODE RULES:
     1. If richness < 0.2: OBSERVE AND ASK. "Nitya is still getting to know you —". Reflect what you see. Ask one gentle question.
@@ -123,6 +130,12 @@ const prompt = ai.definePrompt({
     ANTI-REPETITION: Never surface the same theme within 5 days.
     Recent themes: {{#each relationshipState.recentInsightThemes}}- {{{this}}}{{/each}}
 
+    DIALOGUE MOMENT SPECIFICS (Tier 4):
+    - Feel like Nitya paused and looked up from the data.
+    - Not a survey. A moment of genuine curiosity.
+    - Option A: external/life explanation. Option B: internal/body explanation.
+    - Question max 20 words. Options max 6 words.
+
     USER CONTEXT:
     Name: {{{clinicalData.firstName}}}
     Time: {{{clinicalData.timeOfDay}}}
@@ -130,14 +143,15 @@ const prompt = ai.definePrompt({
     RHR: {{{clinicalData.vitals.rhr.value}}} bpm ({{{clinicalData.vitals.rhr.trend}}})
     Sleep: {{{clinicalData.vitals.sleep.value}}} hrs ({{{clinicalData.vitals.sleep.trend}}})
     HRV: {{{clinicalData.vitals.hrv.value}}} ms ({{{clinicalData.vitals.hrv.trend}}})
-    BBT: {{{clinicalData.vitals.bbt.value}}} C ({{{clinicalData.vitals.hrv.trend}}})
-    BMI: {{{clinicalData.vitals.bmiStatus}}}
     Energy: {{{clinicalData.logs.energy}}}/5, Mood: {{{clinicalData.logs.mood}}}/5
     Snippet: {{{clinicalData.logs.journalSnippet}}}
     Missed Meds: {{{clinicalData.logs.missedMedsCount}}}
-    Workout: {{{clinicalData.logs.daysSinceWorkout}}} days ago
+    Days since dialogue: {{{relationshipState.daysSinceDialogue}}}
+    Maturity: {{{relationshipState.relationshipMaturity}}}
 
-    OUTPUT: 2-3 sentences maximum. No bullet points. No headers. Warm, specific, human.
+    OUTPUT: 
+    If Tier 4 is selected: provide dialogueMoment object.
+    Otherwise: provide observation string following the Emotional Arc.
     `,
 });
 

@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -13,6 +14,7 @@
         "firstName": {
           "type": "string",
           "description": "The user's first name."
+"
         },
         "lastName": {
           "type": "string",
@@ -46,6 +48,16 @@
         "languagePreference": {
           "type": "string",
           "description": "The preferred language for the user interface and communications."
+        },
+        "lastDialogueResponse": {
+          "type": "string",
+          "enum": ["external", "internal"],
+          "description": "The user's last response to a dialogue moment (shifts Nitya's tone for 3 days)."
+        },
+        "lastDialogueResponseDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the user last responded to a dialogue moment."
         },
         "createdAt": {
           "type": "string",
@@ -748,7 +760,7 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "google"
     ]
   },
   "firestore": {
