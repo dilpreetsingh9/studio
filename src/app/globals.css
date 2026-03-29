@@ -4,39 +4,39 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* Clean Slate White */
+    --background: 210 20% 98%; /* Light Gray #FAFAFA */
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 215 25% 27%; /* Neutral Deep Slate */
+    --primary: 180 48% 44%; /* Primary #3BA6A6 - Teal */
     --primary-foreground: 210 40% 98%;
-    --secondary: 158 23% 88%; /* Sage Accent */
-    --secondary-foreground: 215 25% 27%;
+    --secondary: 180 48% 92%; /* Very Light Teal */
+    --secondary-foreground: 180 48% 24%;
     --muted: 210 20% 94%;
     --muted-foreground: 215 16% 47%;
-    --accent: 25 30% 92%; /* Soft Terracotta */
-    --accent-foreground: 215 25% 27%;
+    --accent: 10 60% 63%; /* Accent #D97C6A - Terracotta/Teal in PRD */
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 215 25% 27%;
-    --radius: 1rem;
+    --ring: 180 48% 44%;
+    --radius: 1.25rem;
 
-    --chart-1: 215 25% 27%;
-    --chart-2: 158 23% 60%;
-    --chart-3: 25 30% 70%;
+    --chart-1: 180 48% 44%;
+    --chart-2: 10 60% 63%;
+    --chart-3: 180 20% 60%;
     
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 215 25% 27%;
+    --sidebar-primary: 180 48% 44%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 20% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-accent: 180 48% 96%;
+    --sidebar-accent-foreground: 180 48% 24%;
     --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 215 25% 27%;
+    --sidebar-ring: 180 48% 44%;
   }
 
   .dark {
@@ -44,10 +44,10 @@
     --foreground: 210 40% 98%;
     --card: 222 47% 11%;
     --card-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
+    --primary: 180 48% 64%;
     --primary-foreground: 222 47% 11%;
     --secondary: 217 32% 17%;
-    --accent: 217 32% 17%;
+    --accent: 10 60% 63%;
   }
 }
 
