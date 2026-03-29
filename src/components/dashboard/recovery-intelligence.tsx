@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Activity, Zap, Loader2, Battery, TrendingUp, TrendingDown } from 'lucide-react';
@@ -17,8 +17,20 @@ export default function RecoveryIntelligence({ language = 'English', profile }: 
   const rhr = { value: 64, trend: 'stable' };
   const sleepAvg = 7.2;
 
+  // Recovery score 0–100
+  // Weighted: HRV 50%, Sleep 30%, RHR 20%
+  const recoveryScore = useMemo(() => {
+    const hrvScore = Math.min(100, (hrv.value / 65) * 100);        // 65ms = baseline
+    const sleepScore = Math.min(100, (sleepAvg / 8) * 100);       // 8hrs = baseline
+    const rhrScore = Math.max(0, 100 - ((rhr.value - 50) * 2));   // 50bpm = baseline
+
+    return Math.round(
+      (hrvScore * 0.5) + (sleepScore * 0.3) + (rhrScore * 0.2)
+    );
+  }, [hrv.value, rhr.value, sleepAvg]);
+
   const fetchRecoveryInsight = async () => {
-    if (!profile) return;
+    if (!profile || insight) return;
     setIsLoading(true);
     try {
       const result = await generateRecoveryInsights({
@@ -43,7 +55,7 @@ export default function RecoveryIntelligence({ language = 'English', profile }: 
     fetchRecoveryInsight();
   }, [profile, language]);
 
-  const isPositive = hrv.trend === 'up';
+  const isPositive = recoveryScore >= 70;
 
   return (
     <Card className="shadow-md border-primary/5 overflow-hidden bg-white">
@@ -61,11 +73,51 @@ export default function RecoveryIntelligence({ language = 'English', profile }: 
           </Badge>
         </div>
         <CardDescription>
-          Using HRV to understand your body's readiness for the day.
+          Using biometrics to understand your body's readiness.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-2 gap-4 pt-4">
+        {/* RECOVERY SCORE HERO GAUGE */}
+        <div className="flex flex-col items-center justify-center py-6 bg-primary/5 rounded-[2rem] border border-primary/10 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(61,48,96,0.05),transparent_70%)]" />
+          <div className="relative flex items-center justify-center h-32 w-32">
+            <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 100 100">
+              <circle
+                cx="50"
+                cy="50"
+                r="44"
+                fill="transparent"
+                stroke="currentColor"
+                strokeWidth="8"
+                className="text-primary/10"
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="44"
+                fill="transparent"
+                stroke="currentColor"
+                strokeWidth="8"
+                strokeDasharray={2 * Math.PI * 44}
+                strokeDashoffset={2 * Math.PI * 44 * (1 - recoveryScore / 100)}
+                strokeLinecap="round"
+                className="text-primary transition-all duration-1000 ease-out"
+              />
+            </svg>
+            <div className="absolute flex flex-col items-center justify-center">
+              <span className="text-4xl font-black tracking-tighter text-primary">{recoveryScore}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary/40">Score</span>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-col items-center gap-1">
+            <p className="text-[10px] font-black text-primary/60 uppercase tracking-[0.2em]">Body Recovery</p>
+            <p className="text-[11px] font-bold text-muted-foreground italic">
+              {recoveryScore > 85 ? "Optimal readiness" : (recoveryScore > 65 ? "Steady state" : "Rest recommended")}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div className="p-4 rounded-2xl bg-secondary/10 border border-secondary/20 relative overflow-hidden group">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">HRV</span>
@@ -75,7 +127,7 @@ export default function RecoveryIntelligence({ language = 'English', profile }: 
               <span className="text-3xl font-black">{hrv.value}</span>
               <span className="text-xs text-muted-foreground font-medium">ms</span>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1 font-medium italic">Internal balance signal</p>
+            <p className="text-[10px] text-muted-foreground mt-1 font-medium italic">Internal balance</p>
           </div>
           <div className="p-4 rounded-2xl bg-secondary/10 border border-secondary/20 relative overflow-hidden group">
             <div className="flex items-center justify-between mb-2">
@@ -110,8 +162,8 @@ export default function RecoveryIntelligence({ language = 'English', profile }: 
 
         <div className="p-3 bg-accent/5 rounded-xl border border-accent/10 flex gap-3 items-center">
           <Zap className="h-4 w-4 text-primary" />
-          <p className="text-[10px] font-medium text-muted-foreground">
-            HRV tells us about your nervous system. A higher number generally means your body is responding well to life's demands.
+          <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">
+            Recovery uses HRV, Sleep, and RHR to score your nervous system. A higher number indicates your body is handling life's demands well.
           </p>
         </div>
       </CardContent>
