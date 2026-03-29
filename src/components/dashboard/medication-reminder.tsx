@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -66,7 +65,7 @@ export default function MedicationReminder({ language = 'English' }: MedicationR
           setIsNotificationsEnabled(true);
           toast({
             title: "Soft Reminders On",
-            description: "I will nudge you gently when it is time.",
+            description: "I will nudge you with a generic 'Upcoming event' alert to keep your privacy safe.",
           });
         }
       }
@@ -235,6 +234,14 @@ export default function MedicationReminder({ language = 'English' }: MedicationR
                         {analyzingMedId === med.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5 mr-1" />}
                         Paused
                       </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeMed(med.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </div>
 
@@ -248,7 +255,7 @@ export default function MedicationReminder({ language = 'English' }: MedicationR
                         {missedAnalysis[med.id].consequences}
                       </p>
                       <div className="bg-white/50 p-2 rounded border border-black/5">
-                        <p className="font-bold text-foreground">Next Step:</p>
+                        <p className="font-bold text-foreground">A Gentle Step:</p>
                         <p className="text-muted-foreground italic">{missedAnalysis[med.id].actionPlan}</p>
                       </div>
                       <Button 
