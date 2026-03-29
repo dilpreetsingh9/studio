@@ -28,9 +28,16 @@ export default function LifestyleGuidance() {
   const fetchNityaInsight = async () => {
     setIsLoading(true);
     try {
+      const vitalsText = patientData.vitals.map(v => `${v.name}: ${v.value} ${v.unit} (${v.trend})`).join(', ');
+      const medsText = patientData.medications?.map(m => `${m.name} (${m.priority})`).join(', ') || 'None';
+      
       const result = await generateHealthRecommendations({
-        medicalRecords: "Endometriosis history, regular cycles.",
-        patientDetails: `28y Female, ${patientData.cycleData.predictedPhase} phase. Sensitivities: Peanuts.`,
+        clinicalData: {
+          vitals: vitalsText,
+          medicationAdherence: "Consistent over last 3 days.",
+          cycleInfo: `Day ${patientData.cycleData.currentDay}, ${patientData.cycleData.predictedPhase} phase.`,
+          medicalHistory: patientData.medicalHistory,
+        },
         relationshipState: {
           daysActive: 12,
           dataRichnessScore: 0.3,
@@ -62,7 +69,7 @@ export default function LifestyleGuidance() {
         </div>
         <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 gap-1 px-2">
           <Sparkles className="h-3 w-3" />
-          Insight
+          {nityaInsight?.tierReached ? `Tier ${nityaInsight.tierReached}` : 'Insight'}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -77,7 +84,7 @@ export default function LifestyleGuidance() {
               <div className="bg-primary/10 p-2 rounded-xl">
                 <Sparkles className="h-4 w-4 text-primary" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1">
                 <p className="text-sm font-medium leading-relaxed italic text-foreground">
                   "{nityaInsight.observation}"
                 </p>
@@ -97,7 +104,7 @@ export default function LifestyleGuidance() {
         <div className="grid gap-3">
           {recommendations.map((rec) => (
             <div key={rec.type} className="flex gap-4 p-4 rounded-2xl bg-secondary/5 border border-secondary/10 group hover:bg-secondary/10 transition-colors">
-              <div className="bg-white p-2.5 rounded-xl shadow-sm border border-secondary/20 group-hover:scale-110 transition-transform">
+              <div className="bg-white p-2.5 rounded-xl shadow-sm border border-secondary/20 group-hover:scale-110 transition-transform h-fit">
                 <rec.icon className="h-5 w-5 text-primary" />
               </div>
               <div className="space-y-1">
