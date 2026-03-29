@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Smile, Zap, Activity, Ghost, Heart, Droplets, Brain, AlertCircle, Plus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { acknowledgeSymptomLog } from '@/ai/flows/acknowledge-symptom-log';
+import { confirmLogEntry } from '@/ai/flows/confirm-log-entry';
 
 const symptoms = [
   { type: 'Mood', icon: Smile, color: 'text-yellow-600 bg-yellow-100' },
@@ -36,20 +35,20 @@ export default function SymptomTracker() {
     setIsLogging(true);
     
     try {
-      // For MVP, we acknowledge the first selected symptom with full logic
-      // In a real app, we'd log all and maybe get a summary acknowledgement
       const primarySymptom = selected[0];
       
-      const response = await acknowledgeSymptomLog({
-        signalType: primarySymptom,
-        signalValue: 4, // Defaulting to high for demonstration of empathy
-        threeDayPattern: false, // Mocked for now
+      // Get warm confirmation from Nitya
+      const response = await confirmLogEntry({
+        logType: primarySymptom,
+        logValue: 4,
+        logStreak: 1, // Mocked streak
+        isFirstLog: false, // Mocked logic
         targetLanguage: 'English'
       });
 
       toast({
         title: "I hear you.",
-        description: response.acknowledgement,
+        description: response.confirmation,
       });
       setSelected([]);
     } catch (error) {

@@ -7,6 +7,7 @@ import { Mic, Square, Loader2, BookOpen, Clock, Tag, Plus, Trash2, Send, Message
 import { useToast } from '@/hooks/use-toast';
 import { transcribeHealthDictation } from '@/ai/flows/transcribe-health-dictation';
 import { tagJournalEntry } from '@/ai/flows/tag-journal-entry';
+import { confirmLogEntry } from '@/ai/flows/confirm-log-entry';
 import { patientData } from '@/lib/data';
 import { JournalEntry } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -67,7 +68,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
       toast({
         variant: "destructive",
         title: "Mic Access Required",
-        description: "Please enable microphone permissions to use Dictahealth.",
+        description: "Please enable microphone permissions to use Nitya.",
       });
     }
   };
@@ -82,17 +83,23 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
   const processVoiceEntry = async (audioDataUri: string) => {
     setIsProcessing(true);
     try {
-      // 1. Transcribe the audio
       const transcriptionResult = await transcribeHealthDictation({
         audioDataUri,
         targetLanguage: language
       });
 
-      // 2. Pass to tagging engine for deeper structure
       const taggingResult = await tagJournalEntry({
         entryText: transcriptionResult.transcription,
         sex: profile?.gender || 'Female',
         phase: patientData.cycleData.predictedPhase
+      });
+
+      const confirmationResult = await confirmLogEntry({
+        logType: 'journal',
+        logStreak: entries.length + 1,
+        isFirstLog: entries.length === 0,
+        detectedItem: taggingResult.food_item,
+        targetLanguage: language
       });
 
       const newEntry: JournalEntry = {
@@ -109,14 +116,14 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
       setEntries(prev => [newEntry, ...prev]);
       toast({
-        title: t('entrySaved', language),
-        description: t('entrySavedDesc', language),
+        title: "Note received",
+        description: confirmationResult.confirmation,
       });
     } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "AI Busy",
+        title: "Nitya is busy",
         description: "Could not process your dictation at this time.",
       });
     } finally {
@@ -139,6 +146,14 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         phase: patientData.cycleData.predictedPhase
       });
 
+      const confirmationResult = await confirmLogEntry({
+        logType: 'journal',
+        logStreak: entries.length + 1,
+        isFirstLog: entries.length === 0,
+        detectedItem: taggingResult.food_item,
+        targetLanguage: language
+      });
+
       const newEntry: JournalEntry = {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date(),
@@ -153,8 +168,8 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
       setEntries(prev => [newEntry, ...prev]);
       toast({
-        title: t('entrySaved', language),
-        description: t('entrySavedDesc', language),
+        title: "Note received",
+        description: confirmationResult.confirmation,
       });
     } catch (error) {
       console.error('Failed to process text entry', error);
@@ -197,7 +212,6 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Entry Input Area */}
         <div className="space-y-3">
           <form onSubmit={handleTextSubmit} className="relative group">
             <Input 
