@@ -4,9 +4,10 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Smile, Zap, Activity, Ghost, Heart, Droplets, Brain, AlertCircle, Plus } from 'lucide-react';
+import { Smile, Zap, Activity, Ghost, Heart, Droplets, Brain, AlertCircle, Plus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { acknowledgeSymptomLog } from '@/ai/flows/acknowledge-symptom-log';
 
 const symptoms = [
   { type: 'Mood', icon: Smile, color: 'text-yellow-600 bg-yellow-100' },
@@ -21,6 +22,7 @@ const symptoms = [
 
 export default function SymptomTracker() {
   const [selected, setSelected] = useState<string[]>([]);
+  const [isLogging, setIsLogging] = useState(false);
   const { toast } = useToast();
 
   const toggleSymptom = (type: string) => {
@@ -29,13 +31,37 @@ export default function SymptomTracker() {
     );
   };
 
-  const handleLog = () => {
+  const handleLog = async () => {
     if (selected.length === 0) return;
-    toast({
-      title: "Symptoms Logged",
-      description: `Logged ${selected.length} variables for Day 12.`,
-    });
-    setSelected([]);
+    setIsLogging(true);
+    
+    try {
+      // For MVP, we acknowledge the first selected symptom with full logic
+      // In a real app, we'd log all and maybe get a summary acknowledgement
+      const primarySymptom = selected[0];
+      
+      const response = await acknowledgeSymptomLog({
+        signalType: primarySymptom,
+        signalValue: 4, // Defaulting to high for demonstration of empathy
+        threeDayPattern: false, // Mocked for now
+        targetLanguage: 'English'
+      });
+
+      toast({
+        title: "I hear you.",
+        description: response.acknowledgement,
+      });
+      setSelected([]);
+    } catch (error) {
+      console.error('Failed to log symptoms', error);
+      toast({
+        variant: "destructive",
+        title: "Logging failed",
+        description: "I'm having trouble saving your notes right now.",
+      });
+    } finally {
+      setIsLogging(false);
+    }
   };
 
   return (
@@ -81,10 +107,16 @@ export default function SymptomTracker() {
         </div>
         <Button 
           className="w-full h-12 rounded-2xl font-bold tracking-tight" 
-          disabled={selected.length === 0}
+          disabled={selected.length === 0 || isLogging}
           onClick={handleLog}
         >
-          {selected.length > 0 ? `Log ${selected.length} Symptoms` : 'Select to Log'}
+          {isLogging ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : selected.length > 0 ? (
+            `Log ${selected.length} Symptoms`
+          ) : (
+            'Select to Log'
+          )}
         </Button>
       </CardContent>
     </Card>
