@@ -2,28 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare } from 'lucide-react';
+import { Apple, Dumbbell, Wind, Sparkles, Loader2, MessageSquare, Briefcase, Users } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { generateHealthRecommendations, GenerateHealthRecommendationsOutput } from '@/ai/flows/generate-health-recommendations';
+import { generatePhaseGuidance, GeneratePhaseGuidanceOutput } from '@/ai/flows/generate-phase-guidance';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-const staticGuidance = {
-  Follicular: [
-    { type: 'Nourishment', icon: Apple, text: 'A handful of soaked almonds with your morning tea for steady energy.' },
-    { type: 'Movement', icon: Dumbbell, text: 'A 2-minute brisk walk after your rajma-chawal lunch.' },
-  ],
-  Menstrual: [
-    { type: 'Nourishment', icon: Apple, text: 'Warm khichdi with a little ghee. Comforting and easy on the gut.' },
-    { type: 'Rest', icon: Wind, text: 'A simple stretch while the chai water boils. Nothing strenuous.' },
-  ],
+const iconMap: Record<string, any> = {
+  Nutrition: Apple,
+  Movement: Dumbbell,
+  Work: Briefcase,
+  Social: Users,
+  Rest: Wind,
 };
 
 export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [nityaInsight, setNityaInsight] = useState<GenerateHealthRecommendationsOutput | null>(null);
+  const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const currentPhase = patientData.cycleData.predictedPhase;
-  const recommendations = staticGuidance[currentPhase as keyof typeof staticGuidance] || staticGuidance.Follicular;
+  const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
 
   const fetchNityaInsight = async () => {
     if (!profile) return;
@@ -34,7 +32,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           firstName: profile.firstName,
           timeOfDay: new Date().getHours() < 12 ? 'Morning' : 'Afternoon',
           cycleDay: patientData.cycleData.currentDay,
-          cycleLength: patientData.cycleLength,
+          cycleLength: patientData.cycleData.avgCycleLength,
           phase: patientData.cycleData.predictedPhase,
           vitals: {
             rhr: { value: Number(patientData.vitals[0].value), trend: patientData.vitals[0].trend },
@@ -67,8 +65,31 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
     }
   };
 
+  const fetchPhaseGuidance = async () => {
+    if (!profile) return;
+    setIsGuidanceLoading(true);
+    try {
+      const result = await generatePhaseGuidance({
+        phase: patientData.cycleData.predictedPhase,
+        energyScore: patientData.symptoms[0]?.value || 3,
+        moodScore: patientData.symptoms[1]?.value || 3,
+        occupationType: 'unknown',
+        fastingToday: false,
+        culturalContext: 'none',
+        energyHistory: [3, 4, 3], // Mocked for now
+        targetLanguage: 'English'
+      });
+      setPhaseGuidance(result);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsGuidanceLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchNityaInsight();
+    fetchPhaseGuidance();
   }, [profile]);
 
   return (
@@ -118,18 +139,37 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         )}
 
         <div className="grid gap-3">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-1">Phase Invitations</p>
-          {recommendations.map((rec) => (
-            <div key={rec.type} className="flex gap-4 p-4 rounded-2xl bg-secondary/5 border border-secondary/10 group hover:bg-secondary/10 transition-all">
-              <div className="bg-white p-2.5 rounded-xl shadow-sm border border-secondary/20 group-hover:scale-110 transition-transform h-fit">
-                <rec.icon className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Phase Invitations</p>
+            {isGuidanceLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          </div>
+          
+          {phaseGuidance?.introMessage && (
+            <p className="text-xs text-primary font-medium italic bg-primary/5 p-2 rounded-lg border border-primary/10 mb-1">
+              {phaseGuidance.introMessage}
+            </p>
+          )}
+
+          {phaseGuidance?.guidance.map((rec) => {
+            const Icon = iconMap[rec.domain] || Sparkles;
+            return (
+              <div key={rec.domain} className="flex gap-4 p-4 rounded-2xl bg-secondary/5 border border-secondary/10 group hover:bg-secondary/10 transition-all">
+                <div className="bg-white p-2.5 rounded-xl shadow-sm border border-secondary/20 group-hover:scale-110 transition-transform h-fit">
+                  <Icon className="h-5 w-5 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest">{rec.domain}</p>
+                  <p className="text-sm leading-relaxed text-foreground font-semibold">{rec.invitation}</p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest">{rec.type}</p>
-                <p className="text-sm leading-relaxed text-foreground font-semibold">{rec.text}</p>
-              </div>
+            );
+          })}
+          
+          {!phaseGuidance && !isGuidanceLoading && (
+            <div className="text-center py-6 text-muted-foreground italic text-xs">
+              Waiting for my lens to focus on your day...
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
     </Card>
