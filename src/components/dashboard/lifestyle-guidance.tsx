@@ -170,11 +170,11 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const isReturn = profile?.reEngagementCount > 0 && !displayObservation;
 
   return (
-    <Card className="shadow-xl border-none bg-[#0A0A0A] text-white overflow-hidden rounded-[2rem]">
+    <Card className="shadow-xl border-none bg-primary text-primary-foreground overflow-hidden rounded-[2rem]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div className="space-y-1">
           <CardTitle className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
+            <Sparkles className="h-5 w-5 text-secondary" />
             Nitya's Daily Read
           </CardTitle>
           <CardDescription className="text-white/60 font-medium">
@@ -188,14 +188,14 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       <CardContent className="space-y-6">
         {isLoading || isFSLoding ? (
           <div className="flex flex-col items-center justify-center py-10 text-white/40 border-2 border-dashed border-white/10 rounded-3xl bg-white/5">
-            <Loader2 className="h-8 w-8 animate-spin mb-3 text-primary opacity-50" />
+            <Loader2 className="h-8 w-8 animate-spin mb-3 text-secondary opacity-50" />
             <p className="text-xs font-medium italic">Finding the threads...</p>
           </div>
         ) : (
           <div className="space-y-6">
             {milestoneNote && (
-              <div className="bg-primary/20 p-5 rounded-3xl border border-primary/20 animate-in fade-in slide-in-from-bottom-4">
-                <p className="text-sm font-medium leading-relaxed italic text-primary-foreground">"{milestoneNote}"</p>
+              <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
+                <p className="text-sm font-medium leading-relaxed italic text-white">"{milestoneNote}"</p>
               </div>
             )}
 
@@ -217,7 +217,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             )}
 
             {nityaInsight?.dialogueMoment && (
-              <div className="bg-primary/10 p-6 rounded-3xl border border-primary/20 text-center animate-in fade-in slide-in-from-bottom-4">
+              <div className="bg-white/10 p-6 rounded-3xl border border-white/20 text-center animate-in fade-in slide-in-from-bottom-4">
                 <p className="text-lg font-bold mb-4">{nityaInsight.dialogueMoment.question}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <Button variant="outline" className="rounded-2xl text-xs h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('external')}>{nityaInsight.dialogueMoment.optionA}</Button>
@@ -232,7 +232,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
                   "{displayObservation}"
                 </p>
                 {nityaInsight?.actionLine && (
-                  <Button variant="ghost" className="w-full justify-between h-14 bg-white/10 border-white/5 hover:bg-white/20 rounded-3xl px-5 text-primary-foreground group">
+                  <Button variant="ghost" className="w-full justify-between h-14 bg-white/10 border-white/5 hover:bg-white/20 rounded-3xl px-5 text-white group">
                     <span className="text-sm font-black uppercase tracking-widest">{nityaInsight.actionLine}</span>
                     <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
@@ -250,7 +250,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
                 const Icon = iconMap[rec.domain] || Sparkles;
                 return (
                   <div key={rec.domain} className="p-4 rounded-3xl bg-white/5 border border-white/10 flex flex-col gap-2">
-                    <Icon className="h-4 w-4 text-primary" />
+                    <Icon className="h-4 w-4 text-secondary" />
                     <p className="text-[11px] leading-snug font-bold text-white/80">{rec.invitation}</p>
                   </div>
                 );

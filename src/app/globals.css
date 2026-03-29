@@ -4,50 +4,50 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* Light Gray #FAFAFA */
-    --foreground: 222 47% 11%;
+    --background: 255 20% 98%; /* Cool Lilac White #F8F7FB */
+    --foreground: 256 40% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 256 40% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 180 48% 44%; /* Primary #3BA6A6 - Teal */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 180 48% 92%; /* Very Light Teal */
-    --secondary-foreground: 180 48% 24%;
-    --muted: 210 20% 94%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 10 60% 63%; /* Accent #D97C6A - Terracotta/Teal in PRD */
-    --accent-foreground: 210 40% 98%;
+    --popover-foreground: 256 40% 10%;
+    --primary: 256 33% 28%; /* Deep Dusk Indigo #3D3060 */
+    --primary-foreground: 255 20% 98%;
+    --secondary: 260 33% 94%; /* Soft Violet #EEEAF6 */
+    --secondary-foreground: 256 33% 28%;
+    --muted: 260 33% 96%;
+    --muted-foreground: 256 10% 45%;
+    --accent: 256 33% 28%; /* Same as primary indigo per request */
+    --accent-foreground: 255 20% 98%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 180 48% 44%;
+    --border: 260 20% 92%;
+    --input: 260 20% 92%;
+    --ring: 256 33% 28%;
     --radius: 1.25rem;
 
-    --chart-1: 180 48% 44%;
-    --chart-2: 10 60% 63%;
-    --chart-3: 180 20% 60%;
+    --chart-1: 256 33% 28%;
+    --chart-2: 260 33% 60%;
+    --chart-3: 260 33% 80%;
     
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 180 48% 44%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 180 48% 96%;
-    --sidebar-accent-foreground: 180 48% 24%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 180 48% 44%;
+    --sidebar-primary: 256 33% 28%;
+    --sidebar-primary-foreground: 255 20% 98%;
+    --sidebar-accent: 260 33% 96%;
+    --sidebar-accent-foreground: 256 33% 28%;
+    --sidebar-border: 260 20% 92%;
+    --sidebar-ring: 256 33% 28%;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --primary: 180 48% 64%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 32% 17%;
-    --accent: 10 60% 63%;
+    --background: 256 40% 10%;
+    --foreground: 255 20% 98%;
+    --card: 256 40% 12%;
+    --card-foreground: 255 20% 98%;
+    --primary: 260 33% 60%;
+    --primary-foreground: 256 40% 10%;
+    --secondary: 256 33% 20%;
+    --accent: 260 33% 60%;
   }
 }
 

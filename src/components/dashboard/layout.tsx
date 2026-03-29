@@ -94,7 +94,7 @@ export function DashboardLayout({
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-[#FAFAFA] pb-24">
+      <main className="flex-1 overflow-y-auto bg-background pb-24">
         <div className="max-w-md mx-auto p-4 md:p-6 space-y-6">
           {children}
         </div>
@@ -111,7 +111,7 @@ export function DashboardLayout({
                 onClick={() => onTabChange?.(item.id)}
                 className={cn(
                   "flex flex-col items-center justify-center gap-[3px] w-16 transition-colors duration-200",
-                  isActive ? "text-[#0A0A0A]" : "text-[#999999]"
+                  isActive ? "text-primary" : "text-[#999999]"
                 )}
               >
                 <item.icon className={cn("size-[20px]", isActive && "fill-current")} />
