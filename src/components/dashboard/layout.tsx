@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -27,6 +28,7 @@ import {
   LogOut,
   Users,
   UserPlus,
+  Sparkles
 } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -35,7 +37,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { t } from '@/lib/translations';
 import { useAuth } from '@/firebase';
@@ -43,11 +44,7 @@ import { signOut } from 'firebase/auth';
 
 const COMMON_LANGUAGES = [
   { name: 'English', code: 'en' },
-  { name: 'Spanish', code: 'es' },
-  { name: 'French', code: 'fr' },
   { name: 'Hindi', code: 'hi' },
-  { name: 'Chinese', code: 'zh' },
-  { name: 'Arabic', code: 'ar' },
 ];
 
 export function DashboardLayout({ 
@@ -84,8 +81,8 @@ export function DashboardLayout({
       <Sidebar collapsible="icon" className="border-r-0">
         <SidebarHeader className="h-14 flex justify-center px-4 pt-[env(safe-area-inset-top)]">
           <div className="flex items-center gap-2">
-            <Logo className="size-8 text-primary shrink-0" />
-            <span className="text-xl font-bold tracking-tight text-primary group-data-[collapsible=icon]:hidden uppercase">Healthea</span>
+            <Sparkles className="size-6 text-primary shrink-0" />
+            <span className="text-xl font-bold tracking-tight text-primary group-data-[collapsible=icon]:hidden">NITYA</span>
           </div>
         </SidebarHeader>
         <SidebarContent className="pt-2">
@@ -115,12 +112,6 @@ export function DashboardLayout({
                   <span>{t('shareWithFamily', currentLanguage)}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip={t('referFriend', currentLanguage)} className="h-10 hover:bg-primary/5">
-                  <UserPlus className="size-5" />
-                  <span>{t('referFriend', currentLanguage)}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -134,8 +125,8 @@ export function DashboardLayout({
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-0.5 leading-none overflow-hidden">
-                  <span className="font-bold text-sm truncate">{userProfile?.firstName} {userProfile?.lastName}</span>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{userProfile?.gender} Intelligence</span>
+                  <span className="font-bold text-sm truncate">{userProfile?.firstName}</span>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">A Balanced Life</span>
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -146,7 +137,7 @@ export function DashboardLayout({
                 onClick={handleLogout}
               >
                 <LogOut className="size-5" />
-                <span>Logout</span>
+                <span>Sign Out</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -157,8 +148,8 @@ export function DashboardLayout({
           <div className="flex items-center gap-2">
             <SidebarTrigger className="h-9 w-9" />
             <div className="md:hidden flex items-center gap-1.5 ml-1">
-              <Logo className="size-6 text-primary" />
-              <span className="text-lg font-bold tracking-tight text-primary uppercase">Healthea</span>
+              <Sparkles className="size-5 text-primary" />
+              <span className="text-lg font-bold tracking-tight text-primary">NITYA</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -177,11 +168,6 @@ export function DashboardLayout({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 size-2 bg-destructive rounded-full border-2 border-background" />
-              <span className="sr-only">Notifications</span>
-            </Button>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-secondary/10 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">

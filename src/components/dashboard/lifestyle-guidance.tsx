@@ -2,17 +2,22 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Apple, Dumbbell, Briefcase, Heart } from 'lucide-react';
+import { Apple, Dumbbell, Coffee, Wind } from 'lucide-react';
 import { patientData } from '@/lib/data';
 
 const guidance = {
   Follicular: [
-    { type: 'Nutrition', icon: Apple, text: 'Focus on fermented foods and lean proteins to support rising estrogen.' },
-    { type: 'Exercise', icon: Dumbbell, text: 'High energy phase. Try HIIT or heavy lifting.' },
-    { type: 'Work', icon: Briefcase, text: 'Great for brainstorming and initiating new projects.' },
-    { type: 'Social', icon: Heart, text: 'Outward energy is high. Ideal for networking or social events.' },
+    { type: 'Nourishment', icon: Apple, text: 'A handful of soaked almonds with your morning tea for steady energy.' },
+    { type: 'Movement', icon: Dumbbell, text: 'A 2-minute brisk walk after your rajma-chawal lunch.' },
+    { type: 'Focus', icon: Coffee, text: 'The morning is your sharpest time. Use it for your big tasks.' },
+    { type: 'Breath', icon: Wind, text: 'Try 2 minutes of Anulom Vilom before the 4 PM chai rush.' },
   ],
-  // ... other phases would be defined here
+  Menstrual: [
+    { type: 'Nourishment', icon: Apple, text: 'Warm khichdi with a little ghee. Comforting and easy on the gut.' },
+    { type: 'Rest', icon: Wind, text: 'A simple stretch while the chai water boils. Nothing strenuous.' },
+    { type: 'Peace', icon: Coffee, text: 'Keep your social circle small today. A quiet evening is enough.' },
+    { type: 'Hydration', icon: Wind, text: 'Warm water with ginger. Sip it slowly throughout the day.' },
+  ],
 };
 
 export default function LifestyleGuidance() {
@@ -22,8 +27,8 @@ export default function LifestyleGuidance() {
   return (
     <Card className="shadow-md border-primary/5">
       <CardHeader>
-        <CardTitle className="text-lg font-bold">Phase-Based Guidance</CardTitle>
-        <CardDescription>Optimize your lifestyle for your {currentPhase} phase.</CardDescription>
+        <CardTitle className="text-lg font-bold">Nitya's Invitations</CardTitle>
+        <CardDescription>Small steps, achievable in under 2 minutes.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         {recommendations.map((rec) => (

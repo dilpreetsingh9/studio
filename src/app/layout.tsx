@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -10,12 +11,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Healthea',
-  description: 'Your personal AI-powered health navigator.',
+  title: 'Nitya',
+  description: 'Your AI health companion for a balanced life.',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Healthea',
+    title: 'Nitya',
   },
   formatDetection: {
     telephone: false,
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0A2558',
+  themeColor: '#2C3E50',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
