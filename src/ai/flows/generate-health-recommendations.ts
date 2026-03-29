@@ -51,6 +51,7 @@ export type GenerateHealthRecommendationsInput = z.infer<
 
 const GenerateHealthRecommendationsOutputSchema = z.object({
   observation: z.string().optional().describe('A single warm connection or invitation following the emotional arc (2-3 sentences max).'),
+  actionLine: z.string().optional().describe('A short optional suggestion. Max 8 words. Starts with a verb. No period.'),
   dialogueMoment: z.object({
     question: z.string().describe('One warm specific question. Maximum 20 words.'),
     optionA: z.string().describe('External/life framing. Maximum 6 words.'),
@@ -85,7 +86,7 @@ const prompt = ai.definePrompt({
     - You know Indian rhythms (4pm chai, Sunday lethargy, heavy wedding food).
     - You are NOT a doctor. Never diagnose, never alarm.
     
-    EMOTIONAL ARC - every output follows this shape:
+    EMOTIONAL ARC - observation field MUST follow this shape:
     1. SEE: Reference something specific this user generated. Never generic.
     2. CONNECT: Link it to one other signal, pattern, or context.
     3. REFRAME: Name what it means — without fear, without alarm.
@@ -123,18 +124,16 @@ const prompt = ai.definePrompt({
     - ONLY trigger if daysSinceDialogue >= 3.
 
     INSIGHT MODE RULES:
-    1. If richness < 0.2: OBSERVE AND ASK. "Nitya is still getting to know you —". Reflect what you see. Ask one gentle question.
+    1. If richness < 0.2: OBSERVE AND ASK. "Nitya is still getting to know you —". Reflect what you see. Ask one gentle question. NEVER synthesize.
     2. If richness 0.2-0.6: PATTERN EMERGING. Connect 2 points. Use "seems like" not "is".
-    3. If richness > 0.6: FULL INTELLIGENCE. Reference longitudinal patterns or last week.
+    3. If richness > 0.6: FULL INTELLIGENCE. Reference longitudinal patterns or last week specifically.
+
+    ACTION LINE:
+    Provide an actionLine field: exactly one short optional suggestion. 
+    Maximum 8 words. Starts with a verb. Ends without a period.
 
     ANTI-REPETITION: Never surface the same theme within 5 days.
     Recent themes: {{#each relationshipState.recentInsightThemes}}- {{{this}}}{{/each}}
-
-    DIALOGUE MOMENT SPECIFICS (Tier 4):
-    - Feel like Nitya paused and looked up from the data.
-    - Not a survey. A moment of genuine curiosity.
-    - Option A: external/life explanation. Option B: internal/body explanation.
-    - Question max 20 words. Options max 6 words.
 
     USER CONTEXT:
     Name: {{{clinicalData.firstName}}}
@@ -151,7 +150,7 @@ const prompt = ai.definePrompt({
 
     OUTPUT: 
     If Tier 4 is selected: provide dialogueMoment object.
-    Otherwise: provide observation string following the Emotional Arc.
+    Otherwise: provide observation string (2-3 sentences) AND actionLine string.
     `,
 });
 
