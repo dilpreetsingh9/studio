@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -12,24 +13,25 @@ import { Button } from '@/components/ui/button';
 import { ScanLine, FileText, ChevronRight, Info, MessageSquare, Sparkles, Upload } from 'lucide-react';
 import ScanDocumentDialog from './scan-document-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MedicalRecord } from '@/lib/types';
+import { Report } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { t } from '@/lib/translations';
+import { Loader2 } from 'lucide-react';
 
 interface HealthRecordsProps {
-  records: MedicalRecord[];
-  onRecordScanned: (record: Omit<MedicalRecord, 'id' | 'capturedAt'>) => void;
+  records: Report[];
+  isLoading?: boolean;
   language?: string;
 }
 
 export default function HealthRecords({ 
   records, 
-  onRecordScanned,
+  isLoading = false,
   language = 'English'
 }: HealthRecordsProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<Report | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export default function HealthRecords({
   }, [records, selectedRecord]);
 
   const totalMarkersLearned = useMemo(() => {
-    return records.reduce((acc, record) => acc + (record.keyFindings?.length || 0), 0);
+    return records.reduce((acc, record) => acc + (record.markers?.length || 0), 0);
   }, [records]);
 
   const subtitle = records.length === 0 
@@ -51,6 +53,15 @@ export default function HealthRecords({
     : t('recordsSubtitlePopulated', language)
         .replace('{{n}}', records.length.toString())
         .replace('{{m}}', totalMarkersLearned.toString());
+
+  if (isLoading && records.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin mb-4 opacity-50" />
+        <p className="text-xs font-bold uppercase tracking-widest">Opening Clinical Vault...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -92,10 +103,6 @@ export default function HealthRecords({
                   <ScanLine className="mr-2 h-5 w-5" />
                   {t('startScan', language)}
                 </Button>
-                <Button variant="ghost" className="text-xs font-bold text-muted-foreground uppercase tracking-widest hover:bg-transparent">
-                  <Upload className="mr-2 h-4 w-4 opacity-50" />
-                  {t('uploadFile', language)}
-                </Button>
               </div>
             </div>
           ) : (
@@ -115,18 +122,12 @@ export default function HealthRecords({
                     >
                       <div className="flex justify-between items-start mb-1">
                         <p className="font-bold text-sm truncate pr-4">
-                          Report - {mounted ? new Date(record.capturedAt).toLocaleDateString() : '...'}
+                          {record.report_type.replace('_', ' ').toUpperCase()} - {mounted && record.scan_date ? new Date(record.scan_date.seconds * 1000).toLocaleDateString() : '...'}
                         </p>
-                        <ChevronRight className={cn(
-                          "h-4 w-4 transition-transform",
-                          selectedRecord?.id === record.id ? "rotate-90" : "group-hover:translate-x-1"
-                        )} />
+                        <ChevronRight className={cn("h-4 w-4 transition-transform", selectedRecord?.id === record.id ? "rotate-90" : "group-hover:translate-x-1")} />
                       </div>
-                      <p className={cn(
-                        "text-[10px] font-black uppercase tracking-widest",
-                        selectedRecord?.id === record.id ? "text-primary-foreground/60" : "text-muted-foreground/60"
-                      )}>
-                        {mounted ? new Date(record.capturedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                        {record.lab_name}
                       </p>
                     </div>
                   ))}
@@ -138,71 +139,47 @@ export default function HealthRecords({
                   <Card className="h-full flex flex-col border-primary/5 rounded-[2rem] overflow-hidden">
                     <CardHeader className="py-4 border-b border-primary/5 bg-primary/5">
                       <div className="flex justify-between items-center">
-                        <Badge variant="outline" className="bg-white/50 text-primary border-primary/10 text-[10px] font-black uppercase tracking-widest px-3">
-                          Jeiva Analysis
-                        </Badge>
-                        <span className="text-[10px] font-bold text-muted-foreground">
-                          {mounted ? new Date(selectedRecord.capturedAt).toLocaleString() : '...'}
-                        </span>
+                        <Badge variant="outline" className="bg-white/50 text-primary border-primary/10 text-[10px] font-black uppercase tracking-widest px-3">Jeiva Analysis</Badge>
+                        <span className="text-[10px] font-bold text-muted-foreground">{mounted && selectedRecord.scan_date ? new Date(selectedRecord.scan_date.seconds * 1000).toLocaleString() : '...'}</span>
                       </div>
                     </CardHeader>
                     <CardContent className="flex-grow overflow-hidden pt-6">
                       <ScrollArea className="h-full pr-4">
                         <div className="space-y-6 pb-6">
-                          {selectedRecord.interpretation && (
-                            <div className="bg-primary/5 p-5 rounded-[2rem] border border-primary/10 relative overflow-hidden group">
-                              <div className="absolute top-0 right-0 p-4 opacity-5">
-                                <Sparkles className="h-12 w-12 text-primary" />
+                          <div className="bg-primary/5 p-5 rounded-[2rem] border border-primary/10 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-5"><Sparkles className="h-12 w-12 text-primary" /></div>
+                            <div className="flex gap-4 items-start relative z-10">
+                              <div className="bg-white p-2.5 rounded-xl shadow-sm border border-primary/5 shrink-0"><MessageSquare className="h-5 w-5 text-primary" /></div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Jeiva's Perspective</p>
+                                <p className="text-base font-bold leading-relaxed text-primary italic">"{selectedRecord.jeiva_summary}"</p>
                               </div>
-                              <div className="flex gap-4 items-start relative z-10">
-                                <div className="bg-white p-2.5 rounded-xl shadow-sm border border-primary/5 shrink-0">
-                                  <MessageSquare className="h-5 w-5 text-primary" />
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Jeiva's Perspective</p>
-                                  <p className="text-base font-bold leading-relaxed text-primary italic">
-                                    "{selectedRecord.interpretation}"
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="relative group overflow-hidden rounded-[2rem] border shadow-sm">
-                             <img
-                              src={selectedRecord.imageUrl}
-                              alt="Scanned record"
-                              className="w-full h-auto object-cover max-h-48"
-                            />
-                            <div className="absolute bottom-3 right-3">
-                               <Badge className="bg-black/60 backdrop-blur-md text-[10px] border-none px-3 font-bold uppercase tracking-widest">Source Document</Badge>
                             </div>
                           </div>
 
-                          <div className="space-y-4">
-                            <div className="bg-secondary/30 p-5 rounded-[2rem] border border-primary/10">
-                              <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                                <Info className="h-3.5 w-3.5" />
-                                Patient Summary
-                              </h4>
-                              <p className="text-sm font-medium leading-relaxed text-foreground italic">
-                                {selectedRecord.summary}
-                              </p>
+                          {selectedRecord.imageUrl && (
+                            <div className="relative group overflow-hidden rounded-[2rem] border shadow-sm">
+                               <img src={selectedRecord.imageUrl} alt="Source" className="w-full h-auto object-cover max-h-48" />
+                               <div className="absolute bottom-3 right-3"><Badge className="bg-black/60 backdrop-blur-md text-[10px] border-none px-3 font-bold uppercase tracking-widest">Original Scan</Badge></div>
                             </div>
+                          )}
 
-                            {selectedRecord.keyFindings && selectedRecord.keyFindings.length > 0 && (
-                              <div className="space-y-3 px-2">
-                                <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Markers Identified</h4>
-                                <div className="grid grid-cols-1 gap-2">
-                                  {selectedRecord.keyFindings.map((finding, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 text-xs bg-muted/10 p-3 rounded-xl border border-transparent hover:border-primary/10 transition-colors">
-                                      <div className="h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0" />
-                                      <span className="font-bold">{finding}</span>
-                                    </div>
-                                  ))}
+                          <div className="space-y-4 px-2">
+                            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Markers Extracted</h4>
+                            <div className="grid grid-cols-1 gap-2">
+                              {selectedRecord.markers?.map((marker, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-muted/10 border border-transparent hover:border-primary/10 transition-colors">
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0" />
+                                    <span className="font-bold text-sm">{marker.name}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="font-black text-sm">{marker.value}</span>
+                                    <span className="text-[10px] ml-1 text-muted-foreground font-medium">{marker.unit}</span>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </ScrollArea>
@@ -219,12 +196,7 @@ export default function HealthRecords({
           )}
         </CardContent>
       </Card>
-      <ScanDocumentDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onRecordScanned={onRecordScanned}
-        language={language}
-      />
+      <ScanDocumentDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} language={language} />
     </>
   );
 }

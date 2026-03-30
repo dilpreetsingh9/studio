@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -13,12 +14,12 @@ import MedicationReminder from '@/components/dashboard/medication-reminder';
 import HealthJournal from '@/components/dashboard/health-journal';
 import WeeklyInsightLetter from '@/components/dashboard/weekly-insight-letter';
 import VitalsMonitor from '@/components/dashboard/vitals-monitor';
-import { MedicalRecord } from '@/lib/types';
-import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, collection, orderBy, query } from 'firebase/firestore';
 import { LoginScreen } from '@/components/auth/login-screen';
 import { ProfileSetup } from '@/components/auth/profile-setup';
 import { ECGLoader } from '@/components/ecg-loader';
+import { Report } from '@/lib/types';
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -30,7 +31,13 @@ export default function Home() {
 
   const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  const [records, setRecords] = useState<MedicalRecord[]>([]);
+  const recordsQuery = useMemoFirebase(() => {
+    if (!user || !db) return null;
+    return query(collection(db, 'users', user.uid, 'records'), orderBy('scan_date', 'desc'));
+  }, [user, db]);
+
+  const { data: recordsData, isLoading: isRecordsLoading } = useCollection<Report>(recordsQuery);
+
   const [activeTab, setActiveTab] = useState('today');
   const [language, setLanguage] = useState('English');
 
@@ -53,15 +60,6 @@ export default function Home() {
     return <ProfileSetup />;
   }
 
-  const handleRecordScanned = (newRecord: Omit<MedicalRecord, 'id' | 'capturedAt'>) => {
-    const record: MedicalRecord = {
-      id: new Date().toISOString(),
-      capturedAt: new Date(),
-      ...newRecord,
-    };
-    setRecords((prev) => [record, ...prev]);
-  };
-
   const isMale = profile?.gender === 'Male';
 
   const renderTabContent = () => {
@@ -75,10 +73,10 @@ export default function Home() {
               <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">With Jeiva for {daysWithJeiva} days</p>
             </div>
 
-            {/* 1. SYNTHESIS CARD (Indigo Card) */}
+            {/* 1. SYNTHESIS CARD */}
             <LifestyleGuidance profile={profile} />
 
-            {/* 2. VITALS CARD (3-tile strip) */}
+            {/* 2. VITALS CARD */}
             <VitalsMonitor language={language} isStrip />
 
             {/* 3. CYCLE/RECOVERY CARD */}
@@ -88,10 +86,10 @@ export default function Home() {
               <RecoveryIntelligence language={language} profile={profile} />
             )}
 
-            {/* 4. CHECK-IN CARD (Shortcut to FAB trigger) */}
+            {/* 4. CHECK-IN CARD */}
             <SymptomTracker profile={profile} />
 
-            {/* Weekly Insight Letter (Contextual addition) */}
+            {/* Weekly Insight Letter */}
             <WeeklyInsightLetter profile={profile} language={language} />
           </div>
         );
@@ -100,8 +98,8 @@ export default function Home() {
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <HealthRecords 
-              records={records} 
-              onRecordScanned={handleRecordScanned}
+              records={recordsData || []} 
+              isLoading={isRecordsLoading}
               language={language}
             />
           </div>
@@ -111,12 +109,8 @@ export default function Home() {
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
             <PatientProfile language={language} profile={profile} />
-            
-            {/* Medications and Lab Syntheses now live here */}
             <MedicationReminder language={language} />
-            <LabResults language={language} />
-
-            {/* Check-In history (Journal) moved to You hub */}
+            <LabResults language={language} profile={profile} />
             <HealthJournal language={language} profile={profile} />
           </div>
         );

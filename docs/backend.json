@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -74,48 +75,60 @@
         "gender"
       ]
     },
-    "MedicalRecord": {
+    "Report": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "MedicalRecord",
+      "title": "Report",
       "type": "object",
-      "description": "Represents an aggregated medical record entry.",
+      "description": "Scanned clinical report with extracted markers and Jeiva interpretations.",
       "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "recordType": { "type": "string" },
-        "source": { "type": "string" },
-        "recordDate": { "type": "string", "format": "date" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
+        "report_type": { "type": "string" },
+        "lab_name": { "type": "string" },
+        "report_date": { "type": "string" },
+        "scan_date": { "type": "string", "format": "date-time" },
+        "markers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "value": { "type": "number" },
+              "unit": { "type": "string" },
+              "trend": { "type": "string" },
+              "interpretation": { "type": "string" }
+            }
+          }
+        },
+        "jeiva_summary": { "type": "string" },
+        "ocr_confidence": { "type": "number" },
+        "unclear_markers": { "type": "array", "items": { "type": "string" } },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["report_type", "scan_date", "jeiva_summary"]
+    },
+    "HistorySynthesis": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "HistorySynthesis",
+      "type": "object",
+      "description": "Cross-report clinical synthesis.",
+      "properties": {
+        "content": { "type": "string" },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "reports_included": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["content", "generated_at"]
+    },
+    "JournalEntry": {
+      "title": "JournalEntry",
+      "type": "object",
+      "properties": {
+        "raw_entry": { "type": "string" },
+        "ai_summary": { "type": "string" },
+        "ai_tags": { "type": "array", "items": { "type": "string" } },
+        "sentiment": { "type": "string" },
+        "jeiva_observation": { "type": "string" },
+        "log_type": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "recordType", "source", "recordDate", "title", "description"]
-    },
-    "Insight": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Insight",
-      "type": "object",
-      "description": "AI-powered insights generated from medical data.",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "generatedDate": { "type": "string", "format": "date-time" },
-        "title": { "type": "string" },
-        "content": { "type": "string" },
-        "riskCategory": { "type": "string" }
-      },
-      "required": ["id", "userId", "generatedDate", "title", "content", "riskCategory"]
-    },
-    "Synthesis": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Synthesis",
-      "type": "object",
-      "description": "Daily AI-generated health synthesis summary.",
-      "properties": {
-        "content": { "type": "string" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["content"]
+      }
     }
   },
   "auth": {
@@ -137,33 +150,33 @@
         }
       },
       {
-        "path": "users/{userId}/medicalRecords/{medicalRecordId}",
+        "path": "users/{userId}/records/{reportId}",
         "definition": {
-          "entityName": "MedicalRecord",
+          "entityName": "Report",
           "schema": {
-            "$ref": "#/backend/entities/MedicalRecord"
+            "$ref": "#/backend/entities/Report"
           },
-          "description": "Individual medical record entries."
+          "description": "Individual scanned medical reports."
         }
       },
       {
-        "path": "users/{userId}/insights/{insightId}",
+        "path": "users/{userId}/records/synthesis",
         "definition": {
-          "entityName": "Insight",
+          "entityName": "HistorySynthesis",
           "schema": {
-            "$ref": "#/backend/entities/Insight"
+            "$ref": "#/backend/entities/HistorySynthesis"
           },
-          "description": "AI-generated insights."
+          "description": "Cross-report clinical synthesis."
         }
       },
       {
-        "path": "users/{userId}/synthesis/today",
+        "path": "users/{userId}/journal/{entryId}",
         "definition": {
-          "entityName": "Synthesis",
+          "entityName": "JournalEntry",
           "schema": {
-            "$ref": "#/backend/entities/Synthesis"
+            "$ref": "#/backend/entities/JournalEntry"
           },
-          "description": "Current daily AI synthesis summary."
+          "description": "Daily reflections and observations."
         }
       }
     ]
