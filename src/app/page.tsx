@@ -13,12 +13,13 @@ import MedicationReminder from '@/components/dashboard/medication-reminder';
 import HealthJournal from '@/components/dashboard/health-journal';
 import WeeklyInsightLetter from '@/components/dashboard/weekly-insight-letter';
 import VitalsMonitor from '@/components/dashboard/vitals-monitor';
+import { RoutineStrip } from '@/components/dashboard/routine-strip';
 import { useUser, useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, orderBy, query } from 'firebase/firestore';
 import { LoginScreen } from '@/components/auth/login-screen';
 import { ProfileSetup } from '@/components/auth/profile-setup';
 import { ECGLoader } from '@/components/ecg-loader';
-import { Report } from '@/lib/types';
+import { Report, Medication } from '@/lib/types';
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -37,6 +38,13 @@ export default function Home() {
 
   const { data: recordsData, isLoading: isRecordsLoading } = useCollection<Report>(recordsQuery);
 
+  const medsQuery = useMemoFirebase(() => {
+    if (!user || !db) return null;
+    return collection(db, 'users', user.uid, 'medications');
+  }, [user, db]);
+
+  const { data: medications } = useCollection<Medication>(medsQuery);
+
   const [activeTab, setActiveTab] = useState('today');
   const [language, setLanguage] = useState('English');
 
@@ -46,6 +54,50 @@ export default function Home() {
     const diffMs = new Date().getTime() - createdDate.getTime();
     return Math.max(1, Math.floor(diffMs / (1000 * 3600 * 24)));
   }, [profile?.createdAt]);
+
+  const routineStripState = useMemo(() => {
+    if (!medications) return { state: 'none' as const };
+    
+    const WINDOW_MINUTES = 30;
+    const now = new Date();
+
+    const parseTime = (timeStr: string) => {
+      const [time, modifier] = timeStr.split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+      if (modifier === 'PM' && hours < 12) hours += 12;
+      if (modifier === 'AM' && hours === 12) hours = 0;
+      
+      const d = new Date();
+      d.setHours(hours, minutes, 0, 0);
+      return d;
+    };
+
+    const isSameDay = (d1: Date, d2: Date) => {
+      return d1.getDate() === d2.getDate() &&
+             d1.getMonth() === d2.getMonth() &&
+             d1.getFullYear() === d2.getFullYear();
+    };
+
+    for (const med of medications) {
+      const scheduledTime = parseTime(med.reminderTime);
+      const diffMs = now.getTime() - scheduledTime.getTime();
+      const minutesDiff = diffMs / 60000;
+      
+      const takenToday = med.lastTaken && isSameDay(new Date(med.lastTaken), now);
+
+      if (takenToday) continue;
+
+      if (minutesDiff >= -WINDOW_MINUTES && minutesDiff <= WINDOW_MINUTES) {
+        return { state: 'due' as const, medication: med };
+      }
+
+      if (minutesDiff > WINDOW_MINUTES && minutesDiff < 360) {
+        return { state: 'missed' as const, medication: med };
+      }
+    }
+
+    return { state: 'none' as const };
+  }, [medications]);
 
   if (isUserLoading || (user && isProfileLoading)) {
     return <ECGLoader />;
@@ -71,6 +123,15 @@ export default function Home() {
               <h1 className="greeting-name">{profile?.firstName}</h1>
               <p className="text-label font-bold text-primary uppercase tracking-[0.2em]">With Jeiva for {daysWithJeiva} days</p>
             </div>
+
+            {/* ROUTINE STRIP */}
+            {routineStripState.state !== 'none' && routineStripState.medication && (
+              <RoutineStrip 
+                state={routineStripState.state} 
+                medication={routineStripState.medication} 
+                firstName={profile?.firstName || 'Priya'}
+              />
+            )}
 
             {/* 1. SYNTHESIS CARD */}
             <LifestyleGuidance profile={profile} />
@@ -105,10 +166,10 @@ export default function Home() {
         );
 
       case 'you':
-        return ( activeTab === 'you' &&
+        return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
             <PatientProfile language={language} profile={profile} />
-            <MedicationReminder language={language} />
+            <MedicationReminder language={language} medications={medications || []} />
             <LabResults language={language} profile={profile} />
             <HealthJournal language={language} profile={profile} />
           </div>

@@ -33,7 +33,6 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from '@/components/ui/dialog';
-import { patientData } from '@/lib/data';
 import { Medication } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -43,20 +42,20 @@ import { useToast } from '@/hooks/use-toast';
 import { analyzeMissedMedication, AnalyzeMissedMedicationOutput } from '@/ai/flows/analyze-missed-medication';
 import { acknowledgeMedicationIntake } from '@/ai/flows/acknowledge-medication-intake';
 import { acknowledgeNewMedication } from '@/ai/flows/acknowledge-new-medication';
+import { useFirestore, useUser } from '@/firebase';
+import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 
 interface MedicationReminderProps {
   language?: string;
   relationshipMaturity?: 'new' | 'developing' | 'established' | 'deep';
+  medications: Medication[];
 }
 
 export default function MedicationReminder({ 
   language = 'English',
-  relationshipMaturity = 'developing'
+  relationshipMaturity = 'developing',
+  medications = []
 }: MedicationReminderProps) {
-  const [meds, setMeds] = useState<Medication[]>(patientData.medications || [
-    { id: '1', name: 'Vitamin D3', dosage: '2000 IU', frequency: 'Daily', priority: 'Supportive', reminderTime: '08:00 AM', streak: 5 },
-    { id: '2', name: 'Magnesium', dosage: '250 mg', frequency: 'Daily', priority: 'Supportive', reminderTime: '09:00 PM', streak: 13 }
-  ]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
@@ -64,6 +63,8 @@ export default function MedicationReminder({
   const [processingIntakeId, setProcessingIntakeId] = useState<string | null>(null);
   const [nudges, setNudges] = useState<Record<string, AnalyzeMissedMedicationOutput>>({});
   const { toast } = useToast();
+  const db = useFirestore();
+  const { user } = useUser();
   
   const [newMed, setNewMed] = useState<Partial<Medication>>({
     priority: 'Essential',
@@ -92,11 +93,15 @@ export default function MedicationReminder({
   };
 
   const handleAddMed = async () => {
+    if (!user) return;
     if (newMed.name && newMed.dosage) {
       setIsAdding(true);
       try {
+        const medId = Math.random().toString(36).substr(2, 9);
+        const medRef = doc(db, 'users', user.uid, 'medications', medId);
+        
         const med: Medication = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: medId,
           name: newMed.name,
           dosage: newMed.dosage,
           frequency: newMed.frequency || 'Daily',
@@ -117,7 +122,7 @@ export default function MedicationReminder({
           targetLanguage: language
         });
 
-        setMeds([...meds, med]);
+        await setDoc(medRef, med);
         setNewMed({ priority: 'Essential', reminderTime: '09:00 AM' });
         setIsAddOpen(false);
         
@@ -157,8 +162,10 @@ export default function MedicationReminder({
   };
 
   const handleConfirmIntake = async (med: Medication) => {
+    if (!user) return;
     setProcessingIntakeId(med.id);
     try {
+      const medRef = doc(db, 'users', user.uid, 'medications', med.id);
       const newStreak = (med.streak || 0) + 1;
       const milestones = [7, 14, 30, 60, 90];
       const isMilestone = milestones.includes(newStreak);
@@ -170,11 +177,10 @@ export default function MedicationReminder({
         targetLanguage: language
       });
 
-      setMeds(prev => prev.map(m => m.id === med.id ? { 
-        ...m, 
-        streak: newStreak, 
-        lastTaken: new Date().toISOString() 
-      } : m));
+      await updateDoc(medRef, {
+        streak: newStreak,
+        lastTaken: new Date().toISOString()
+      });
 
       toast({
         title: "Routine witnessed",
@@ -187,8 +193,13 @@ export default function MedicationReminder({
     }
   };
 
-  const removeMed = (id: string) => {
-    setMeds(meds.filter(m => m.id !== id));
+  const removeMed = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'medications', id));
+    } catch (error) {
+      console.error('Failed to remove medication', error);
+    }
   };
 
   const isTakenToday = (med: Medication) => {
@@ -289,13 +300,13 @@ export default function MedicationReminder({
       <CardContent>
         <ScrollArea className="h-[350px] pr-4">
           <div className="space-y-4">
-            {meds.length === 0 ? (
+            {medications.length === 0 ? (
               <div className="text-center py-10 text-muted-foreground italic text-sm border-2 border-dashed rounded-2xl bg-muted/5">
                  <Wind className="h-8 w-8 mx-auto mb-2 opacity-20" />
                  No routines added yet.
               </div>
             ) : (
-              meds.map((med) => (
+              medications.map((med) => (
                 <div key={med.id} className="space-y-2">
                   <div className="flex items-center justify-between p-3 rounded-xl border bg-card hover:shadow-sm transition-all group">
                     <div className="flex gap-3 items-start">
