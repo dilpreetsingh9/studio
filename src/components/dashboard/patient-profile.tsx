@@ -1,33 +1,97 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LifeStage } from '@/lib/types';
+import { RelationshipState, Medication, Report } from '@/lib/types';
 import { 
-  RefreshCw, 
-  Smartphone,
-  ClipboardList,
+  Pill, 
+  Microscope, 
+  Target, 
+  Bell, 
+  ChevronRight, 
+  LogOut,
+  Sparkles,
+  Loader2,
   Settings2,
-  UserCircle,
-  LogOut
+  Smartphone,
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { doc, collection } from 'firebase/firestore';
+import { generateYouSynthesis } from '@/ai/flows/generate-you-synthesis';
 
 export default function PatientProfile({ language = 'English', profile }: { language?: string; profile?: any }) {
-  const [lifeStage, setLifeStage] = useState<LifeStage>(profile?.lifeStage || 'Regular');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [jeivaSynthesis, setJeivaSynthesis] = useState<string>('');
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
   const { toast } = useToast();
   const auth = useAuth();
+  const db = useFirestore();
+  const { user } = useUser();
 
   const avatarImage = PlaceHolderImages.find(img => img.id === 'patient-saher');
+
+  // Load relationship state
+  const relRef = useMemoFirebase(() => {
+    return user ? doc(db, 'users', user.uid, 'relationship', 'state') : null;
+  }, [user, db]);
+  const { data: relationship } = useDoc<RelationshipState>(relRef);
+
+  // Load medications for streak calculation
+  const medsRef = useMemoFirebase(() => {
+    return user ? collection(db, 'users', user.uid, 'medications') : null;
+  }, [user, db]);
+  const { data: medications } = useCollection<Medication>(medsRef);
+
+  // Load reports for count
+  const reportsRef = useMemoFirebase(() => {
+    return user ? collection(db, 'users', user.uid, 'records') : null;
+  }, [user, db]);
+  const { data: reports } = useCollection<Report>(reportsRef);
+
+  const daysActive = useMemo(() => {
+    if (relationship?.days_active) return relationship.days_active;
+    if (!profile?.createdAt) return 1;
+    const createdDate = profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt);
+    return Math.max(1, Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24)));
+  }, [relationship, profile?.createdAt]);
+
+  const routineStreak = useMemo(() => {
+    if (!medications || medications.length === 0) return 0;
+    return Math.max(...medications.map(m => m.streak || 0));
+  }, [medications]);
+
+  const reportsCount = reports?.length || 0;
+
+  useEffect(() => {
+    const fetchSynthesis = async () => {
+      if (!profile || jeivaSynthesis || isSynthesizing) return;
+      setIsSynthesizing(true);
+      try {
+        const res = await generateYouSynthesis({
+          daysActive,
+          relationshipMaturity: relationship?.relationship_maturity || 'new',
+          mostConsistent: relationship?.most_consistent_behaviour || null,
+          biggestChange: relationship?.biggest_change || null,
+          targetLanguage: language
+        });
+        setJeivaSynthesis(res.content);
+      } catch (error) {
+        console.error('Jeiva synthesis failed', error);
+      } finally {
+        setIsSynthesizing(false);
+      }
+    };
+    fetchSynthesis();
+  }, [profile, daysActive, relationship, language]);
 
   const handleSync = () => {
     setIsSyncing(true);
@@ -35,7 +99,7 @@ export default function PatientProfile({ language = 'English', profile }: { lang
       setIsSyncing(false);
       toast({
         title: "Biometrics Updated",
-        description: "Synced latest temperature and sleep data.",
+        description: "Synced latest health patterns.",
       });
     }, 2000);
   };
@@ -44,107 +108,151 @@ export default function PatientProfile({ language = 'English', profile }: { lang
     await signOut(auth);
   };
 
+  const resolveField = (value: any, fallback: string) => {
+    if (!value || (typeof value === 'string' && value.startsWith('$'))) return fallback;
+    return value;
+  };
+
   return (
-    <Card className="shadow-md border-primary/5 overflow-hidden bg-white rounded-[2rem]">
-      <CardHeader className="pb-6">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20 border-4 border-primary/10 shrink-0 overflow-hidden relative shadow-inner">
-              {avatarImage && (
-                <Image 
-                  src={avatarImage.imageUrl}
-                  alt={`${profile?.firstName} portrait`}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="80px"
-                  data-ai-hint={avatarImage.imageHint}
-                />
-              )}
-              <AvatarFallback className="text-2xl font-black">{profile?.firstName?.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 space-y-1">
-              <CardTitle className="text-2xl font-black tracking-tight">{profile?.firstName} {profile?.lastName}</CardTitle>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-black px-2 py-0.5">
-                  {profile?.gender}
-                </Badge>
-                <span className="text-xs font-bold text-muted-foreground">
-                  {profile?.dateOfBirth ? `${new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()} years` : '...'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
-              className={cn(
-                "h-12 gap-2 rounded-2xl border-primary/10 shadow-sm transition-all",
-                isSyncing && "bg-primary/5 animate-pulse"
-              )}
-              onClick={handleSync}
-              disabled={isSyncing}
-            >
-              {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin text-primary" /> : <Smartphone className="h-4 w-4 text-primary" />}
-              <span className="text-xs font-black uppercase tracking-widest">Sync Patterns</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-12 gap-2 rounded-2xl border-destructive/10 text-destructive hover:bg-destructive/5 transition-all shadow-sm"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="text-xs font-black uppercase tracking-widest">Sign Out</span>
-            </Button>
-          </div>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+      {/* ── Profile header ──────────────────────────────── */}
+      <div className="flex items-center gap-5 p-2">
+        <Avatar className="h-20 w-20 border-4 border-primary/10 shadow-sm relative overflow-hidden">
+          {avatarImage && (
+            <Image 
+              src={avatarImage.imageUrl}
+              alt="Profile"
+              fill
+              className="object-cover"
+              sizes="80px"
+              data-ai-hint="woman portrait"
+            />
+          )}
+          <AvatarFallback className="text-2xl font-black bg-primary/5 text-primary">
+            {profile?.firstName?.charAt(0)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="space-y-1">
+          <h1 className="greeting-name text-primary">{resolveField(profile?.firstName, 'You')}</h1>
+          <p className="text-label font-black text-muted-foreground uppercase tracking-widest">
+            With Jeiva for {daysActive} {daysActive === 1 ? 'day' : 'days'}
+          </p>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-6">
-        <div className="bg-muted/20 p-5 rounded-3xl border border-muted/30 space-y-4">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
-              <Settings2 className="h-3 w-3" />
-              Identity Mode
-            </label>
-            <Select value={lifeStage} onValueChange={(v) => setLifeStage(v as LifeStage)}>
-              <SelectTrigger className="h-12 rounded-2xl border-primary/5 bg-white shadow-sm font-bold text-sm">
-                <SelectValue placeholder="Select Mode" />
-              </SelectTrigger>
-              <SelectContent className="rounded-2xl">
-                <SelectItem value="Regular">Regular Intelligence</SelectItem>
-                <SelectItem value="TTC">Trying to Conceive</SelectItem>
-                <SelectItem value="Pregnancy">Pregnancy Support</SelectItem>
-                <SelectItem value="Perimenopause">Perimenopause Tracking</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      {/* ── Relationship stats ───────────────────────────── */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatTile value={daysActive} label="Days together" />
+        <StatTile value={routineStreak} label="Routine streak" />
+        <StatTile value={reportsCount} label="Reports scanned" />
+      </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
-              <ClipboardList className="h-3 w-3" />
-              Medical Context
-            </label>
-            <div className="bg-white p-4 rounded-2xl border border-primary/5 text-sm italic text-foreground leading-relaxed shadow-sm">
-              "{profile?.allergies?.length ? `Sensitivities: ${profile.allergies.join(', ')}. ` : ''} 
-              Type ${profile?.bloodType}. Focus: ${profile?.healthFocus || 'General balance'}."
-            </div>
-          </div>
+      {/* ── Jeiva synthesis card ─────────────────────────── */}
+      <Card className="shadow-lg border-none bg-primary text-primary-foreground overflow-hidden rounded-[2rem] relative">
+        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+          <Sparkles className="h-16 w-16" />
         </div>
+        <CardContent className="p-6 space-y-4 relative z-10">
+          <p className="text-label font-black text-white/40 uppercase tracking-[0.2em]">Jeiva on your journey</p>
+          {isSynthesizing ? (
+            <div className="flex items-center gap-3 text-white/60 italic synthesis-body">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Finding the right words...
+            </div>
+          ) : (
+            <p className="synthesis-body text-white/90 italic leading-relaxed">
+              "{jeivaSynthesis || "Welcome to the beginning of our health navigation together."}"
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Data menu ────────────────────────────────────── */}
+      <Card className="shadow-md border-primary/5 rounded-[2rem] overflow-hidden bg-white">
+        <CardContent className="p-0 divide-y divide-primary/5">
+          <div className="px-6 py-4 bg-muted/5">
+            <p className="text-label font-black text-muted-foreground uppercase tracking-[0.2em]">Your Data</p>
+          </div>
+          
+          <MenuItem 
+            icon={<Pill className="h-4 w-4" />} 
+            label="Routine" 
+            meta={`${medications?.length || 0} active`} 
+          />
+          
+          <MenuItem 
+            icon={<Microscope className="h-4 w-4" />} 
+            label="Lab Observations" 
+            meta={`${reportsCount} reports`} 
+          />
+          
+          <MenuItem 
+            icon={<Target className="h-4 w-4" />} 
+            label="Health Focus" 
+            meta={resolveField(profile?.healthFocus, 'General balance')} 
+          />
+          
+          <MenuItem 
+            icon={<Bell className="h-4 w-4" />} 
+            label="Notifications" 
+            meta="Manage" 
+            isLast 
+          />
+        </CardContent>
+      </Card>
+
+      {/* ── Actions ─────────────────────────────────────── */}
+      <div className="flex flex-col gap-3">
+        <Button 
+          variant="outline" 
+          className={cn(
+            "h-14 rounded-2xl border-primary/10 gap-3 font-ui text-label font-black uppercase tracking-widest",
+            isSyncing && "bg-primary/5 animate-pulse"
+          )}
+          onClick={handleSync}
+          disabled={isSyncing}
+        >
+          {isSyncing ? <RefreshCw className="h-5 w-5 animate-spin text-primary" /> : <Smartphone className="h-5 w-5 text-primary" />}
+          Sync Patterns
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          className="h-14 rounded-2xl text-destructive hover:bg-destructive/5 font-ui text-label font-black uppercase tracking-widest gap-2"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-5 w-5" />
+          Sign Out
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function StatTile({ value, label }: { value: number; label: string }) {
+  return (
+    <Card className="bg-white border-primary/5 shadow-sm rounded-3xl overflow-hidden group">
+      <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-1">
+        <span className="font-content text-metric font-bold text-primary group-hover:scale-110 transition-transform">{value}</span>
+        <span className="text-[10px] font-black text-muted-foreground uppercase leading-tight tracking-tight px-1">{label}</span>
       </CardContent>
     </Card>
   );
 }
 
-function Badge({ children, variant, className }: { children: React.ReactNode, variant?: any, className?: string }) {
+function MenuItem({ icon, label, meta, isLast = false }: { icon: React.ReactNode; label: string; meta: string; isLast?: boolean }) {
   return (
-    <div className={cn(
-      "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors",
-      variant === 'secondary' ? "border-transparent bg-secondary text-secondary-foreground" : "border-foreground",
-      className
-    )}>
-      {children}
+    <div className="flex items-center justify-between p-5 hover:bg-muted/5 transition-colors cursor-pointer group">
+      <div className="flex items-center gap-4">
+        <div className="p-2.5 rounded-xl bg-primary/5 text-primary/60 group-hover:bg-primary group-hover:text-white transition-all">
+          {icon}
+        </div>
+        <div className="space-y-0.5">
+          <p className="text-body font-bold text-foreground">{label}</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{meta}</p>
+        </div>
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-primary transition-all" />
     </div>
-  )
+  );
 }

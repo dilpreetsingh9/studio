@@ -84,7 +84,7 @@
         "report_type": { "type": "string" },
         "lab_name": { "type": "string" },
         "report_date": { "type": "string" },
-        "scan_date": { "type": "string", "format": "date-time" },
+        "scan_date": { "type": "string", format: "date-time" },
         "markers": {
           "type": "array",
           "items": {
@@ -100,7 +100,7 @@
         },
         "jeiva_summary": { "type": "string" },
         "ocr_confidence": { "type": "number" },
-        "unclear_markers": { "type": "array", "items": { "type": "string" } },
+        "unclear_markers": { "type": "array", items: { "type": "string" } },
         "imageUrl": { "type": "string" }
       },
       "required": ["report_type", "scan_date", "jeiva_summary"]
@@ -128,6 +128,17 @@
         "jeiva_observation": { "type": "string" },
         "log_type": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "RelationshipState": {
+      "title": "RelationshipState",
+      "type": "object",
+      "properties": {
+        "days_active": { "type": "number" },
+        "relationship_maturity": { "type": "string", "enum": ["new", "developing", "established", "deep"] },
+        "most_consistent_behaviour": { "type": "string" },
+        "biggest_change": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -177,6 +188,16 @@
             "$ref": "#/backend/entities/JournalEntry"
           },
           "description": "Daily reflections and observations."
+        }
+      },
+      {
+        "path": "users/{userId}/relationship/state",
+        "definition": {
+          "entityName": "RelationshipState",
+          "schema": {
+            "$ref": "#/backend/entities/RelationshipState"
+          },
+          "description": "Long-term relationship stats and AI reflections."
         }
       }
     ]

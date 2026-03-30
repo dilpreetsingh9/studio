@@ -103,3 +103,10 @@ export type Medication = {
   streak?: number;
   lastTaken?: string; // ISO date string
 };
+
+export type RelationshipState = {
+  days_active: number;
+  relationship_maturity: 'new' | 'developing' | 'established' | 'deep';
+  most_consistent_behaviour?: string;
+  biggest_change?: string;
+};
