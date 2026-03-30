@@ -1,19 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { DM_Sans, Fraunces } from 'next/font/google';
+import { Manrope } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from "@/firebase/client-provider"
 
-const dmSans = DM_Sans({
+const manrope = Manrope({
   subsets: ['latin'],
-  variable: '--font-dm',
-  display: 'swap',
-});
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  axes: ['opsz', 'SOFT', 'WONK'],
-  variable: '--font-fraunces',
+  variable: '--font-manrope',
   display: 'swap',
 });
 
@@ -45,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`light ${dmSans.variable} ${fraunces.variable}`}>
+    <html lang="en" className={`light ${manrope.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>

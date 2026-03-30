@@ -1,4 +1,3 @@
-
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -11,10 +10,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-dm)', 'sans-serif'],
-        serif: ['var(--font-fraunces)', 'serif'],
-        ui: ['var(--font-dm)', 'sans-serif'],
-        content: ['var(--font-fraunces)', 'serif'],
+        sans: ['var(--font-manrope)', 'sans-serif'],
+        serif: ['var(--font-manrope)', 'serif'],
+        ui: ['var(--font-manrope)', 'sans-serif'],
+        content: ['var(--font-manrope)', 'sans-serif'],
       },
       fontSize: {
         'display': ['22px', { fontWeight: '500', letterSpacing: '-0.02em' }],
