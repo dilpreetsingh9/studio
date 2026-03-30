@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Loader2, BookOpen, Clock, Tag, Plus, Trash2, Send, MessageSquare, Flame, Sparkles, AlertCircle } from 'lucide-react';
+import { Mic, Square, Loader2, BookOpen, Clock, Tag, Plus, Trash2, Send, MessageSquare, Flame, Sparkles, AlertCircle, RotateCcw, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { transcribeHealthDictation } from '@/ai/flows/transcribe-health-dictation';
 import { tagJournalEntry } from '@/ai/flows/tag-journal-entry';
@@ -23,6 +23,14 @@ interface HealthJournalProps {
   profile?: any;
 }
 
+interface ReviewData {
+  transcript: string;
+  tags: string[];
+  observation: string;
+  sentiment: 'positive' | 'neutral' | 'low';
+  flagForSynthesis: boolean;
+}
+
 export default function HealthJournal({ language = 'English', profile }: HealthJournalProps) {
   const [entries, setEntries] = useState<JournalEntry[]>(patientData.journalEntries || []);
   const [textInput, setTextInput] = useState('');
@@ -30,6 +38,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorState, setErrorState] = useState<string | null>(null);
+  const [reviewData, setReviewData] = useState<ReviewData | null>(null);
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
   
@@ -46,13 +55,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
   useEffect(() => {
     if (isRecording) {
       timerRef.current = setInterval(() => {
-        setRecordingDuration(prev => {
-          if (prev >= 60) {
-            // Logic handled in render for the message, but we could auto-stop here if desired.
-            return prev + 1;
-          }
-          return prev + 1;
-        });
+        setRecordingDuration(prev => prev + 1);
       }, 1000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -65,6 +68,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
   const startRecording = async () => {
     setErrorState(null);
+    setReviewData(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -107,6 +111,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
   const processVoiceEntry = async (audioDataUri: string) => {
     setIsProcessing(true);
+    setErrorState(null);
     try {
       const timeOfDay = new Date().getHours() < 12 ? 'Morning' : (new Date().getHours() < 17 ? 'Afternoon' : 'Evening');
       
@@ -125,7 +130,6 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         phase: patientData.cycleData.predictedPhase
       });
 
-      // L-4: Deeper Voice Observation
       const observationResult = await generateVoiceObservation({
         transcript: transcriptionResult.transcription,
         tags: taggingResult.tags,
@@ -135,33 +139,14 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         targetLanguage: language
       });
 
-      const confirmationResult = await confirmLogEntry({
-        logType: 'voice',
-        logValue: transcriptionResult.transcription,
-        timeOfDay,
-        isFirst: entries.length === 0,
-        streak: entries.length + 1,
-        patternFlag: false,
-        sex: profile?.gender || 'Female',
-        targetLanguage: language
-      });
-
-      const newEntry: JournalEntry = {
-        id: Math.random().toString(36).substr(2, 9),
-        timestamp: new Date(),
-        content: transcriptionResult.transcription,
-        summary: observationResult.observation, // Use L-4 as primary summary for voice
-        category: taggingResult.tags[0] || 'General',
-        tags: taggingResult.tags,
+      setReviewData({
+        transcript: transcriptionResult.transcription,
+        tags: taggingResult.tags.slice(0, 3).map(tag => tag.toLowerCase().replace(/^#/, '')),
+        observation: observationResult.observation,
         sentiment: taggingResult.sentiment,
         flagForSynthesis: taggingResult.flag_for_synthesis
-      };
-
-      setEntries(prev => [newEntry, ...prev]);
-      toast({
-        title: "Check-In witnessed",
-        description: confirmationResult.confirmation,
       });
+
     } catch (error: any) {
       console.error(error);
       if (error.message === "EMPTY_SPEECH") {
@@ -173,6 +158,48 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
           description: "Could not process your dictation at this time.",
         });
       }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSaveReview = async () => {
+    if (!reviewData) return;
+    
+    setIsProcessing(true);
+    try {
+      const timeOfDay = new Date().getHours() < 12 ? 'Morning' : (new Date().getHours() < 17 ? 'Afternoon' : 'Evening');
+      
+      const confirmationResult = await confirmLogEntry({
+        logType: 'voice',
+        logValue: reviewData.transcript,
+        timeOfDay,
+        isFirst: entries.length === 0,
+        streak: entries.length + 1,
+        patternFlag: false,
+        sex: profile?.gender || 'Female',
+        targetLanguage: language
+      });
+
+      const newEntry: JournalEntry = {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date(),
+        content: reviewData.transcript,
+        summary: reviewData.observation,
+        category: reviewData.tags[0] || 'General',
+        tags: reviewData.tags,
+        sentiment: reviewData.sentiment,
+        flagForSynthesis: reviewData.flagForSynthesis
+      };
+
+      setEntries(prev => [newEntry, ...prev]);
+      setReviewData(null);
+      toast({
+        title: "Check-In witnessed",
+        description: confirmationResult.confirmation,
+      });
+    } catch (error) {
+      console.error('Failed to save review', error);
     } finally {
       setIsProcessing(false);
     }
@@ -213,7 +240,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         content: content,
         summary: taggingResult.summary_title,
         category: taggingResult.tags[0] || 'General',
-        tags: taggingResult.tags,
+        tags: taggingResult.tags.slice(0, 3).map(t => t.toLowerCase().replace(/^#/, '')),
         sentiment: taggingResult.sentiment,
         flagForSynthesis: taggingResult.flag_for_synthesis
       };
@@ -257,7 +284,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
               {t('healthJournal', language)}
             </CardTitle>
             <CardDescription className="text-primary font-bold italic mt-1">
-              {dynamicPrompt}
+              {reviewData ? "Check your entry" : dynamicPrompt}
             </CardDescription>
           </div>
           <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-widest px-3 py-1">
@@ -266,82 +293,129 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-3">
-          <form onSubmit={handleTextSubmit} className="relative group">
-            <Input 
-              placeholder="Write your thoughts..." 
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              className="h-14 rounded-2xl bg-muted/20 border-primary/5 pr-24 focus-visible:ring-primary/20"
-              disabled={isProcessing || isRecording}
-            />
-            <div className="absolute right-2 top-2 flex gap-1">
+        
+        {/* REVIEW SCREEN */}
+        {reviewData ? (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-secondary/5 p-6 rounded-[2rem] border border-primary/5">
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Here's what Jeiva heard</p>
+                <p className="text-lg font-medium text-foreground leading-relaxed italic">"{reviewData.transcript}"</p>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {reviewData.tags.map(tag => (
+                  <Badge key={tag} className="rounded-full bg-primary/10 text-primary border-none px-3 py-1 lowercase font-bold text-[10px] tracking-tight">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-primary/5">
+                <p className="text-sm text-muted-foreground italic font-medium leading-relaxed">
+                  {reviewData.observation}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
               <Button 
-                type="button"
-                variant={isRecording ? "destructive" : "ghost"}
-                size="icon"
-                className={cn(
-                  "h-10 w-10 rounded-xl transition-all",
-                  isRecording && "animate-pulse"
-                )}
-                onClick={isRecording ? stopRecording : startRecording}
+                variant="outline" 
+                className="flex-1 h-14 rounded-2xl border-primary/10 font-bold" 
+                onClick={() => setReviewData(null)}
                 disabled={isProcessing}
               >
-                {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-5 w-5 text-primary" />}
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Try again
               </Button>
               <Button 
-                type="submit"
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-xl"
-                disabled={!textInput.trim() || isProcessing || isRecording}
+                className="flex-[2] h-14 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg" 
+                onClick={handleSaveReview}
+                disabled={isProcessing}
               >
-                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-5 w-5 text-primary" />}
+                {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
+                Save it
               </Button>
             </div>
-          </form>
-
-          {/* RECORDING / ERROR / PROCESSING STATES */}
-          <div className="min-h-[40px] flex flex-col items-center justify-center">
-            {isRecording && (
-              <div className="text-center space-y-1 animate-in fade-in zoom-in-95 duration-300">
-                <p className="text-sm font-black text-primary animate-pulse">{t('recordingMain', language)}</p>
-                <p className="text-[10px] font-bold text-muted-foreground italic">
-                  {recordingDuration >= 60 ? t('recordingLimitReached', language) : t('recordingSubtitle', language)}
-                </p>
-                <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest mt-1">
-                  {recordingDuration}s · {t('tapToFinish', language)}
-                </p>
-              </div>
-            )}
-
-            {isProcessing && (
-              <div className="flex flex-col items-center gap-1 animate-pulse">
-                <p className="text-[10px] font-black text-primary uppercase tracking-widest">
-                  {t('transcribing', language)}
-                </p>
-                <div className="flex gap-1">
-                  <div className="h-1 w-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <div className="h-1 w-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <div className="h-1 w-1 bg-primary rounded-full animate-bounce" />
-                </div>
-              </div>
-            )}
-
-            {errorState && !isRecording && !isProcessing && (
-              <div className="bg-destructive/5 p-3 rounded-xl border border-destructive/10 flex items-start gap-3 animate-in slide-in-from-top-2">
-                <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                <p className="text-[10px] font-bold text-destructive leading-tight">
-                  {errorState}
-                </p>
-              </div>
-            )}
           </div>
-        </div>
+        ) : (
+          /* INPUT FORM */
+          <div className="space-y-3">
+            <form onSubmit={handleTextSubmit} className="relative group">
+              <Input 
+                placeholder="Write your thoughts..." 
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                className="h-14 rounded-2xl bg-muted/20 border-primary/5 pr-24 focus-visible:ring-primary/20"
+                disabled={isProcessing || isRecording}
+              />
+              <div className="absolute right-2 top-2 flex gap-1">
+                <Button 
+                  type="button"
+                  variant={isRecording ? "destructive" : "ghost"}
+                  size="icon"
+                  className={cn(
+                    "h-10 w-10 rounded-xl transition-all",
+                    isRecording && "animate-pulse"
+                  )}
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={isProcessing}
+                >
+                  {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-5 w-5 text-primary" />}
+                </Button>
+                <Button 
+                  type="submit"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 rounded-xl"
+                  disabled={!textInput.trim() || isProcessing || isRecording}
+                >
+                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-5 w-5 text-primary" />}
+                </Button>
+              </div>
+            </form>
+
+            <div className="min-h-[40px] flex flex-col items-center justify-center">
+              {isRecording && (
+                <div className="text-center space-y-1 animate-in fade-in zoom-in-95 duration-300">
+                  <p className="text-sm font-black text-primary animate-pulse">{t('recordingMain', language)}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground italic">
+                    {recordingDuration >= 60 ? t('recordingLimitReached', language) : t('recordingSubtitle', language)}
+                  </p>
+                  <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest mt-1">
+                    {recordingDuration}s · {t('tapToFinish', language)}
+                  </p>
+                </div>
+              )}
+
+              {isProcessing && (
+                <div className="flex flex-col items-center gap-1 animate-pulse">
+                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">
+                    {t('transcribing', language)}
+                  </p>
+                  <div className="flex gap-1">
+                    <div className="h-1 w-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <div className="h-1 w-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <div className="h-1 w-1 bg-primary rounded-full animate-bounce" />
+                  </div>
+                </div>
+              )}
+
+              {errorState && !isRecording && !isProcessing && (
+                <div className="bg-destructive/5 p-3 rounded-xl border border-destructive/10 flex items-start gap-3 animate-in slide-in-from-top-2">
+                  <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-[10px] font-bold text-destructive leading-tight">
+                    {errorState}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
-            {entries.length === 0 ? (
+            {entries.length === 0 && !reviewData ? (
               <div className="text-center py-12 text-muted-foreground italic text-sm border-2 border-dashed rounded-3xl bg-muted/5">
                 <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-20" />
                 {t('noEntries', language)}
@@ -383,7 +457,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
                         <MessageSquare className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                         <div className="space-y-1">
                           <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Jeiva's Thought</p>
-                          <p className="text-sm font-bold leading-tight text-primary">
+                          <p className="text-sm font-bold leading-tight text-primary italic">
                             {entry.summary}
                           </p>
                         </div>
@@ -393,8 +467,8 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
                   <div className="flex flex-wrap gap-1.5 mt-4">
                     {entry.tags.map(tag => (
-                      <Badge key={tag} variant="secondary" className="text-[9px] h-5 bg-muted/50 border-transparent font-medium">
-                        #{tag}
+                      <Badge key={tag} variant="secondary" className="text-[9px] h-5 bg-muted/50 border-transparent font-bold lowercase px-2 rounded-full">
+                        {tag}
                       </Badge>
                     ))}
                   </div>
