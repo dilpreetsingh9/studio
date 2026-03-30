@@ -37,6 +37,58 @@
     --sidebar-accent-foreground: 256 33% 28%;
     --sidebar-border: 260 20% 92%;
     --sidebar-ring: 256 33% 28%;
+
+    /* Font families */
+    --font-ui:      var(--font-dm), sans-serif;
+    --font-content: var(--font-fraunces), serif;
+
+    /* Jeiva type scale */
+
+    /* Display — user name, screen titles */
+    --text-display-size:    22px;
+    --text-display-weight:  500;
+    --text-display-font:    var(--font-content);
+    --text-display-spacing: -0.02em;
+
+    /* Synthesis body — Jeiva speaking */
+    --text-voice-size:    14px;
+    --text-voice-weight:  300;
+    --text-voice-font:    var(--font-content);
+    --text-voice-height:  1.65;
+
+    /* Card body — supporting content */
+    --text-body-size:    13px;
+    --text-body-weight:  400;
+    --text-body-font:    var(--font-ui);
+    --text-body-height:  1.6;
+
+    /* Vital numbers — large figures */
+    --text-metric-size:   18px;
+    --text-metric-weight: 500;
+    --text-metric-font:   var(--font-content);
+
+    /* Small body — phase notes, card sub-text */
+    --text-small-size:   11px;
+    --text-small-weight: 300;
+    --text-small-font:   var(--font-content);
+    --text-small-height: 1.6;
+
+    /* Labels — ALL CAPS UI chrome */
+    --text-label-size:    9px;
+    --text-label-weight:  600;
+    --text-label-font:    var(--font-ui);
+    --text-label-spacing: 0.09em;
+
+    /* Navigation — tab labels */
+    --text-nav-size:    10px;
+    --text-nav-weight:  400;
+    --text-nav-font:    var(--font-ui);
+
+    /* Buttons */
+    --text-button-size:    13px;
+    --text-button-weight:  600;
+    --text-button-font:    var(--font-ui);
+    --text-button-spacing: -0.01em;
   }
 
   .dark {
@@ -56,8 +108,14 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-ui);
+    font-size: var(--text-body-size);
+    font-weight: var(--text-body-weight);
+    line-height: var(--text-body-height);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     padding-bottom: env(safe-area-inset-bottom);
     touch-action: manipulation;
   }
