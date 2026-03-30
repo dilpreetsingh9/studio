@@ -1,17 +1,17 @@
+
 'use client';
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Smile, Zap, AlertCircle, Ghost, Loader2, Target } from 'lucide-react';
+import { Smile, Zap, AlertCircle, Ghost, Loader2, Target, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { confirmLogEntry } from '@/ai/flows/confirm-log-entry';
+import { CheckInDialog } from './check-in-dialog';
 
 export default function SymptomTracker({ profile }: { profile?: any }) {
-  const [selected, setSelected] = useState<string[]>([]);
-  const [isLogging, setIsLogging] = useState(false);
-  const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
 
   const isMale = profile?.gender === 'Male';
 
@@ -26,96 +26,45 @@ export default function SymptomTracker({ profile }: { profile?: any }) {
     { type: 'Stress', icon: Ghost, color: 'text-purple-600 bg-purple-100' },
   ];
 
-  const toggleSymptom = (type: string) => {
-    setSelected(prev => 
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    );
-  };
-
-  const handleLog = async () => {
-    if (selected.length === 0) return;
-    setIsLogging(true);
-    
-    try {
-      const primarySymptom = selected[0].toLowerCase() as any;
-      const response = await confirmLogEntry({
-        logType: primarySymptom,
-        logValue: "4", // Default high intensity for tiles
-        timeOfDay: new Date().getHours() < 12 ? 'Morning' : (new Date().getHours() < 17 ? 'Afternoon' : 'Evening'),
-        isFirst: false,
-        streak: 1, 
-        patternFlag: false, // In a real app, this would be computed from history
-        sex: profile?.gender || 'Female',
-        targetLanguage: 'English'
-      });
-
-      toast({
-        title: "I hear you.",
-        description: response.confirmation,
-      });
-      setSelected([]);
-    } catch (error) {
-      console.error('Failed to log symptoms', error);
-      toast({
-        variant: "destructive",
-        title: "Check-In failed",
-        description: "I'm having trouble saving your notes right now.",
-      });
-    } finally {
-      setIsLogging(false);
-    }
-  };
-
   return (
-    <Card className="shadow-md border-primary/5 rounded-[2rem] bg-white overflow-hidden">
-      <CardHeader className="pb-4">
-        <div className="space-y-1">
-          <CardTitle className="text-xl font-black tracking-tight">How are you feeling?</CardTitle>
-          <CardDescription className="text-xs font-medium">A quick check-in for Jeiva to note your state.</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-4 gap-3 mb-6">
-          {checkInSymptoms.map((s) => (
-            <button
-              key={s.type}
-              onClick={() => toggleSymptom(s.type)}
-              className={cn(
-                "flex flex-col items-center gap-2 p-3 rounded-3xl transition-all border",
-                selected.includes(s.type) 
-                  ? "bg-primary border-primary scale-95 shadow-inner" 
-                  : "bg-card border-muted hover:border-primary/20"
-              )}
-            >
-              <div className={cn(
-                "p-2.5 rounded-2xl transition-colors",
-                selected.includes(s.type) ? "bg-white/20 text-white" : s.color
-              )}>
-                <s.icon className="h-5 w-5" />
+    <>
+      <Card className="shadow-md border-primary/5 rounded-[2rem] bg-white overflow-hidden group hover:border-primary/20 transition-all cursor-pointer" onClick={() => setIsOpen(true)}>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-black tracking-tight">How are you feeling?</CardTitle>
+              <CardDescription className="text-xs font-medium">Share a moment with Jeiva.</CardDescription>
+            </div>
+            <div className="bg-primary/5 p-3 rounded-2xl text-primary group-hover:scale-110 transition-transform">
+              <Plus className="h-5 w-5" />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-4 gap-3">
+            {checkInSymptoms.map((s) => (
+              <div
+                key={s.type}
+                className="flex flex-col items-center gap-2 p-3 rounded-3xl bg-card border border-muted opacity-60 grayscale group-hover:opacity-100 group-hover:grayscale-0 transition-all"
+              >
+                <div className={cn("p-2.5 rounded-2xl", s.color)}>
+                  <s.icon className="h-5 w-5" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-tight text-muted-foreground">
+                  {s.type}
+                </span>
               </div>
-              <span className={cn(
-                "text-[10px] font-black uppercase tracking-tight",
-                selected.includes(s.type) ? "text-white" : "text-muted-foreground"
-              )}>
-                {s.type}
-              </span>
-            </button>
-          ))}
-        </div>
-        <Button 
-          className="w-full h-14 rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg hover:shadow-xl transition-all" 
-          disabled={selected.length === 0 || isLogging}
-          onClick={handleLog}
-        >
-          {isLogging ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : selected.length > 0 ? (
-            `Log ${selected.length} Patterns`
-          ) : (
-            'Tap to Select'
-          )}
-        </Button>
-      </CardContent>
-    </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <CheckInDialog 
+        open={isOpen} 
+        onOpenChange={setIsOpen} 
+        profile={profile} 
+        language="English" 
+      />
+    </>
   );
 }

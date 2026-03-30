@@ -1,6 +1,7 @@
+
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Sparkles, 
   Mic, 
@@ -8,7 +9,8 @@ import {
   User,
   LogOut,
   Languages,
-  Check
+  Check,
+  Plus
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -22,6 +24,7 @@ import { t } from '@/lib/translations';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
+import { CheckInDialog } from './check-in-dialog';
 
 const COMMON_LANGUAGES = [
   { name: 'English', code: 'en' },
@@ -44,6 +47,7 @@ export function DashboardLayout({
   userProfile?: any;
 }) {
   const auth = useAuth();
+  const [isCheckInOpen, setIsCheckInOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -51,7 +55,6 @@ export function DashboardLayout({
 
   const navItems = [
     { id: 'today', label: 'Today', icon: Sparkles },
-    { id: 'checkin', label: 'Check-In', icon: Mic },
     { id: 'history', label: 'History', icon: History },
     { id: 'you', label: 'You', icon: User },
   ];
@@ -100,8 +103,19 @@ export function DashboardLayout({
         </div>
       </main>
 
+      {/* FAB */}
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
+        <Button 
+          size="icon" 
+          className="h-14 w-14 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-white scale-110 active:scale-95 transition-transform"
+          onClick={() => setIsCheckInOpen(true)}
+        >
+          <Plus className="h-7 w-7" />
+        </Button>
+      </div>
+
       {/* Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[rgba(0,0,0,0.08)] z-50 pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[rgba(0,0,0,0.08)] z-30 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-[56px] max-w-md mx-auto px-4">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
@@ -121,6 +135,13 @@ export function DashboardLayout({
           })}
         </div>
       </nav>
+
+      <CheckInDialog 
+        open={isCheckInOpen} 
+        onOpenChange={setIsCheckInOpen} 
+        profile={userProfile} 
+        language={currentLanguage} 
+      />
     </div>
   );
 }
