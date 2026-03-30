@@ -52,14 +52,13 @@ export function DashboardLayout({
   };
 
   const navItems = [
-    { id: 'today', label: t('tabToday', currentLanguage), icon: Sparkles, type: 'tab' },
-    { id: 'checkin', label: t('tabCheckIn', currentLanguage), icon: Mic, type: 'action' },
-    { id: 'scan', label: t('tabScan', currentLanguage), icon: ScanLine, type: 'tab' },
-    { id: 'you', label: t('tabYou', currentLanguage), icon: User, type: 'tab' },
+    { id: 'today', label: t('tabToday', currentLanguage), icon: Sparkles },
+    { id: 'scan', label: t('tabScan', currentLanguage), icon: ScanLine },
+    { id: 'you', label: t('tabYou', currentLanguage), icon: User },
   ];
 
   return (
-    <div className="flex flex-col h-svh bg-background overflow-hidden">
+    <div className="flex flex-col h-svh bg-background overflow-hidden relative">
       {/* Header */}
       <header className="flex h-14 items-center justify-between border-b bg-white/80 backdrop-blur-md sticky top-0 z-30 px-4 shrink-0 pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-2">
@@ -102,39 +101,40 @@ export function DashboardLayout({
         </div>
       </main>
 
+      {/* Floating Check-In Button */}
+      <div className="fixed bottom-[84px] right-6 z-40 max-w-md w-full pointer-events-none mx-auto left-0 flex justify-end px-6 md:px-0">
+        <button
+          onClick={() => setIsCheckInOpen(true)}
+          className="pointer-events-auto h-14 w-14 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200"
+          aria-label="Check In"
+        >
+          <Mic className="size-6" />
+        </button>
+      </div>
+
       {/* Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[rgba(0,0,0,0.08)] z-30 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-[64px] max-w-md mx-auto px-4">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
-            const isAction = item.type === 'action';
             
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  if (isAction) {
-                    setIsCheckInOpen(true);
-                  } else {
-                    onTabChange?.(item.id);
-                  }
-                }}
+                onClick={() => onTabChange?.(item.id)}
                 className={cn(
                   "flex flex-col items-center justify-center gap-[4px] w-16 transition-all duration-200 relative",
-                  isActive ? "text-primary" : "text-[#999999]",
-                  isAction && "text-primary opacity-100"
+                  isActive ? "text-primary" : "text-[#999999]"
                 )}
               >
                 <div className={cn(
                   "p-2 rounded-full transition-all duration-300",
-                  isAction && "bg-primary text-white shadow-lg -translate-y-1 scale-110",
-                  !isAction && isActive && "bg-primary/5"
+                  isActive && "bg-primary/5"
                 )}>
-                  <item.icon className={cn("size-[20px]", !isAction && isActive && "fill-current")} />
+                  <item.icon className={cn("size-[20px]", isActive && "fill-current")} />
                 </div>
                 <span className={cn(
-                  "text-[9px] font-black uppercase tracking-tight leading-none",
-                  isAction && "text-primary"
+                  "text-[9px] font-black uppercase tracking-tight leading-none"
                 )}>
                   {item.label}
                 </span>
