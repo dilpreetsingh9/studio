@@ -52,9 +52,10 @@ export function DashboardLayout({
   };
 
   const navItems = [
-    { id: 'today', label: 'Today', icon: Sparkles },
-    { id: 'history', label: t('tabScan', currentLanguage), icon: ScanLine },
-    { id: 'you', label: 'You', icon: User },
+    { id: 'today', label: t('tabToday', currentLanguage), icon: Sparkles, type: 'tab' },
+    { id: 'checkin', label: t('tabCheckIn', currentLanguage), icon: Mic, type: 'action' },
+    { id: 'scan', label: t('tabScan', currentLanguage), icon: ScanLine, type: 'tab' },
+    { id: 'you', label: t('tabYou', currentLanguage), icon: User, type: 'tab' },
   ];
 
   return (
@@ -101,33 +102,42 @@ export function DashboardLayout({
         </div>
       </main>
 
-      {/* FAB */}
-      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
-        <Button 
-          size="icon" 
-          className="h-14 w-14 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-white scale-110 active:scale-95 transition-transform"
-          onClick={() => setIsCheckInOpen(true)}
-        >
-          <Mic className="h-7 w-7" />
-        </Button>
-      </div>
-
       {/* Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[rgba(0,0,0,0.08)] z-30 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around h-[56px] max-w-md mx-auto px-4">
+        <div className="flex items-center justify-around h-[64px] max-w-md mx-auto px-4">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
+            const isAction = item.type === 'action';
+            
             return (
               <button
                 key={item.id}
-                onClick={() => onTabChange?.(item.id)}
+                onClick={() => {
+                  if (isAction) {
+                    setIsCheckInOpen(true);
+                  } else {
+                    onTabChange?.(item.id);
+                  }
+                }}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-[3px] w-16 transition-colors duration-200",
-                  isActive ? "text-primary" : "text-[#999999]"
+                  "flex flex-col items-center justify-center gap-[4px] w-16 transition-all duration-200 relative",
+                  isActive ? "text-primary" : "text-[#999999]",
+                  isAction && "text-primary opacity-100"
                 )}
               >
-                <item.icon className={cn("size-[20px]", isActive && "fill-current")} />
-                <span className="text-[10px] font-bold leading-none">{item.label}</span>
+                <div className={cn(
+                  "p-2 rounded-full transition-all duration-300",
+                  isAction && "bg-primary text-white shadow-lg -translate-y-1 scale-110",
+                  !isAction && isActive && "bg-primary/5"
+                )}>
+                  <item.icon className={cn("size-[20px]", !isAction && isActive && "fill-current")} />
+                </div>
+                <span className={cn(
+                  "text-[9px] font-black uppercase tracking-tight leading-none",
+                  isAction && "text-primary"
+                )}>
+                  {item.label}
+                </span>
               </button>
             );
           })}

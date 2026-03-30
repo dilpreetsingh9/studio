@@ -63,7 +63,7 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     safetyAlert: "Jeiva's Thought",
     actionPlan: "A Gentle Step",
     enablePush: "Enable Soft Reminders",
-    healthJournal: "Check-In",
+    healthJournal: "Check-In History",
     journalSubtitle: "Share your thoughts. I am listening.",
     dictate: "Speak",
     stop: "Done",
@@ -93,6 +93,9 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     couldNotReadError: "Jeiva couldn't read that one clearly. Try uploading the file directly instead.",
     partialReadError: "Jeiva read {{n}} markers. {{m}} were unclear — you can add those manually.",
     tabScan: "Scan",
+    tabToday: "Today",
+    tabYou: "You",
+    tabCheckIn: "Check In",
     // Recording States
     recordingMain: "Listening...",
     recordingSubtitle: "Say anything. Jeiva will sort it out.",

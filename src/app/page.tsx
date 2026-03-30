@@ -88,22 +88,15 @@ export default function Home() {
               <RecoveryIntelligence language={language} profile={profile} />
             )}
 
-            {/* 4. CHECK-IN CARD (Always last) */}
+            {/* 4. CHECK-IN CARD (Shortcut to FAB trigger) */}
             <SymptomTracker profile={profile} />
 
             {/* Weekly Insight Letter (Contextual addition) */}
             <WeeklyInsightLetter profile={profile} language={language} />
           </div>
         );
-      
-      case 'checkin':
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <HealthJournal language={language} profile={profile} />
-          </div>
-        );
 
-      case 'history':
+      case 'scan':
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <HealthRecords 
@@ -118,8 +111,13 @@ export default function Home() {
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
             <PatientProfile language={language} profile={profile} />
+            
+            {/* Medications and Lab Syntheses now live here */}
             <MedicationReminder language={language} />
             <LabResults language={language} />
+
+            {/* Check-In history (Journal) moved to You hub */}
+            <HealthJournal language={language} profile={profile} />
           </div>
         );
 
