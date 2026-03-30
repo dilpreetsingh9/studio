@@ -75,6 +75,13 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     transcribing: "Reflecting...",
     transcriptionFailed: "Try again later",
     weeklyLetterInvite: "Your week, in Jeiva's words. Ready when you are.",
+    // Recording States (Static Copy)
+    recordingMain: "Listening...",
+    recordingSubtitle: "Say anything. Jeiva will sort it out.",
+    tapToFinish: "Tap to finish",
+    recordingLimitReached: "Jeiva has enough. Tap to finish.",
+    micPermissionDenied: "Jeiva needs your microphone to listen. You can also tap to log instead.",
+    speechNotRecognized: "Jeiva didn't quite catch that. Try again or tap to log instead.",
   }
 };
 

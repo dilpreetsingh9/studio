@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Loader2, BookOpen, Clock, Tag, Plus, Trash2, Send, MessageSquare, Flame, Sparkles } from 'lucide-react';
+import { Mic, Square, Loader2, BookOpen, Clock, Tag, Plus, Trash2, Send, MessageSquare, Flame, Sparkles, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { transcribeHealthDictation } from '@/ai/flows/transcribe-health-dictation';
 import { tagJournalEntry } from '@/ai/flows/tag-journal-entry';
@@ -27,7 +27,9 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
   const [entries, setEntries] = useState<JournalEntry[]>(patientData.journalEntries || []);
   const [textInput, setTextInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorState, setErrorState] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
   
@@ -35,12 +37,34 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (isRecording) {
+      timerRef.current = setInterval(() => {
+        setRecordingDuration(prev => {
+          if (prev >= 60) {
+            // Logic handled in render for the message, but we could auto-stop here if desired.
+            return prev + 1;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setRecordingDuration(0);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isRecording]);
+
   const startRecording = async () => {
+    setErrorState(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -64,15 +88,12 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
       mediaRecorder.start();
       setIsRecording(true);
-      toast({ 
-        title: t('recordingStarted', language), 
-        description: t('recordingDescription', language) 
-      });
     } catch (err) {
+      setErrorState(t('micPermissionDenied', language));
       toast({
         variant: "destructive",
         title: "Mic Access Required",
-        description: "Please enable microphone permissions to use Jeiva.",
+        description: t('micPermissionDenied', language),
       });
     }
   };
@@ -93,6 +114,10 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         audioDataUri,
         targetLanguage: language
       });
+
+      if (!transcriptionResult.transcription || transcriptionResult.transcription.trim().length < 2) {
+        throw new Error("EMPTY_SPEECH");
+      }
 
       const taggingResult = await tagJournalEntry({
         entryText: transcriptionResult.transcription,
@@ -139,11 +164,15 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
       });
     } catch (error: any) {
       console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Jeiva is busy",
-        description: "Could not process your dictation at this time.",
-      });
+      if (error.message === "EMPTY_SPEECH") {
+        setErrorState(t('speechNotRecognized', language));
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Jeiva is busy",
+          description: "Could not process your dictation at this time.",
+        });
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -156,6 +185,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
     const content = textInput.trim();
     setTextInput('');
     setIsProcessing(true);
+    setErrorState(null);
 
     try {
       const timeOfDay = new Date().getHours() < 12 ? 'Morning' : (new Date().getHours() < 17 ? 'Afternoon' : 'Evening');
@@ -243,7 +273,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               className="h-14 rounded-2xl bg-muted/20 border-primary/5 pr-24 focus-visible:ring-primary/20"
-              disabled={isProcessing}
+              disabled={isProcessing || isRecording}
             />
             <div className="absolute right-2 top-2 flex gap-1">
               <Button 
@@ -264,20 +294,52 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
                 variant="ghost"
                 size="icon"
                 className="h-10 w-10 rounded-xl"
-                disabled={!textInput.trim() || isProcessing}
+                disabled={!textInput.trim() || isProcessing || isRecording}
               >
                 {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-5 w-5 text-primary" />}
               </Button>
             </div>
           </form>
-          {isProcessing && (
-            <p className="text-[10px] font-medium italic text-primary animate-pulse text-center">
-              Jeiva is listening and reflecting...
-            </p>
-          )}
+
+          {/* RECORDING / ERROR / PROCESSING STATES */}
+          <div className="min-h-[40px] flex flex-col items-center justify-center">
+            {isRecording && (
+              <div className="text-center space-y-1 animate-in fade-in zoom-in-95 duration-300">
+                <p className="text-sm font-black text-primary animate-pulse">{t('recordingMain', language)}</p>
+                <p className="text-[10px] font-bold text-muted-foreground italic">
+                  {recordingDuration >= 60 ? t('recordingLimitReached', language) : t('recordingSubtitle', language)}
+                </p>
+                <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest mt-1">
+                  {recordingDuration}s · {t('tapToFinish', language)}
+                </p>
+              </div>
+            )}
+
+            {isProcessing && (
+              <div className="flex flex-col items-center gap-1 animate-pulse">
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest">
+                  {t('transcribing', language)}
+                </p>
+                <div className="flex gap-1">
+                  <div className="h-1 w-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+                  <div className="h-1 w-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+                  <div className="h-1 w-1 bg-primary rounded-full animate-bounce" />
+                </div>
+              </div>
+            )}
+
+            {errorState && !isRecording && !isProcessing && (
+              <div className="bg-destructive/5 p-3 rounded-xl border border-destructive/10 flex items-start gap-3 animate-in slide-in-from-top-2">
+                <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-[10px] font-bold text-destructive leading-tight">
+                  {errorState}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
-        <ScrollArea className="h-[450px] pr-4">
+        <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             {entries.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground italic text-sm border-2 border-dashed rounded-3xl bg-muted/5">
