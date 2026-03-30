@@ -28,3 +28,4 @@ import '@/ai/flows/confirm-lab-upload.ts';
 import '@/ai/flows/generate-relationship-milestone.ts';
 import '@/ai/flows/generate-morning-nudge.ts';
 import '@/ai/flows/generate-pattern-nudge.ts';
+import '@/ai/flows/generate-voice-observation.ts';
