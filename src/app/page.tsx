@@ -8,7 +8,6 @@ import RecoveryIntelligence from '@/components/dashboard/recovery-intelligence';
 import SymptomTracker from '@/components/dashboard/symptom-tracker';
 import LifestyleGuidance from '@/components/dashboard/lifestyle-guidance';
 import HealthRecords from '@/components/dashboard/health-records';
-import MedicationReminder from '@/components/dashboard/medication-reminder';
 import HealthJournal from '@/components/dashboard/health-journal';
 import WeeklyInsightLetter from '@/components/dashboard/weekly-insight-letter';
 import VitalsMonitor from '@/components/dashboard/vitals-monitor';
@@ -168,9 +167,6 @@ export default function Home() {
         return (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
             <PatientProfile language={language} profile={profile} />
-            {/* History component is now visually part of the You tab list in higher fidelity designs, 
-                but keeping the expanded journal here for now as a separate card if needed */}
-            <HealthJournal language={language} profile={profile} />
           </div>
         );
 

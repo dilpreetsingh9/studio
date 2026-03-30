@@ -9,9 +9,7 @@ import {
   Target, 
   Bell, 
   Loader2,
-  Settings2,
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -21,7 +19,6 @@ import { generateYouSynthesis } from '@/ai/flows/generate-you-synthesis';
 export default function PatientProfile({ language = 'English', profile }: { language?: string; profile?: any }) {
   const [jeivaSynthesis, setJeivaSynthesis] = useState<string>('');
   const [isSynthesizing, setIsSynthesizing] = useState(false);
-  const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
   const { user } = useUser();

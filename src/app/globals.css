@@ -148,6 +148,225 @@
     line-height: 1.7;
     font-variation-settings: 'opsz' 14, 'SOFT' 80, 'WONK' 1;
   }
+
+  /* High-fidelity You Screen Styles */
+  .you-screen {
+    padding: 20px 16px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: #F8F7F4;
+    min-height: 100dvh;
+  }
+
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .profile-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: #3D3060;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-avatar span {
+    font-family: var(--font-content);
+    font-size: 20px;
+    font-weight: 400;
+    color: #fff;
+  }
+
+  .profile-name {
+    font-family: var(--font-content);
+    font-size: 22px;
+    font-weight: 400;
+    color: #0A0A0A;
+    letter-spacing: -0.02em;
+    margin: 0 0 2px;
+  }
+
+  .profile-since {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: #999;
+    margin: 0;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .stat-tile {
+    background: #fff;
+    border: 0.5px solid rgba(0,0,0,0.07);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: var(--font-content);
+    font-size: 22px;
+    font-weight: 400;
+    color: #0A0A0A;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 4px;
+    font-variation-settings: 'opsz' 22, 'SOFT' 40;
+  }
+
+  .stat-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    color: #999;
+    letter-spacing: 0.02em;
+  }
+
+  .jeiva-card {
+    background: #3D3060;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .jeiva-card-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 8px;
+  }
+
+  .jeiva-card-body {
+    font-family: var(--font-content);
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.92);
+    letter-spacing: -0.01em;
+    font-variation-settings: 'opsz' 13, 'SOFT' 60, 'WONK' 1;
+    margin: 0;
+  }
+
+  .menu-card {
+    background: #fff;
+    border: 0.5px solid rgba(0,0,0,0.07);
+    border-radius: 16px;
+    padding: 0 14px;
+    margin-bottom: 10px;
+  }
+
+  .menu-section-label {
+    font-family: var(--font-ui);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #bbb;
+    padding: 14px 0 8px;
+  }
+
+  .menu-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    cursor: pointer;
+  }
+
+  .menu-row--last {
+    border-bottom: none;
+  }
+
+  .menu-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: #F0F4F2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .menu-label {
+    flex: 1;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 400;
+    color: #0A0A0A;
+    letter-spacing: -0.01em;
+  }
+
+  .menu-meta {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: #bbb;
+  }
+
+  .menu-caret {
+    font-size: 12px;
+    color: #ccc;
+    margin-left: 4px;
+  }
+
+  .signout-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 0.5px solid rgba(0,0,0,0.1);
+    border-radius: 12px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: #999;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: background 0.15s;
+  }
+
+  .signout-btn:hover {
+    background: rgba(0,0,0,0.03);
+  }
+
+  .you-skeleton {
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, #F0F0EE 25%, #E8E8E6 50%, #F0F0EE 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 10px;
+  }
+
+  .skeleton--avatar { width: 52px; height: 52px; border-radius: 16px; }
+  .skeleton--name   { width: 140px; height: 24px; }
+  .skeleton--stats  { width: 100%; height: 72px; }
+  .skeleton--card   { width: 100%; height: 120px; }
 }
 
 @keyframes scan {
@@ -169,6 +388,11 @@
 @keyframes dash {
   from { stroke-dashoffset: 200; }
   to { stroke-dashoffset: 0; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .animate-scan {
