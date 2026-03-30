@@ -6,12 +6,6 @@ service cloud.firestore {
      * CORE PHILOSOPHY:
      * This ruleset enforces a strict user-ownership model for all personal health data and a membership-based 
      * collaborative model for communication and care provider relationships.
-     * 
-     * DATA STRUCTURE:
-     * - Personal data (Medical Records, Insights, Appointments, Goals, etc.) is hierarchically nested 
-     *   under `/users/{userId}/...` to ensure natural isolation.
-     * - Communications (Conversations, Messages) are top-level but secured via a `participantIds` array.
-     * - Provider and Specialist directories are top-level, with CareProvider access limited by `patientUserIds`.
      */
 
     // --- GLOBAL HELPER FUNCTIONS ---
@@ -41,22 +35,26 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
 
-      match /medicalRecords/{id} {
+      // Clinical reports and cross-report synthesis
+      match /records/{id} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
-      }
-
-      match /insights/{id} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
+        allow write: if isOwner(userId);
       }
 
       // Daily AI-generated synthesis
       match /synthesis/{id} {
+        allow get, list: if isOwner(userId);
+        allow write: if isOwner(userId);
+      }
+
+      // Check-ins (quick tiles)
+      match /checkins/{id} {
+        allow get, list: if isOwner(userId);
+        allow write: if isOwner(userId);
+      }
+
+      // Health Journal entries (voice/text)
+      match /journal/{id} {
         allow get, list: if isOwner(userId);
         allow write: if isOwner(userId);
       }
@@ -79,12 +77,6 @@ service cloud.firestore {
         allow write: if isOwner(userId);
       }
 
-      // Health Journal entries
-      match /journal/{id} {
-        allow get, list: if isOwner(userId);
-        allow write: if isOwner(userId);
-      }
-
       // Relationship state
       match /relationship/{id} {
         allow get, list: if isOwner(userId);
@@ -93,37 +85,27 @@ service cloud.firestore {
 
       match /appointments/{id} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
+        allow write: if isOwner(userId);
       }
 
       match /referrals/{id} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
+        allow write: if isOwner(userId);
       }
 
       match /healthGoals/{id} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
+        allow write: if isOwner(userId);
       }
 
       match /notifications/{id} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
+        allow write: if isOwner(userId);
       }
 
       match /familyMembers/{id} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.patientUserId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.patientUserId == resource.data.patientUserId;
-        allow delete: if isExistingOwner(userId);
+        allow write: if isOwner(userId);
       }
     }
 
