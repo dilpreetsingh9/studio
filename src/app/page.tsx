@@ -53,6 +53,7 @@ export default function Home() {
     return Math.max(1, Math.floor(diffMs / (1000 * 3600 * 24)));
   }, [profile?.createdAt]);
 
+  // Routine Intelligence Logic
   const routineStripState = useMemo(() => {
     if (!medications) return { state: 'none' as const };
     
@@ -60,7 +61,9 @@ export default function Home() {
     const now = new Date();
 
     const parseTime = (timeStr: string) => {
-      const [time, modifier] = timeStr.split(' ');
+      const parts = timeStr.split(' ');
+      if (parts.length !== 2) return new Date();
+      const [time, modifier] = parts;
       let [hours, minutes] = time.split(':').map(Number);
       if (modifier === 'PM' && hours < 12) hours += 12;
       if (modifier === 'AM' && hours === 12) hours = 0;

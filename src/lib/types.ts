@@ -1,4 +1,3 @@
-
 export type LifeStage = 'Regular' | 'TTC' | 'Pregnancy' | 'Perimenopause';
 export type CyclePhase = 'Menstrual' | 'Follicular' | 'Ovulatory' | 'Luteal';
 

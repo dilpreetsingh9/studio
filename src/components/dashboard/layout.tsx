@@ -101,7 +101,7 @@ export function DashboardLayout({
         </div>
       </main>
 
-      {/* Floating Check-In Button */}
+      {/* Floating Check-In Button - Aligned Right above 'You' */}
       <div className="fixed bottom-[84px] right-6 z-40 max-w-md w-full pointer-events-none mx-auto left-0 flex justify-end px-6 md:px-0">
         <button
           onClick={() => setIsCheckInOpen(true)}
