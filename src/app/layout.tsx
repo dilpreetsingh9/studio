@@ -1,11 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { DM_Sans, Fraunces } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from "@/firebase/client-provider"
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ['latin'],
+  variable: '--font-dm',
+  display: 'swap',
+});
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  axes: ['opsz', 'SOFT', 'WONK'],
+  variable: '--font-fraunces',
   display: 'swap',
 });
 
@@ -37,11 +45,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light">
+    <html lang="en" className={`light ${dmSans.variable} ${fraunces.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={`${inter.className} antialiased selection:bg-primary/10`}>
+      <body className="font-sans antialiased selection:bg-primary/10">
         <FirebaseClientProvider>
           {children}
           <Toaster />
