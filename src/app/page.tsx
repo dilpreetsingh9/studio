@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -69,7 +68,7 @@ export default function Home() {
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
             {/* Header Identity strip */}
             <div className="px-1 space-y-0.5">
-              <h1 className="text-display font-content">{profile?.firstName}</h1>
+              <h1 className="greeting-name">{profile?.firstName}</h1>
               <p className="text-label font-bold text-primary uppercase tracking-[0.2em]">With Jeiva for {daysWithJeiva} days</p>
             </div>
 

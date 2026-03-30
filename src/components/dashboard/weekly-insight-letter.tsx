@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -137,7 +136,7 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
                 Close Letter
               </Button>
             </div>
-            <CardTitle className="text-display font-content text-primary mt-4">
+            <CardTitle className="greeting-name text-primary mt-4">
               Dear {profile?.firstName},
             </CardTitle>
           </CardHeader>
@@ -147,7 +146,7 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
               <div className="space-y-8">
                 <div className="space-y-6">
                   {letter.letterContent.split('\n\n').map((para, i) => (
-                    <p key={i} className="font-content text-voice leading-relaxed text-foreground/90 font-medium italic">
+                    <p key={i} className="weekly-letter text-foreground/90 italic">
                       {para}
                     </p>
                   ))}

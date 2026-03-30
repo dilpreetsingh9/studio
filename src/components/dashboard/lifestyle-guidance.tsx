@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -196,13 +195,13 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           <div className="space-y-6">
             {milestoneNote && (
               <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
-                <p className="font-content text-voice italic text-white">"{milestoneNote}"</p>
+                <p className="synthesis-body text-white italic">"{milestoneNote}"</p>
               </div>
             )}
 
             {isReturn && (
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-                <p className="font-content text-display leading-relaxed italic text-white/90">
+                <p className="synthesis-body leading-relaxed italic text-white/90">
                   "Welcome back. The body keeps its rhythm even when we aren't watching. Ready to check in?"
                 </p>
               </div>
@@ -211,7 +210,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             {!displayObservation && !milestoneNote && !isReturn && (
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-col items-center text-center gap-3">
                 <BrainCircuit className="h-8 w-8 text-white/20" />
-                <p className="font-content text-voice text-white/60 italic">
+                <p className="synthesis-body text-white/60 italic">
                   "Our patterns are still quiet. Share a thought in your journal to help Jeiva learn your rhythm today."
                 </p>
               </div>
@@ -229,7 +228,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
             {displayObservation && !jeivaInsight?.dialogueMoment && (
               <div className="space-y-4 animate-in fade-in duration-700">
-                <p className="font-content text-display leading-relaxed italic text-white/90 pr-4">
+                <p className="synthesis-body leading-relaxed italic text-white/90 pr-4">
                   "{displayObservation}"
                 </p>
                 {jeivaInsight?.actionLine && (

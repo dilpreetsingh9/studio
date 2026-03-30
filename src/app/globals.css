@@ -121,6 +121,35 @@
   }
 }
 
+@layer components {
+  /* Specialized font settings for Jeiva Content */
+  
+  .synthesis-body {
+    font-family: var(--font-content);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.65;
+    font-variation-settings: 'opsz' 14, 'SOFT' 60, 'WONK' 1;
+    letter-spacing: -0.01em;
+  }
+
+  .greeting-name {
+    font-family: var(--font-content);
+    font-size: 22px;
+    font-weight: 500;
+    font-variation-settings: 'opsz' 22, 'SOFT' 40, 'WONK' 0;
+    letter-spacing: -0.02em;
+  }
+
+  .weekly-letter {
+    font-family: var(--font-content);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.7;
+    font-variation-settings: 'opsz' 14, 'SOFT' 80, 'WONK' 1;
+  }
+}
+
 @keyframes scan {
   0% { top: 0; opacity: 0; }
   10% { opacity: 1; }
