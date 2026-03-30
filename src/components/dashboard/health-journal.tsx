@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { transcribeHealthDictation } from '@/ai/flows/transcribe-health-dictation';
 import { tagJournalEntry } from '@/ai/flows/tag-journal-entry';
 import { confirmLogEntry } from '@/ai/flows/confirm-log-entry';
-import { connectFoodToState } from '@/ai/flows/connect-food-to-state';
 import { generateVoiceObservation } from '@/ai/flows/generate-voice-observation';
 import { patientData } from '@/lib/data';
 import { JournalEntry } from '@/lib/types';
@@ -17,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/translations';
+import { useCheckInPrompt } from '@/hooks/use-checkin-prompt';
 
 interface HealthJournalProps {
   language?: string;
@@ -30,6 +30,8 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
   const [isProcessing, setIsProcessing] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
+  
+  const dynamicPrompt = useCheckInPrompt();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -224,7 +226,9 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
               <BookOpen className="h-5 w-5 text-primary" />
               {t('healthJournal', language)}
             </CardTitle>
-            <CardDescription>{t('journalSubtitle', language)}</CardDescription>
+            <CardDescription className="text-primary font-bold italic mt-1">
+              {dynamicPrompt}
+            </CardDescription>
           </div>
           <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-widest px-3 py-1">
             Voice & Text
