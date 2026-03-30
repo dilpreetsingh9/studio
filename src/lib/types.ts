@@ -56,6 +56,7 @@ export type MedicalRecord = {
   capturedAt: Date;
   imageUrl: string;
   summary: string;
+  interpretation?: string;
   keyFindings?: string[];
   nextSteps?: string[];
 };

@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ScanLine, FileText, ChevronRight, Info } from 'lucide-react';
+import { ScanLine, FileText, ChevronRight, Info, MessageSquare, Sparkles } from 'lucide-react';
 import ScanDocumentDialog from './scan-document-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MedicalRecord } from '@/lib/types';
@@ -129,14 +129,33 @@ export default function HealthRecords({
                     <CardContent className="flex-grow overflow-hidden">
                       <ScrollArea className="h-full pr-4">
                         <div className="space-y-6 pb-6">
-                          <div className="relative group overflow-hidden rounded-xl border">
+                          {selectedRecord.interpretation && (
+                            <div className="bg-primary/5 p-5 rounded-[2rem] border border-primary/10 relative overflow-hidden group/obs">
+                              <div className="absolute top-0 right-0 p-4 opacity-5">
+                                <Sparkles className="h-12 w-12 text-primary" />
+                              </div>
+                              <div className="flex gap-4 items-start relative z-10">
+                                <div className="bg-white p-2 rounded-xl shadow-sm border border-primary/5 shrink-0">
+                                  <MessageSquare className="h-5 w-5 text-primary" />
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Jeiva's Perspective</p>
+                                  <p className="text-base font-bold leading-relaxed text-primary italic">
+                                    "{selectedRecord.interpretation}"
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="relative group overflow-hidden rounded-xl border shadow-sm">
                              <img
                               src={selectedRecord.imageUrl}
                               alt="Scanned record"
                               className="w-full h-auto object-cover max-h-48"
                             />
                             <div className="absolute bottom-2 right-2">
-                               <Badge className="bg-black/60 backdrop-blur-md">Source Document</Badge>
+                               <Badge className="bg-black/60 backdrop-blur-md text-[10px] border-none">Source Document</Badge>
                             </div>
                           </div>
 
@@ -146,19 +165,19 @@ export default function HealthRecords({
                                 <Info className="h-4 w-4 text-primary" />
                                 Patient Summary
                               </h4>
-                              <p className="text-sm leading-relaxed text-muted-foreground italic">
+                              <p className="text-sm leading-relaxed text-muted-foreground">
                                 {selectedRecord.summary}
                               </p>
                             </div>
 
                             {selectedRecord.keyFindings && selectedRecord.keyFindings.length > 0 && (
                               <div className="space-y-2">
-                                <h4 className="text-sm font-semibold text-primary">Key Findings</h4>
+                                <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] ml-1">Notable Points</h4>
                                 <ul className="grid grid-cols-1 gap-2">
                                   {selectedRecord.keyFindings.map((finding, idx) => (
-                                    <li key={idx} className="flex items-start gap-3 text-sm bg-muted/50 p-3 rounded-lg border border-transparent hover:border-primary/20 transition-colors">
-                                      <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                                      <span>{finding}</span>
+                                    <li key={idx} className="flex items-start gap-3 text-sm bg-muted/20 p-3 rounded-lg border border-transparent hover:border-primary/10 transition-colors">
+                                      <div className="h-1.5 w-1.5 rounded-full bg-primary/40 mt-2 shrink-0" />
+                                      <span className="font-medium">{finding}</span>
                                     </li>
                                   ))}
                                 </ul>

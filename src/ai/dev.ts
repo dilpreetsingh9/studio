@@ -29,3 +29,4 @@ import '@/ai/flows/generate-relationship-milestone.ts';
 import '@/ai/flows/generate-morning-nudge.ts';
 import '@/ai/flows/generate-pattern-nudge.ts';
 import '@/ai/flows/generate-voice-observation.ts';
+import '@/ai/flows/interpret-medical-report.ts';

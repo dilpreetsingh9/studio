@@ -14,10 +14,12 @@ import { Camera, RefreshCcw, Loader2, Save, FileCheck, BrainCircuit, ScanLine, M
 import { useToast } from '@/hooks/use-toast';
 import { analyzeMedicalDocument } from '@/ai/flows/analyze-medical-document';
 import { confirmLabUpload } from '@/ai/flows/confirm-lab-upload';
+import { interpretMedicalReport } from '@/ai/flows/interpret-medical-report';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { MedicalRecord } from '@/lib/types';
 import { Badge } from '../ui/badge';
+import { patientData } from '@/lib/data';
 
 interface ScanDocumentDialogProps {
   open: boolean;
@@ -41,6 +43,7 @@ export default function ScanDocumentDialog({
     summary: string;
     keyFindings?: string[];
     nextSteps?: string[];
+    interpretation?: string;
   } | null>(null);
   const [confirmationNote, setConfirmationNote] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -124,19 +127,37 @@ export default function ScanDocumentDialog({
     setAnalysis(null);
     setConfirmationNote(null);
     try {
+      // 1. Structural Extraction via OCR
       const result = await analyzeMedicalDocument({
         documentImage: capturedImage,
         targetLanguage: language
       });
-      setAnalysis(result);
 
-      // Call Jeiva's confirmation flow
-      const markersFound = result.keyFindings?.length || 0;
-      const unclearCount = markersFound === 0 ? 1 : 0; 
+      // 2. Jeiva's Deeper Interpretation (Flow R-1)
+      const markersFound = result.keyFindings?.map(f => ({
+        name: f.split(':')[0] || 'Unknown Marker',
+        value: f.split(':')[1]?.trim().split(' ')[0] || 'Present',
+        unit: f.split(':')[1]?.trim().split(' ')[1] || ''
+      })) || [];
 
+      const interpretationResult = await interpretMedicalReport({
+        reportType: 'General Scan',
+        markers: markersFound,
+        sex: patientData.details.gender,
+        phase: patientData.cycleData.predictedPhase,
+        healthFocus: patientData.medicalHistory,
+        targetLanguage: language
+      });
+
+      setAnalysis({
+        ...result,
+        interpretation: interpretationResult.interpretation
+      });
+
+      // 3. Immediate Confirmation Note
       const confirmation = await confirmLabUpload({
-        markersReadCount: markersFound,
-        markersUnclearCount: unclearCount,
+        markersReadCount: markersFound.length,
+        markersUnclearCount: markersFound.length === 0 ? 1 : 0,
         targetLanguage: language
       });
       setConfirmationNote(confirmation.confirmation);
@@ -161,6 +182,7 @@ export default function ScanDocumentDialog({
       onRecordScanned({ 
         imageUrl: capturedImage, 
         summary: analysis.summary,
+        interpretation: analysis.interpretation,
         keyFindings: analysis.keyFindings,
         nextSteps: analysis.nextSteps
       });
@@ -203,9 +225,15 @@ export default function ScanDocumentDialog({
               <CardContent>
                 <ScrollArea className="h-48 pr-4">
                   <div className="space-y-4">
+                    {analysis.interpretation && (
+                      <div className="bg-white/50 p-3 rounded-xl border border-primary/10">
+                        <p className="text-xs font-black text-primary/60 uppercase tracking-widest mb-1">Jeiva's Interpretation</p>
+                        <p className="text-sm italic font-medium text-primary">"{analysis.interpretation}"</p>
+                      </div>
+                    )}
                     <div>
-                        <p className="text-sm italic font-medium">Summary:</p>
-                        <p className="text-sm text-muted-foreground">{analysis.summary}</p>
+                        <p className="text-sm font-bold">Summary:</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{analysis.summary}</p>
                     </div>
                     {analysis.keyFindings && analysis.keyFindings.length > 0 && (
                       <div>
