@@ -92,7 +92,7 @@ export const UI_TRANSLATIONS: TranslationDictionary = {
     processingSublabel: "Translating clinical values into plain language",
     couldNotReadError: "Jeiva couldn't read that one clearly. Try uploading the file directly instead.",
     partialReadError: "Jeiva read {{n}} markers. {{m}} were unclear — you can add those manually.",
-    tabScan: "Scan",
+    tabScan: "Scan Reports",
     tabToday: "Today",
     tabYou: "You",
     tabCheckIn: "Check In",
