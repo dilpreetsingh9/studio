@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -110,7 +109,7 @@ export function DashboardLayout({
           className="h-14 w-14 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-white scale-110 active:scale-95 transition-transform"
           onClick={() => setIsCheckInOpen(true)}
         >
-          <Plus className="h-7 w-7" />
+          <Mic className="h-7 w-7" />
         </Button>
       </div>
 
