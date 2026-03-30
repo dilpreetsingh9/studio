@@ -51,7 +51,7 @@ export function DashboardLayout({
 
   const navItems = [
     { id: 'today', label: 'Today', icon: Sparkles },
-    { id: 'log', label: 'Log', icon: Mic },
+    { id: 'checkin', label: 'Check-In', icon: Mic },
     { id: 'history', label: 'History', icon: History },
     { id: 'you', label: 'You', icon: User },
   ];

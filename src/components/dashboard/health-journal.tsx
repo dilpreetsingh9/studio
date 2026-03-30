@@ -69,7 +69,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
       toast({
         variant: "destructive",
         title: "Mic Access Required",
-        description: "Please enable microphone permissions to use Nitya.",
+        description: "Please enable microphone permissions to use Jeiva.",
       });
     }
   };
@@ -109,10 +109,13 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
       }
 
       const confirmationResult = await confirmLogEntry({
-        logType: taggingResult.food_item ? 'food' : 'journal',
-        logStreak: entries.length + 1,
-        isFirstLog: entries.length === 0,
-        detectedItem: taggingResult.food_item,
+        logType: 'voice',
+        logValue: transcriptionResult.transcription,
+        timeOfDay: new Date().getHours() < 12 ? 'Morning' : (new Date().getHours() < 17 ? 'Afternoon' : 'Evening'),
+        isFirst: entries.length === 0,
+        streak: entries.length + 1,
+        patternFlag: false,
+        sex: profile?.gender || 'Female',
         targetLanguage: language
       });
 
@@ -131,14 +134,14 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
       setEntries(prev => [newEntry, ...prev]);
       toast({
-        title: "Note received",
+        title: "Check-In witnessed",
         description: confirmationResult.confirmation,
       });
     } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Nitya is busy",
+        title: "Jeiva is busy",
         description: "Could not process your dictation at this time.",
       });
     } finally {
@@ -175,10 +178,13 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
       }
 
       const confirmationResult = await confirmLogEntry({
-        logType: taggingResult.food_item ? 'food' : 'journal',
-        logStreak: entries.length + 1,
-        isFirstLog: entries.length === 0,
-        detectedItem: taggingResult.food_item,
+        logType: 'other',
+        logValue: content,
+        timeOfDay: new Date().getHours() < 12 ? 'Morning' : (new Date().getHours() < 17 ? 'Afternoon' : 'Evening'),
+        isFirst: entries.length === 0,
+        streak: entries.length + 1,
+        patternFlag: false,
+        sex: profile?.gender || 'Female',
         targetLanguage: language
       });
 
@@ -197,7 +203,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
       setEntries(prev => [newEntry, ...prev]);
       toast({
-        title: "Note received",
+        title: "Check-In received",
         description: confirmationResult.confirmation,
       });
     } catch (error) {
@@ -277,7 +283,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
           </form>
           {isProcessing && (
             <p className="text-[10px] font-medium italic text-primary animate-pulse text-center">
-              Nitya is listening and reflecting...
+              Jeiva is listening and reflecting...
             </p>
           )}
         </div>

@@ -1,71 +1,73 @@
 'use server';
 
 /**
- * @fileOverview Jeiva's Logging Confirmation Flow - Generates a single-sentence,
- * warm confirmation after a user logs data.
- * 
- * Persona: Jeiva - Indian health companion.
+ * @fileOverview Jeiva's Check-In Confirmation Flow (L-2)
+ * Generates a single-sentence, warm closure after a check-in.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const ConfirmLogInputSchema = z.object({
-  logType: z.string().describe('The category of what was logged (e.g. Mood, Energy, Food, Vitals).'),
-  logValue: z.any().optional().describe('The value logged if applicable.'),
-  logStreak: z.number().optional().default(0).describe('Consecutive days of logging.'),
-  isFirstLog: z.boolean().optional().default(false).describe('True if this is the user’s first ever log.'),
-  detectedItem: z.string().optional().nullable().describe('Specific item detected, like an Indian food name.'),
+const ConfirmCheckInInputSchema = z.object({
+  logType: z.enum(['voice', 'mood', 'energy', 'pain', 'stress', 'focus', 'meal', 'activity', 'sleep', 'other']),
+  logValue: z.string().describe('The transcript or the numeric value (1-5).'),
+  timeOfDay: z.string(),
+  isFirst: z.boolean(),
+  streak: z.number(),
+  patternFlag: z.boolean().describe('True if same signal was low 3 days running.'),
+  sex: z.enum(['Female', 'Male', 'Other']),
   targetLanguage: z.string().optional().default('English'),
 });
-export type ConfirmLogInput = z.infer<typeof ConfirmLogInputSchema>;
+export type ConfirmCheckInInput = z.infer<typeof ConfirmCheckInInputSchema>;
 
-const ConfirmLogOutputSchema = z.object({
-  confirmation: z.string().describe('A single warm confirmation sentence, max 12 words.'),
+const ConfirmCheckInOutputSchema = z.object({
+  confirmation: z.string().describe('Exactly 1 sentence closure. Max 12 words.'),
 });
-export type ConfirmLogOutput = z.infer<typeof ConfirmLogOutputSchema>;
+export type ConfirmCheckInOutput = z.infer<typeof ConfirmCheckInOutputSchema>;
 
-export async function confirmLogEntry(input: ConfirmLogInput): Promise<ConfirmLogOutput> {
-  return confirmLogEntryFlow(input);
+export async function confirmLogEntry(input: ConfirmCheckInInput): Promise<ConfirmCheckInOutput> {
+  return confirmCheckInFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'confirmLogEntryPrompt',
-  input: { schema: ConfirmLogInputSchema },
-  output: { schema: ConfirmLogOutputSchema },
+  name: 'confirmCheckInPrompt',
+  input: { schema: ConfirmCheckInInputSchema },
+  output: { schema: ConfirmCheckInOutputSchema },
   prompt: `
-    You are Jeiva — a warm health companion.
-    Confirm that a log was received in exactly 1 sentence (max 12 words).
+    ROLE: Jeiva (Indian health companion).
+    TASK: Write a closing line after a check-in.
     
     LOGIC:
-    1. If isFirstLog is true: "First one is always the most important. Noted."
-    2. If logType is "food" and detectedItem is present (especially Indian food like Dal, Roti, Chawal): 
-       "{{{detectedItem}}} noted. Jeiva will remember that."
-    3. If logStreak is 7: Acknowledge the week milestone naturally (e.g. "Seven days of showing up. It adds up.").
-    4. If logStreak is 30: Acknowledge the month milestone warmly.
-    5. Standard log: Simple, warm confirmation. Never hollow.
+    - IF isFirst: "First one noted. That is how it starts."
+    - IF logType == voice: Reflect 1 specific item from transcript. No rewriting.
+    - IF logType == quick tile: 
+        - Value 1-2: Pure witness. No fix.
+        - Value 4-5: Warm, brief.
+        - Value 3: Neutral.
+    - IF patternFlag: Add: "That is three days of low [signal]. Worth sitting with."
+    - IF streak in [7, 14, 30]: Add: "[Count] days of checking in. That is something."
+    - SEX SPECIFIC:
+        - Female + Pain + High: "That sounds like a hard one. Noted."
+        - Male + Focus + Low: "Low focus after a short night — that tracks."
     
     CONSTRAINTS:
-    - Exactly 1 sentence only.
-    - Maximum 12 words.
-    - Warm. Immediate. Specific to the log type where possible.
-    - No exclamation marks.
-    - Provide the output in {{{targetLanguage}}}.
-    
-    USER CONTEXT:
-    Type: {{{logType}}}
-    Value: {{{logValue}}}
-    Streak: {{{logStreak}}}
-    First Log: {{{isFirstLog}}}
-    Detected: {{{detectedItem}}}
+    - Exactly 1 sentence. Max 12 words.
+    - Warm gravity. No exclamation marks.
+    - No hollow affirmations (Great/Amazing). 
+    - No clinical/instructional language.
+    - Output in {{{targetLanguage}}}.
+
+    DATA: 
+    Type: {{{logType}}} | Value: {{{logValue}}} | Time: {{{timeOfDay}}} 
+    First: {{{isFirst}}} | Streak: {{{streak}}} | Pattern: {{{patternFlag}}} | Sex: {{{sex}}}
   `,
 });
 
-const confirmLogEntryFlow = ai.defineFlow(
+const confirmCheckInFlow = ai.defineFlow(
   {
-    name: 'confirmLogEntryFlow',
-    inputSchema: ConfirmLogInputSchema,
-    outputSchema: ConfirmLogOutputSchema,
+    name: 'confirmCheckInFlow',
+    inputSchema: ConfirmCheckInInputSchema,
+    outputSchema: ConfirmCheckInOutputSchema,
   },
   async (input) => {
     return runWithModelFallback(prompt, input);

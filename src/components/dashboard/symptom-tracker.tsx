@@ -37,12 +37,15 @@ export default function SymptomTracker({ profile }: { profile?: any }) {
     setIsLogging(true);
     
     try {
-      const primarySymptom = selected[0];
+      const primarySymptom = selected[0].toLowerCase() as any;
       const response = await confirmLogEntry({
         logType: primarySymptom,
-        logValue: 4,
-        logStreak: 1, 
-        isFirstLog: false,
+        logValue: "4", // Default high intensity for tiles
+        timeOfDay: new Date().getHours() < 12 ? 'Morning' : (new Date().getHours() < 17 ? 'Afternoon' : 'Evening'),
+        isFirst: false,
+        streak: 1, 
+        patternFlag: false, // In a real app, this would be computed from history
+        sex: profile?.gender || 'Female',
         targetLanguage: 'English'
       });
 
@@ -55,7 +58,7 @@ export default function SymptomTracker({ profile }: { profile?: any }) {
       console.error('Failed to log symptoms', error);
       toast({
         variant: "destructive",
-        title: "Logging failed",
+        title: "Check-In failed",
         description: "I'm having trouble saving your notes right now.",
       });
     } finally {

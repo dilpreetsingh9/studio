@@ -96,7 +96,7 @@ export default function Home() {
           </div>
         );
       
-      case 'log':
+      case 'checkin':
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <HealthJournal language={language} profile={profile} />
