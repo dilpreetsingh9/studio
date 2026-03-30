@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, Droplets, Zap, Sun, Moon, Loader2, MessageSquare } from 'lucide-react';
+import { Sparkles, Loader2, MessageSquare } from 'lucide-react';
 import { patientData } from '@/lib/data';
 import { CyclePhase } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -27,7 +27,7 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
 
   // C-1 Caching: 24 hour check
   useEffect(() => {
-    const cachedData = localStorage.getItem(`nitya_c1_${profile?.id}`);
+    const cachedData = localStorage.getItem(`jeiva_c1_${profile?.id}`);
     if (cachedData) {
       const { value, timestamp } = JSON.parse(cachedData);
       if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
@@ -52,7 +52,7 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
         targetLanguage: language
       });
       setInsight(result);
-      localStorage.setItem(`nitya_c1_${profile.id}`, JSON.stringify({ value: result, timestamp: Date.now() }));
+      localStorage.setItem(`jeiva_c1_${profile.id}`, JSON.stringify({ value: result, timestamp: Date.now() }));
     } catch (error) {
       console.error(error);
     } finally {

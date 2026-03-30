@@ -13,12 +13,11 @@ import {
   Loader2, 
   MessageSquare,
   X,
-  BrainCircuit,
-  Quote
+  BrainCircuit
 } from 'lucide-react';
 import { t } from '@/lib/translations';
 import { analyzeLabResult } from '@/ai/flows/analyze-lab-result';
-import { synthesizeLabMarkers, SynthesizeLabMarkersOutput } from '@/ai/flows/synthesize-lab-markers';
+import { synthesizeLabMarkers } from '@/ai/flows/synthesize-lab-markers';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -31,9 +30,10 @@ const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' | 'first reading
 
 interface LabResultsProps {
   language?: string;
+  daysActive?: number;
 }
 
-export default function LabResults({ language = 'English' }: LabResultsProps) {
+export default function LabResults({ language = 'English', daysActive = 12 }: LabResultsProps) {
   const [analyzingMarker, setAnalyzingMarker] = useState<string | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [collectiveInsight, setCollectiveInsight] = useState<string | null>(null);
@@ -43,16 +43,13 @@ export default function LabResults({ language = 'English' }: LabResultsProps) {
     setIsSynthesizing(true);
     try {
       const result = await synthesizeLabMarkers({
-        labResults: patientData.labResults.map(lab => ({
-          name: lab.name,
-          value: lab.value,
-          unit: lab.unit,
-          trend: lab.trend
-        })),
-        phase: patientData.cycleData.predictedPhase,
+        allReportsJson: JSON.stringify(patientData.labResults),
+        recurringLow: 'Vitamin D3',
+        recurringStable: 'Progesterone, FSH',
+        trends: 'Steady increase in metabolic markers over three reports.',
         sex: patientData.details.gender,
         healthFocus: patientData.medicalHistory,
-        lastLabDate: 'October 2023', // Mocked prior date
+        daysActive: daysActive,
         targetLanguage: language
       });
       setCollectiveInsight(result.synthesis);
@@ -65,7 +62,7 @@ export default function LabResults({ language = 'English' }: LabResultsProps) {
 
   useEffect(() => {
     fetchCollectiveInsight();
-  }, [language]);
+  }, [language, daysActive]);
 
   const handleGetPerspective = async (lab: typeof patientData.labResults[0]) => {
     setAnalyzingMarker(lab.name);
@@ -116,7 +113,7 @@ export default function LabResults({ language = 'English' }: LabResultsProps) {
           {isSynthesizing ? (
             <div className="p-6 rounded-2xl border-2 border-dashed bg-muted/5 flex flex-col items-center justify-center text-center">
               <Loader2 className="h-6 w-6 animate-spin text-primary mb-2 opacity-50" />
-              <p className="text-[10px] font-medium italic text-muted-foreground uppercase tracking-widest">Nitya is finding the story...</p>
+              <p className="text-[10px] font-medium italic text-muted-foreground uppercase tracking-widest">Jeiva is finding the story...</p>
             </div>
           ) : collectiveInsight && (
             <div className="bg-primary/5 p-5 rounded-2xl border border-primary/10 relative overflow-hidden group animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -133,7 +130,7 @@ export default function LabResults({ language = 'English' }: LabResultsProps) {
                   </p>
                   <div className="flex items-center gap-2 pt-1">
                     <div className="h-px w-4 bg-primary/20" />
-                    <p className="text-[10px] text-primary/60 font-black uppercase tracking-widest">Nitya's Collective Insight</p>
+                    <p className="text-[10px] text-primary/60 font-black uppercase tracking-widest">Jeiva's Collective Insight</p>
                   </div>
                 </div>
               </div>

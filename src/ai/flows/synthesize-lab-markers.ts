@@ -1,26 +1,21 @@
 'use server';
 
 /**
- * @fileOverview Nitya's Lab Synthesis Flow - Synthesises across multiple markers
- * into a single, warm story about the user's current health state.
- * 
- * Persona: Nitya - Indian health companion.
+ * @fileOverview Jeiva's Historical Synthesis Flow (R-2)
+ * Synthesises across all historical medical reports into a single coherent narrative.
  */
 
 import { ai, runWithModelFallback } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SynthesizeLabMarkersInputSchema = z.object({
-  labResults: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-    unit: z.string(),
-    trend: z.string(),
-  })).describe('An array of markers and their latest readings.'),
-  phase: z.string().optional().describe('Current cycle phase if applicable.'),
-  sex: z.string().optional().default('Female'),
-  healthFocus: z.string().optional().default('Overall balance'),
-  lastLabDate: z.string().optional().describe('The date of the previous lab upload.'),
+  allReportsJson: z.string().describe('Full history of extracted markers and dates.'),
+  recurringLow: z.string().optional().describe('Markers that are consistently low.'),
+  recurringStable: z.string().optional().describe('Markers that are consistently stable.'),
+  trends: z.string().optional().describe('Notable trends across time.'),
+  sex: z.string(),
+  healthFocus: z.string(),
+  daysActive: z.number(),
   targetLanguage: z.string().optional().default('English'),
 });
 export type SynthesizeLabMarkersInput = z.infer<typeof SynthesizeLabMarkersInputSchema>;
@@ -41,31 +36,29 @@ const prompt = ai.definePrompt({
   input: { schema: SynthesizeLabMarkersInputSchema },
   output: { schema: SynthesizeLabMarkersOutputSchema },
   prompt: `
-    You are Nitya — a wise health companion for Indian users.
-    
-    TASK:
-    Synthesise across multiple lab markers into one story.
+    ROLE: Jeiva (Wise Indian Health Companion).
+    TASK: Synthesise across all historical medical reports into one coherent picture.
     
     LOGIC:
-    1. DO NOT list numbers or markers back. 
-    2. Lead with what is going well based on the trends and values.
-    3. Name one trend worth watching as "useful information" rather than a clinical risk.
-    4. End with one lifestyle observation or reflection (framed as curiosity, not instruction).
-    5. If prior labs exist (lastLabDate: {{{lastLabDate}}}), compare to that time naturally (e.g., "Since your last check in [month]...").
+    - IDENTIFY the single most meaningful cross-report pattern.
+    - LEAD with what is stable — reassurance before observation.
+    - NAME one thing worth watching — framed as useful to know, never as alarming.
+    - IF a marker connects to check-in logs: Name the connection explicitly.
+    - CONFIDENCE: If all markers are stable, say so confidently. "Everything holding steady."
     
-    STRICT CONSTRAINTS:
-    - Exactly 2-3 sentences.
-    - Warm. Plain. Human.
+    BANNED:
     - NO bullet points.
-    - NO clinical terminology (normal, abnormal, range, high/low risk).
-    - Provide the output in {{{targetLanguage}}}.
-
-    USER CONTEXT:
-    Markers: {{#each labResults}}{{{name}}} ({{{value}}} {{{unit}}}, trend: {{{trend}}}); {{/each}}
-    Phase: {{{phase}}}
-    Focus: {{{healthFocus}}}
-    Last Upload: {{{lastLabDate}}}
-    `,
+    - NO clinical terminology.
+    - NO alarming language.
+    
+    DATA:
+    Reports: {{{allReportsJson}}}
+    Recurring Low: {{{recurringLow}}}
+    Recurring Stable: {{{recurringStable}}}
+    Trends: {{{trends}}}
+    Context: Sex: {{{sex}}} | Focus: {{{healthFocus}}} | Days Active: {{{daysActive}}}
+    Target Language: {{{targetLanguage}}}
+  `,
 });
 
 const synthesizeLabMarkersFlow = ai.defineFlow(
