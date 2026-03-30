@@ -4,12 +4,11 @@ import React, { useState } from 'react';
 import { 
   Sparkles, 
   Mic, 
-  History, 
+  ScanLine, 
   User,
   LogOut,
   Languages,
   Check,
-  Plus
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -54,7 +53,7 @@ export function DashboardLayout({
 
   const navItems = [
     { id: 'today', label: 'Today', icon: Sparkles },
-    { id: 'history', label: 'History', icon: History },
+    { id: 'history', label: t('tabScan', currentLanguage), icon: ScanLine },
     { id: 'you', label: 'You', icon: User },
   ];
 
