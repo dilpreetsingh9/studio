@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -40,8 +41,8 @@ export default function VitalsMonitor({ isStrip = false }: VitalsMonitorProps) {
                 <TrendIcon trend={vital.trend as any} />
               </div>
               <div className="mt-1">
-                <p className="text-xl font-black tracking-tight leading-none">{vital.value}</p>
-                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">{vital.name}</p>
+                <p className="font-content text-metric tracking-tight leading-none">{vital.value}</p>
+                <p className="text-label font-black text-muted-foreground uppercase tracking-widest mt-1 font-ui">{vital.name}</p>
               </div>
             </CardContent>
           </Card>
@@ -61,25 +62,25 @@ export default function VitalsMonitor({ isStrip = false }: VitalsMonitorProps) {
                 <TrendIcon trend={vital.trend as any} />
               </div>
               <div>
-                <span className="text-2xl font-black">{vital.value}</span>
-                <span className="text-[10px] font-bold text-muted-foreground ml-1">{vital.unit}</span>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{vital.name}</p>
+                <span className="font-content text-metric leading-none">{vital.value}</span>
+                <span className="text-label font-bold text-muted-foreground ml-1 uppercase tracking-widest font-ui">{vital.unit}</span>
+                <p className="text-label font-black text-muted-foreground uppercase tracking-widest mt-0.5 font-ui">{vital.name}</p>
               </div>
             </div>
           ))}
           <div className="p-4 rounded-3xl bg-accent/5 border border-accent/10 flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black text-accent uppercase tracking-widest">BMI Analysis</span>
+              <span className="text-label font-black text-accent uppercase tracking-widest font-ui">BMI Analysis</span>
             </div>
             <div>
               <span className={cn(
-                "font-black leading-tight block",
-                bmiValue > 60 ? "text-sm text-destructive" : "text-2xl"
+                "font-content leading-tight block",
+                bmiValue > 60 ? "text-voice text-destructive" : "text-metric"
               )}>
                 {bmiDisplay}
               </span>
-              {bmiValue <= 60 && <span className="text-[10px] font-bold text-muted-foreground">kg/m²</span>}
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Your Metric</p>
+              {bmiValue <= 60 && <span className="text-label font-bold text-muted-foreground uppercase tracking-widest font-ui">kg/m²</span>}
+              <p className="text-label font-black text-muted-foreground uppercase tracking-widest mt-0.5 font-ui">Your Metric</p>
             </div>
           </div>
         </div>

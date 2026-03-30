@@ -235,8 +235,8 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
           {flowState === 'idle' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <SheetHeader className="text-left space-y-2">
-                <SheetTitle className="text-2xl font-black tracking-tight">{dynamicPrompt}</SheetTitle>
-                <SheetDescription className="text-primary/60 font-bold uppercase tracking-widest text-[10px]">
+                <SheetTitle className="font-content text-display leading-tight">{dynamicPrompt}</SheetTitle>
+                <SheetDescription className="text-primary/60 font-bold uppercase tracking-widest text-label font-ui">
                   Daily Check-In
                 </SheetDescription>
               </SheetHeader>
@@ -250,8 +250,8 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
                     <Mic className="h-6 w-6" />
                   </div>
                   <div className="text-left">
-                    <p className="font-black text-primary text-lg">Tap to speak</p>
-                    <p className="text-xs text-muted-foreground font-medium">Capture a thought in seconds</p>
+                    <p className="font-black text-primary text-lg font-ui">Tap to speak</p>
+                    <p className="text-small text-muted-foreground font-medium font-ui">Capture a thought in seconds</p>
                   </div>
                 </Button>
 
@@ -265,7 +265,7 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
                       <div className={cn("p-3 rounded-2xl", tile.color)}>
                         <tile.icon className="h-5 w-5" />
                       </div>
-                      <span className="text-[10px] font-black uppercase tracking-tight text-muted-foreground">{tile.type}</span>
+                      <span className="text-label font-black uppercase tracking-tight text-muted-foreground font-ui">{tile.type}</span>
                     </button>
                   ))}
                 </div>
@@ -287,12 +287,12 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
                 </Button>
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-primary">{t('recordingMain', language)}</h3>
-                <p className="text-sm font-bold text-muted-foreground italic">
+                <h3 className="text-display font-content text-primary">{t('recordingMain', language)}</h3>
+                <p className="text-voice font-bold text-muted-foreground italic font-content">
                   {recordingDuration >= 60 ? t('recordingLimitReached', language) : t('recordingSubtitle', language)}
                 </p>
                 <div className="pt-4">
-                  <Badge variant="outline" className="px-4 py-1 text-primary font-black border-primary/20">
+                  <Badge variant="outline" className="px-4 py-1 text-primary font-black border-primary/20 text-label font-ui">
                     {recordingDuration}s · {t('tapToFinish', language)}
                   </Badge>
                 </div>
@@ -303,13 +303,13 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
           {flowState === 'reviewing' && reviewData && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Here's what Jeiva heard</p>
-                <p className="text-xl font-medium leading-relaxed italic text-foreground pr-4">"{reviewData.transcript}"</p>
+                <p className="text-label font-black uppercase tracking-widest text-primary/60 font-ui">Here's what Jeiva heard</p>
+                <p className="font-content text-voice font-medium leading-relaxed italic text-foreground pr-4">"{reviewData.transcript}"</p>
               </div>
 
               <div className="flex flex-wrap gap-2">
                 {reviewData.tags.map((tag: string) => (
-                  <Badge key={tag} className="rounded-full bg-primary/10 text-primary border-none px-3 py-1 lowercase font-bold text-[10px] tracking-tight">
+                  <Badge key={tag} className="rounded-full bg-primary/10 text-primary border-none px-3 py-1 lowercase font-bold text-label tracking-tight font-ui">
                     {tag}
                   </Badge>
                 ))}
@@ -323,7 +323,7 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
                   <div className="bg-white p-2 rounded-xl shadow-sm border border-primary/5 shrink-0">
                     <Sparkles className="h-4 w-4 text-primary" />
                   </div>
-                  <p className="text-sm font-medium leading-relaxed italic text-muted-foreground pr-4">
+                  <p className="font-content text-voice font-medium leading-relaxed italic text-muted-foreground pr-4">
                     "{reviewData.observation}"
                   </p>
                 </div>
@@ -332,7 +332,7 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
               <div className="flex gap-3 pt-4">
                 <Button 
                   variant="outline" 
-                  className="flex-1 h-14 rounded-2xl border-primary/10 font-bold" 
+                  className="flex-1 h-14 rounded-2xl border-primary/10 font-bold font-ui text-label uppercase tracking-widest" 
                   onClick={() => setFlowState('idle')}
                   disabled={isProcessing}
                 >
@@ -340,7 +340,7 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
                   Try again
                 </Button>
                 <Button 
-                  className="flex-[2] h-14 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg" 
+                  className="flex-[2] h-14 rounded-2xl font-black text-label font-ui uppercase tracking-widest shadow-lg" 
                   onClick={handleSaveVoice}
                   disabled={isProcessing}
                 >
@@ -356,12 +356,12 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
               <div className="bg-emerald-100 text-emerald-600 p-4 rounded-full mb-6">
                 <Check className="h-10 w-10" />
               </div>
-              <p className="text-2xl font-black tracking-tight text-primary leading-tight max-w-xs">
+              <p className="font-content text-display font-black tracking-tight text-primary leading-tight max-w-xs">
                 "{closingLine}"
               </p>
               <div className="mt-8 flex items-center gap-2">
                 <div className="h-0.5 w-8 bg-primary/20" />
-                <span className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em]">Jeiva</span>
+                <span className="text-label font-black text-primary/60 uppercase tracking-[0.3em] font-ui">Jeiva</span>
               </div>
             </div>
           )}

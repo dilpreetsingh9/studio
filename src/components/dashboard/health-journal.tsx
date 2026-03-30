@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -283,11 +284,11 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
               <BookOpen className="h-5 w-5 text-primary" />
               {t('healthJournal', language)}
             </CardTitle>
-            <CardDescription className="text-primary font-bold italic mt-1">
+            <CardDescription className="text-primary font-bold italic mt-1 font-content text-voice">
               {reviewData ? "Check your entry" : dynamicPrompt}
             </CardDescription>
           </div>
-          <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-widest px-3 py-1">
+          <Badge variant="secondary" className="bg-primary/5 text-primary text-label font-bold uppercase tracking-widest px-3 py-1">
             Voice & Text
           </Badge>
         </div>
@@ -299,20 +300,20 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-secondary/5 p-6 rounded-[2rem] border border-primary/5">
             <div className="space-y-4">
               <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Here's what Jeiva heard</p>
-                <p className="text-lg font-medium text-foreground leading-relaxed italic">"{reviewData.transcript}"</p>
+                <p className="text-label font-black uppercase tracking-widest text-primary/60">Here's what Jeiva heard</p>
+                <p className="font-content text-voice italic text-foreground pr-4">"{reviewData.transcript}"</p>
               </div>
               
               <div className="flex flex-wrap gap-2">
                 {reviewData.tags.map(tag => (
-                  <Badge key={tag} className="rounded-full bg-primary/10 text-primary border-none px-3 py-1 lowercase font-bold text-[10px] tracking-tight">
+                  <Badge key={tag} className="rounded-full bg-primary/10 text-primary border-none px-3 py-1 lowercase font-bold text-label tracking-tight">
                     {tag}
                   </Badge>
                 ))}
               </div>
 
               <div className="pt-4 border-t border-primary/5">
-                <p className="text-sm text-muted-foreground italic font-medium leading-relaxed">
+                <p className="font-content text-voice text-muted-foreground italic font-medium leading-relaxed">
                   {reviewData.observation}
                 </p>
               </div>
@@ -321,7 +322,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
             <div className="flex gap-3 pt-2">
               <Button 
                 variant="outline" 
-                className="flex-1 h-14 rounded-2xl border-primary/10 font-bold" 
+                className="flex-1 h-14 rounded-2xl border-primary/10 font-bold font-ui text-label uppercase tracking-widest" 
                 onClick={() => setReviewData(null)}
                 disabled={isProcessing}
               >
@@ -329,7 +330,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
                 Try again
               </Button>
               <Button 
-                className="flex-[2] h-14 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg" 
+                className="flex-[2] h-14 rounded-2xl font-black text-label uppercase tracking-widest shadow-lg font-ui" 
                 onClick={handleSaveReview}
                 disabled={isProcessing}
               >
@@ -346,7 +347,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
                 placeholder="Write your thoughts..." 
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
-                className="h-14 rounded-2xl bg-muted/20 border-primary/5 pr-24 focus-visible:ring-primary/20"
+                className="h-14 rounded-2xl bg-muted/20 border-primary/5 pr-24 focus-visible:ring-primary/20 font-ui text-body"
                 disabled={isProcessing || isRecording}
               />
               <div className="absolute right-2 top-2 flex gap-1">
@@ -378,11 +379,11 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
             <div className="min-h-[40px] flex flex-col items-center justify-center">
               {isRecording && (
                 <div className="text-center space-y-1 animate-in fade-in zoom-in-95 duration-300">
-                  <p className="text-sm font-black text-primary animate-pulse">{t('recordingMain', language)}</p>
-                  <p className="text-[10px] font-bold text-muted-foreground italic">
+                  <p className="text-body font-black text-primary animate-pulse font-ui">{t('recordingMain', language)}</p>
+                  <p className="text-small font-bold text-muted-foreground italic font-content">
                     {recordingDuration >= 60 ? t('recordingLimitReached', language) : t('recordingSubtitle', language)}
                   </p>
-                  <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest mt-1">
+                  <p className="text-label font-black text-primary/40 uppercase tracking-widest mt-1">
                     {recordingDuration}s · {t('tapToFinish', language)}
                   </p>
                 </div>
@@ -390,7 +391,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
               {isProcessing && (
                 <div className="flex flex-col items-center gap-1 animate-pulse">
-                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">
+                  <p className="text-label font-black text-primary uppercase tracking-widest">
                     {t('transcribing', language)}
                   </p>
                   <div className="flex gap-1">
@@ -404,7 +405,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
               {errorState && !isRecording && !isProcessing && (
                 <div className="bg-destructive/5 p-3 rounded-xl border border-destructive/10 flex items-start gap-3 animate-in slide-in-from-top-2">
                   <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                  <p className="text-[10px] font-bold text-destructive leading-tight">
+                  <p className="text-small font-bold text-destructive leading-tight font-ui">
                     {errorState}
                   </p>
                 </div>
@@ -416,7 +417,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             {entries.length === 0 && !reviewData ? (
-              <div className="text-center py-12 text-muted-foreground italic text-sm border-2 border-dashed rounded-3xl bg-muted/5">
+              <div className="text-center py-12 text-muted-foreground italic text-small border-2 border-dashed rounded-3xl bg-muted/5 font-content">
                 <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-20" />
                 {t('noEntries', language)}
               </div>
@@ -426,16 +427,16 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-lg" title={entry.sentiment}>{getSentimentIcon(entry.sentiment)}</span>
-                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/10 text-primary/70">
+                      <Badge variant="outline" className="text-label font-black uppercase tracking-widest border-primary/10 text-primary/70">
                         {entry.category}
                       </Badge>
                       {entry.flagForSynthesis && (
-                        <Badge className="bg-accent/10 text-accent border-accent/20 text-[8px] font-black uppercase tracking-tight">
+                        <Badge className="bg-accent/10 text-accent border-accent/20 text-label font-black uppercase tracking-tight">
                           Noted for Daily Read
                         </Badge>
                       )}
                     </div>
-                    <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 opacity-60">
+                    <span className="text-label text-muted-foreground font-bold uppercase tracking-widest flex items-center gap-1 opacity-60">
                       <Clock className="h-3 w-3" />
                       {mounted ? new Date(entry.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '...'}
                     </span>
@@ -443,8 +444,8 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
                   
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Your Voice</p>
-                      <p className="text-sm font-medium italic text-foreground leading-relaxed">
+                      <p className="text-label font-black text-muted-foreground uppercase tracking-widest">Your Voice</p>
+                      <p className="font-content text-voice italic text-foreground leading-relaxed">
                         "{entry.content}"
                       </p>
                     </div>
@@ -456,8 +457,8 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
                       <div className="flex gap-3 items-start">
                         <MessageSquare className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Jeiva's Thought</p>
-                          <p className="text-sm font-bold leading-tight text-primary italic">
+                          <p className="text-label text-primary/60 font-black uppercase tracking-widest">Jeiva's Thought</p>
+                          <p className="font-content text-voice font-bold leading-tight text-primary italic">
                             {entry.summary}
                           </p>
                         </div>
@@ -467,7 +468,7 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
 
                   <div className="flex flex-wrap gap-1.5 mt-4">
                     {entry.tags.map(tag => (
-                      <Badge key={tag} variant="secondary" className="text-[9px] h-5 bg-muted/50 border-transparent font-bold lowercase px-2 rounded-full">
+                      <Badge key={tag} variant="secondary" className="text-label h-5 bg-muted/50 border-transparent font-bold lowercase px-2 rounded-full font-ui">
                         {tag}
                       </Badge>
                     ))}
@@ -492,8 +493,8 @@ export default function HealthJournal({ language = 'English', profile }: HealthJ
             <Mic className="h-4 w-4 text-primary" />
           </div>
           <div className="space-y-1">
-            <p className="text-[11px] font-black text-primary uppercase tracking-widest">{t('proTip', language)}</p>
-            <p className="text-[10px] text-muted-foreground font-medium leading-relaxed italic">
+            <p className="text-label font-black text-primary uppercase tracking-widest">{t('proTip', language)}</p>
+            <p className="font-content text-small text-muted-foreground font-medium leading-relaxed italic">
               {t('proTipContent', language)}
             </p>
           </div>

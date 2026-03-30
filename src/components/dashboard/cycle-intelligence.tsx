@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -69,14 +70,14 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-bold flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />Cycle Intelligence</CardTitle>
-          <Badge variant="outline" className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase", config.color)}>{config.label}</Badge>
+          <Badge variant="outline" className={cn("px-3 py-1 rounded-full text-label font-bold uppercase", config.color)}>{config.label}</Badge>
         </div>
-        <CardDescription>Biometric signals correlated with your phase.</CardDescription>
+        <CardDescription className="font-ui text-small">Biometric signals correlated with your phase.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="relative pt-4">
           <div className="flex justify-between items-end mb-2">
-            <div><span className="text-4xl font-black">Day {currentDay}</span><span className="text-muted-foreground ml-2 text-sm">of {avgCycleLength}</span></div>
+            <div><span className="text-display font-content">Day {currentDay}</span><span className="text-muted-foreground ml-2 text-label font-bold uppercase tracking-widest">of {avgCycleLength}</span></div>
           </div>
           <Progress value={progress} className="h-3 rounded-full bg-secondary/30" />
         </div>
@@ -84,12 +85,12 @@ export default function CycleIntelligence({ language = 'English', profile }: { l
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-6 text-muted-foreground bg-muted/5 rounded-2xl border-2 border-dashed">
             <Loader2 className="h-6 w-6 animate-spin mb-2 text-primary opacity-50" />
-            <p className="text-xs italic">Reading signals...</p>
+            <p className="text-small italic">Reading signals...</p>
           </div>
         ) : insight && (
           <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex gap-4 items-start">
             <div className={cn("p-3 rounded-xl shrink-0", config.color)}><MessageSquare className="h-5 w-5" /></div>
-            <p className="text-sm font-medium italic">"{insight.insight}"</p>
+            <p className="font-content text-voice italic">"{insight.insight}"</p>
           </div>
         )}
       </CardContent>

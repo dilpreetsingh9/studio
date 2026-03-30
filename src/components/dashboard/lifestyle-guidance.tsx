@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -177,11 +178,11 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             <Sparkles className="h-5 w-5 text-secondary" />
             Jeiva's Daily Read
           </CardTitle>
-          <CardDescription className="text-white/60 font-medium">
+          <CardDescription className="text-white/60 font-medium font-content text-voice">
             {morningNudge || "Listening to your patterns"}
           </CardDescription>
         </div>
-        <Badge variant="outline" className="bg-white/10 text-white border-white/20 gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+        <Badge variant="outline" className="bg-white/10 text-white border-white/20 gap-1 px-3 py-1 rounded-full text-label font-bold uppercase tracking-widest">
           {jeivaInsight?.tierReached || 'Synthesis'}
         </Badge>
       </CardHeader>
@@ -195,13 +196,13 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           <div className="space-y-6">
             {milestoneNote && (
               <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
-                <p className="text-sm font-medium leading-relaxed italic text-white">"{milestoneNote}"</p>
+                <p className="font-content text-voice italic text-white">"{milestoneNote}"</p>
               </div>
             )}
 
             {isReturn && (
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-                <p className="text-base font-medium leading-relaxed italic text-white/90">
+                <p className="font-content text-display leading-relaxed italic text-white/90">
                   "Welcome back. The body keeps its rhythm even when we aren't watching. Ready to check in?"
                 </p>
               </div>
@@ -210,7 +211,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             {!displayObservation && !milestoneNote && !isReturn && (
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-col items-center text-center gap-3">
                 <BrainCircuit className="h-8 w-8 text-white/20" />
-                <p className="text-sm font-medium text-white/60 italic">
+                <p className="font-content text-voice text-white/60 italic">
                   "Our patterns are still quiet. Share a thought in your journal to help Jeiva learn your rhythm today."
                 </p>
               </div>
@@ -218,22 +219,22 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
             {jeivaInsight?.dialogueMoment && (
               <div className="bg-white/10 p-6 rounded-3xl border border-white/20 text-center animate-in fade-in slide-in-from-bottom-4">
-                <p className="text-lg font-bold mb-4">{jeivaInsight.dialogueMoment.question}</p>
+                <p className="font-content text-display font-bold mb-4">{jeivaInsight.dialogueMoment.question}</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="rounded-2xl text-xs h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('external')}>{jeivaInsight.dialogueMoment.optionA}</Button>
-                  <Button variant="outline" className="rounded-2xl text-xs h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('internal')}>{jeivaInsight.dialogueMoment.optionB}</Button>
+                  <Button variant="outline" className="rounded-2xl font-ui text-label h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('external')}>{jeivaInsight.dialogueMoment.optionA}</Button>
+                  <Button variant="outline" className="rounded-2xl font-ui text-label h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('internal')}>{jeivaInsight.dialogueMoment.optionB}</Button>
                 </div>
               </div>
             )}
 
             {displayObservation && !jeivaInsight?.dialogueMoment && (
               <div className="space-y-4 animate-in fade-in duration-700">
-                <p className="text-lg font-medium leading-relaxed italic text-white/90 pr-4">
+                <p className="font-content text-display leading-relaxed italic text-white/90 pr-4">
                   "{displayObservation}"
                 </p>
                 {jeivaInsight?.actionLine && (
                   <Button variant="ghost" className="w-full justify-between h-14 bg-white/10 border-white/5 hover:bg-white/20 rounded-3xl px-5 text-white group">
-                    <span className="text-sm font-black uppercase tracking-widest">{jeivaInsight.actionLine}</span>
+                    <span className="font-ui text-label font-black uppercase tracking-widest">{jeivaInsight.actionLine}</span>
                     <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 )}
@@ -244,14 +245,14 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
         {phaseGuidance && (
           <div className="pt-4 border-t border-white/10 space-y-3">
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] px-1">Phase Invitations</p>
+            <p className="text-label font-black text-white/40 uppercase tracking-[0.2em] px-1">Phase Invitations</p>
             <div className="grid grid-cols-2 gap-2">
               {phaseGuidance.guidance.slice(0, 2).map((rec) => {
                 const Icon = iconMap[rec.domain] || Sparkles;
                 return (
                   <div key={rec.domain} className="p-4 rounded-3xl bg-white/5 border border-white/10 flex flex-col gap-2">
                     <Icon className="h-4 w-4 text-secondary" />
-                    <p className="text-[11px] leading-snug font-bold text-white/80">{rec.invitation}</p>
+                    <p className="font-content text-small leading-snug text-white/80">{rec.invitation}</p>
                   </div>
                 );
               })}

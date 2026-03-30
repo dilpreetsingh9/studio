@@ -13,9 +13,17 @@ export default {
       fontFamily: {
         sans: ['var(--font-dm)', 'sans-serif'],
         serif: ['var(--font-fraunces)', 'serif'],
-        body: ['var(--font-dm)', 'sans-serif'],
-        headline: ['var(--font-fraunces)', 'serif'],
-        code: ['monospace'],
+        ui: ['var(--font-dm)', 'sans-serif'],
+        content: ['var(--font-fraunces)', 'serif'],
+      },
+      fontSize: {
+        'display': ['22px', { fontWeight: '500', letterSpacing: '-0.02em' }],
+        'voice':   ['14px', { lineHeight: '1.65', fontWeight: '300' }],
+        'body':    ['13px', { lineHeight: '1.6',  fontWeight: '400' }],
+        'metric':  ['18px', { fontWeight: '500' }],
+        'small':   ['11px', { lineHeight: '1.6',  fontWeight: '300' }],
+        'label':   ['9px',  { fontWeight: '600',  letterSpacing: '0.09em' }],
+        'nav':     ['10px', { fontWeight: '400' }],
       },
       colors: {
         background: 'hsl(var(--background))',

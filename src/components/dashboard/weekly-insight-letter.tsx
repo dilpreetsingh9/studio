@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -101,10 +102,10 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
                 <Mail className={cn("h-6 w-6", isMonthMilestone ? "text-accent" : (isThinWeek ? "text-muted-foreground" : "text-primary"))} />
               </div>
               <div>
-                <h3 className={cn("text-lg font-bold", isMonthMilestone ? "text-accent" : (isThinWeek ? "text-muted-foreground" : "text-primary"))}>
+                <h3 className={cn("text-lg font-bold font-ui", isMonthMilestone ? "text-accent" : (isThinWeek ? "text-muted-foreground" : "text-primary"))}>
                   {isMonthMilestone ? 'A Monthly Reflection' : (isThinWeek ? 'A Quiet Reflection' : 'Your Weekly Reflection')}
                 </h3>
-                <p className="text-sm text-muted-foreground font-medium italic">
+                <p className="font-ui text-small text-muted-foreground font-medium italic">
                   {isMonthMilestone 
                     ? 'Thirty days. A moment to look at the larger pattern.' 
                     : (isThinWeek ? 'A small note on a quiet week.' : t('weeklyLetterInvite', language))}
@@ -125,18 +126,18 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
           <CardHeader className="pb-4 relative z-10 border-b border-primary/5 mb-6">
             <div className="flex items-center justify-between">
               <Badge variant="outline" className={cn(
-                "gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em]",
+                "gap-1 px-3 py-1 rounded-full text-label font-bold uppercase tracking-[0.2em]",
                 isMonthMilestone ? "bg-accent/5 text-accent border-accent/20" : "bg-primary/5 text-primary border-primary/20",
                 isThinWeek && "bg-muted/10 text-muted-foreground border-muted"
               )}>
                 <Calendar className="h-3.5 w-3.5" />
                 {isMonthMilestone ? `Milestone: Month ${currentWeek / 4}` : (isThinWeek ? `Quiet Review: Week ${currentWeek}` : `Review: Week ${currentWeek}`)}
               </Badge>
-              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} className="h-8 text-[10px] font-bold text-muted-foreground uppercase hover:bg-primary/5">
+              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} className="h-8 text-label font-bold text-muted-foreground uppercase hover:bg-primary/5 tracking-widest">
                 Close Letter
               </Button>
             </div>
-            <CardTitle className="text-2xl font-black tracking-tight text-primary mt-4">
+            <CardTitle className="text-display font-content text-primary mt-4">
               Dear {profile?.firstName},
             </CardTitle>
           </CardHeader>
@@ -146,7 +147,7 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
               <div className="space-y-8">
                 <div className="space-y-6">
                   {letter.letterContent.split('\n\n').map((para, i) => (
-                    <p key={i} className="text-base leading-relaxed text-foreground/90 font-medium italic">
+                    <p key={i} className="font-content text-voice leading-relaxed text-foreground/90 font-medium italic">
                       {para}
                     </p>
                   ))}
@@ -155,26 +156,26 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
                 {isThinWeek && (
                   <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-start gap-3">
                     <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-xs text-muted-foreground font-medium leading-relaxed italic">
+                    <p className="font-ui text-small text-muted-foreground font-medium leading-relaxed italic">
                       This was a quiet week for our data, so I've kept this letter short and honest. I'm here when you're ready to share more.
                     </p>
                   </div>
                 )}
 
                 <div className="pt-8 border-t border-primary/10">
-                  <p className="text-xl font-bold text-primary italic leading-tight pr-8">
+                  <p className="font-content text-display text-primary italic leading-tight pr-8">
                     {letter.closingLine}
                   </p>
                   <div className="mt-6 flex items-center gap-2">
                     <div className="h-0.5 w-8 bg-primary/20" />
-                    <span className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em]">Jeiva</span>
+                    <span className="text-label font-black text-primary/60 uppercase tracking-[0.3em]">Jeiva</span>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin mb-4 opacity-50 text-primary" />
-                <p className="text-xs font-medium italic">Reflecting on your journey...</p>
+                <p className="text-small font-medium italic">Reflecting on your journey...</p>
               </div>
             )}
             
@@ -187,8 +188,8 @@ export default function WeeklyInsightLetter({ profile, language = 'English' }: {
                    { label: 'Journal', value: `${patientData.journalEntries?.length || 0} entries`, color: 'bg-amber-50' }
                  ].map((stat) => (
                    <div key={stat.label} className={cn("p-3 rounded-2xl border border-transparent hover:border-primary/10 transition-colors", stat.color)}>
-                     <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-1">{stat.label}</p>
-                     <p className="text-sm font-bold text-primary">{stat.value}</p>
+                     <p className="text-label font-black text-primary/60 uppercase tracking-widest mb-1">{stat.label}</p>
+                     <p className="text-body font-bold text-primary">{stat.value}</p>
                    </div>
                  ))}
               </div>

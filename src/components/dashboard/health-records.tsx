@@ -58,7 +58,7 @@ export default function HealthRecords({
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
         <Loader2 className="h-8 w-8 animate-spin mb-4 opacity-50" />
-        <p className="text-xs font-bold uppercase tracking-widest">Opening Clinical Vault...</p>
+        <p className="text-label font-bold uppercase tracking-widest">Opening Clinical Vault...</p>
       </div>
     );
   }
@@ -76,13 +76,13 @@ export default function HealthRecords({
               size="sm"
               variant="outline"
               onClick={() => setIsDialogOpen(true)}
-              className="rounded-full border-primary/10 bg-primary/5 text-primary font-bold h-8 text-[10px] uppercase tracking-widest"
+              className="rounded-full border-primary/10 bg-primary/5 text-primary font-bold h-8 text-label uppercase tracking-widest"
             >
               <ScanLine className="mr-1.5 h-3.5 w-3.5" />
               {t('startScan', language)}
             </Button>
           </div>
-          <CardDescription className="text-muted-foreground font-medium italic">
+          <CardDescription className="text-muted-foreground font-medium italic font-ui text-small">
             {subtitle}
           </CardDescription>
         </CardHeader>
@@ -95,7 +95,7 @@ export default function HealthRecords({
               <h3 className="text-xl font-black text-primary mb-2 tracking-tight">
                 {t('noRecords', language)}
               </h3>
-              <p className="max-w-xs mb-8 text-sm font-medium leading-relaxed italic text-muted-foreground">
+              <p className="max-w-xs mb-8 text-body font-medium leading-relaxed italic text-muted-foreground font-ui">
                 {t('noRecordsBody', language)}
               </p>
               <div className="flex flex-col gap-3 w-full max-w-[240px]">
@@ -126,7 +126,7 @@ export default function HealthRecords({
                         </p>
                         <ChevronRight className={cn("h-4 w-4 transition-transform", selectedRecord?.id === record.id ? "rotate-90" : "group-hover:translate-x-1")} />
                       </div>
-                      <p className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                      <p className="text-label font-black uppercase tracking-widest opacity-60">
                         {record.lab_name}
                       </p>
                     </div>
@@ -139,8 +139,8 @@ export default function HealthRecords({
                   <Card className="h-full flex flex-col border-primary/5 rounded-[2rem] overflow-hidden">
                     <CardHeader className="py-4 border-b border-primary/5 bg-primary/5">
                       <div className="flex justify-between items-center">
-                        <Badge variant="outline" className="bg-white/50 text-primary border-primary/10 text-[10px] font-black uppercase tracking-widest px-3">Jeiva Analysis</Badge>
-                        <span className="text-[10px] font-bold text-muted-foreground">{mounted && selectedRecord.scan_date ? new Date(selectedRecord.scan_date.seconds * 1000).toLocaleString() : '...'}</span>
+                        <Badge variant="outline" className="bg-white/50 text-primary border-primary/10 text-label font-black uppercase tracking-widest px-3">Jeiva Analysis</Badge>
+                        <span className="text-label font-bold text-muted-foreground uppercase tracking-widest">{mounted && selectedRecord.scan_date ? new Date(selectedRecord.scan_date.seconds * 1000).toLocaleString() : '...'}</span>
                       </div>
                     </CardHeader>
                     <CardContent className="flex-grow overflow-hidden pt-6">
@@ -151,8 +151,8 @@ export default function HealthRecords({
                             <div className="flex gap-4 items-start relative z-10">
                               <div className="bg-white p-2.5 rounded-xl shadow-sm border border-primary/5 shrink-0"><MessageSquare className="h-5 w-5 text-primary" /></div>
                               <div className="space-y-1">
-                                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Jeiva's Perspective</p>
-                                <p className="text-base font-bold leading-relaxed text-primary italic">"{selectedRecord.jeiva_summary}"</p>
+                                <p className="text-label text-primary/60 font-black uppercase tracking-widest">Jeiva's Perspective</p>
+                                <p className="font-content text-voice leading-relaxed text-primary italic">"{selectedRecord.jeiva_summary}"</p>
                               </div>
                             </div>
                           </div>
@@ -160,12 +160,12 @@ export default function HealthRecords({
                           {selectedRecord.imageUrl && (
                             <div className="relative group overflow-hidden rounded-[2rem] border shadow-sm">
                                <img src={selectedRecord.imageUrl} alt="Source" className="w-full h-auto object-cover max-h-48" />
-                               <div className="absolute bottom-3 right-3"><Badge className="bg-black/60 backdrop-blur-md text-[10px] border-none px-3 font-bold uppercase tracking-widest">Original Scan</Badge></div>
+                               <div className="absolute bottom-3 right-3"><Badge className="bg-black/60 backdrop-blur-md text-label border-none px-3 font-bold uppercase tracking-widest">Original Scan</Badge></div>
                             </div>
                           )}
 
                           <div className="space-y-4 px-2">
-                            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Markers Extracted</h4>
+                            <h4 className="text-label font-black text-muted-foreground uppercase tracking-[0.2em]">Markers Extracted</h4>
                             <div className="grid grid-cols-1 gap-2">
                               {selectedRecord.markers?.map((marker, idx) => (
                                 <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-muted/10 border border-transparent hover:border-primary/10 transition-colors">
@@ -174,8 +174,8 @@ export default function HealthRecords({
                                     <span className="font-bold text-sm">{marker.name}</span>
                                   </div>
                                   <div className="text-right">
-                                    <span className="font-black text-sm">{marker.value}</span>
-                                    <span className="text-[10px] ml-1 text-muted-foreground font-medium">{marker.unit}</span>
+                                    <span className="font-metric font-content">{marker.value}</span>
+                                    <span className="text-label ml-1 text-muted-foreground font-bold uppercase tracking-widest">{marker.unit}</span>
                                   </div>
                                 </div>
                               ))}
@@ -188,7 +188,7 @@ export default function HealthRecords({
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground rounded-[2rem] border border-dashed bg-muted/5">
                     <FileText className="h-12 w-12 opacity-10 mb-2" />
-                    <p className="text-xs font-bold uppercase tracking-widest">Select a record</p>
+                    <p className="text-label font-black uppercase tracking-widest">Select a record</p>
                   </div>
                 )}
               </div>

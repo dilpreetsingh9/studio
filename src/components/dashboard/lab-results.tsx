@@ -80,18 +80,18 @@ export default function LabResults({ language = 'English', profile }: LabResults
             <Microscope className="h-5 w-5 text-primary" />
             {t('labResults', language)}
           </CardTitle>
-          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase font-bold tracking-widest px-2 py-0.5">
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-label uppercase font-bold tracking-widest px-2 py-0.5">
             Clinical Insights
           </Badge>
         </div>
-        <CardDescription>Translating clinical biometrics into plain language.</CardDescription>
+        <CardDescription className="font-ui text-small">Translating clinical biometrics into plain language.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="relative">
           {isSynthesizing ? (
             <div className="p-6 rounded-2xl border-2 border-dashed bg-muted/5 flex flex-col items-center justify-center text-center">
               <Loader2 className="h-6 w-6 animate-spin text-primary mb-2 opacity-50" />
-              <p className="text-[10px] font-medium italic text-muted-foreground uppercase tracking-widest">Jeiva is finding the story...</p>
+              <p className="text-label font-medium italic text-muted-foreground uppercase tracking-widest">Jeiva is finding the story...</p>
             </div>
           ) : synthesisData && (
             <div className="bg-primary/5 p-5 rounded-2xl border border-primary/10 relative overflow-hidden group animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -99,10 +99,10 @@ export default function LabResults({ language = 'English', profile }: LabResults
               <div className="flex items-start gap-4 relative z-10">
                 <div className="bg-white p-2.5 rounded-xl shadow-sm border border-primary/5 shrink-0"><BrainCircuit className="h-5 w-5 text-primary" /></div>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium leading-relaxed italic text-foreground pr-4">"{synthesisData.content}"</p>
+                  <p className="font-content text-voice leading-relaxed italic text-foreground pr-4">"{synthesisData.content}"</p>
                   <div className="flex items-center gap-2 pt-1">
                     <div className="h-px w-4 bg-primary/20" />
-                    <p className="text-[10px] text-primary/60 font-black uppercase tracking-widest">Jeiva's Collective Insight</p>
+                    <p className="text-label text-primary/60 font-black uppercase tracking-widest">Jeiva's Collective Insight</p>
                   </div>
                 </div>
               </div>
@@ -115,23 +115,23 @@ export default function LabResults({ language = 'English', profile }: LabResults
             <div key={lab.name} className="space-y-2">
               <Card className="flex flex-col justify-between p-4 border-primary/5 bg-accent/5 hover:bg-accent/10 transition-all cursor-default relative overflow-hidden group">
                 <div className="flex items-center justify-between relative z-10">
-                  <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">{lab.name}</p>
+                  <p className="text-label font-bold text-muted-foreground tracking-widest uppercase">{lab.name}</p>
                   <lab.icon className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="mt-2 relative z-10 flex items-baseline justify-between">
-                  <div><span className="text-xl font-black">{lab.value}</span><span className="ml-1 text-[9px] text-muted-foreground font-bold">{lab.unit}</span></div>
+                  <div><span className="text-metric font-content">{lab.value}</span><span className="ml-1 text-label text-muted-foreground font-bold uppercase tracking-widest">{lab.unit}</span></div>
                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-primary/10 text-primary opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleGetPerspective(lab.name, lab.value, lab.unit, lab.trend)} disabled={analyzingMarker === lab.name}>
                     {analyzingMarker === lab.name ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                   </Button>
                 </div>
-                <div className="mt-1 flex items-center text-[9px] text-muted-foreground font-bold relative z-10">
+                <div className="mt-1 flex items-center text-label text-muted-foreground font-bold relative z-10">
                   <TrendIcon trend={lab.trend as any} /><span className="ml-1 capitalize">{lab.trend}</span>
                 </div>
               </Card>
               {contexts[lab.name] && (
-                <div className="p-3 rounded-xl bg-secondary/10 border border-secondary/20 text-[11px] leading-relaxed italic animate-in slide-in-from-top-2 relative group">
+                <div className="p-3 rounded-xl bg-secondary/10 border border-secondary/20 text-small leading-relaxed italic animate-in slide-in-from-top-2 relative group">
                   <button onClick={() => setContexts(prev => { const next = {...prev}; delete next[lab.name]; return next; })} className="absolute top-1 right-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-2 w-2 text-muted-foreground" /></button>
-                  <div className="flex gap-2"><MessageSquare className="h-3 w-3 text-primary shrink-0 mt-0.5" /><p>"{contexts[lab.name]}"</p></div>
+                  <div className="flex gap-2"><MessageSquare className="h-3 w-3 text-primary shrink-0 mt-0.5" /><p className="font-content">"{contexts[lab.name]}"</p></div>
                 </div>
               )}
             </div>
