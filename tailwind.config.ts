@@ -10,6 +10,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        // Map all families to Manrope
         sans: ['var(--font-manrope)', 'sans-serif'],
         serif: ['var(--font-manrope)', 'serif'],
         ui: ['var(--font-manrope)', 'sans-serif'],

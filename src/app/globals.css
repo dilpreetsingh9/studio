@@ -38,7 +38,7 @@
     --sidebar-border: 260 20% 92%;
     --sidebar-ring: 256 33% 28%;
 
-    /* Font families */
+    /* Font families - All set to Manrope */
     --font-ui:      var(--font-manrope), sans-serif;
     --font-content: var(--font-manrope), sans-serif;
 
@@ -113,7 +113,7 @@
 }
 
 @layer components {
-  /* Specialized font settings for Jeiva Content */
+  /* Specialized font settings for Jeiva Content using Manrope */
   
   .synthesis-body {
     font-family: var(--font-content);
