@@ -26,6 +26,8 @@ export type Patient = {
     dueDate: Date;
     weeksRemaining: number;
     lastInsightTheme?: string;
+    birthLoggedAt?: any; // Firestore timestamp
+    weeksTrackedWithJeiva?: number;
   };
   vitals: Vital[];
   labResults: LabResult[];

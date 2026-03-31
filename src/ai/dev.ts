@@ -37,3 +37,4 @@ import '@/ai/flows/generate-pregnancy-milestone.ts';
 import '@/ai/flows/generate-trimester-transition.ts';
 import '@/ai/flows/acknowledge-pregnancy-checkin.ts';
 import '@/ai/flows/generate-pregnancy-weekly-letter.ts';
+import '@/ai/flows/acknowledge-birth.ts';

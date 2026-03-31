@@ -56,6 +56,14 @@
           "type": "number",
           "description": "Count of times returning after absence."
         },
+        "pregnancyData": {
+          "type": "object",
+          "properties": {
+            "currentWeek": { "type": "number" },
+            "birthLoggedAt": { "type": "string", "format": "date-time" },
+            "weeksTrackedWithJeiva": { "type": "number" }
+          }
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time"
