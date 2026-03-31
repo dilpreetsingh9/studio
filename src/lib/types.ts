@@ -20,6 +20,13 @@ export type Patient = {
     currentDay: number;
     predictedPhase: CyclePhase;
   };
+  pregnancyData?: {
+    currentWeek: number;
+    trimester: number;
+    dueDate: Date;
+    weeksRemaining: number;
+    lastInsightTheme?: string;
+  };
   vitals: Vital[];
   labResults: LabResult[];
   symptoms: SymptomLog[];
@@ -30,9 +37,10 @@ export type Patient = {
 export type SymptomLog = {
   id: string;
   timestamp: Date;
-  type: 'Mood' | 'Energy' | 'Pain' | 'Acne' | 'Libido' | 'Sleep' | 'Stress' | 'Digestive';
+  type: 'Mood' | 'Energy' | 'Pain' | 'Acne' | 'Libido' | 'Sleep' | 'Stress' | 'Digestive' | 'Nausea';
   value: number; // 1-5
   note?: string;
+  metadata?: Record<string, any>; // e.g. movement_felt: true
 };
 
 export type Vital = {

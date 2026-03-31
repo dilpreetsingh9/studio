@@ -10,6 +10,7 @@ import { generateDayOneWelcome } from '@/ai/flows/generate-day-one-welcome';
 import { generateRelationshipMilestone } from '@/ai/flows/generate-relationship-milestone';
 import { generateMorningNudge } from '@/ai/flows/generate-morning-nudge';
 import { generatePatternCheckin } from '@/ai/flows/generate-pattern-checkin';
+import { generatePregnancySynthesis } from '@/ai/flows/generate-pregnancy-synthesis';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -35,7 +36,11 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
   const { data: firestoreSynthesis, isLoading: isFSLoding } = useDoc(synthesisRef);
 
-  const [jeivaInsight, setJeivaInsight] = useState<GenerateHealthRecommendationsOutput | null>(null);
+  const [jeivaInsight, setJeivaInsight] = useState<string | null>(null);
+  const [tierReached, setTierReached] = useState<string | null>(null);
+  const [actionLine, setActionLine] = useState<string | null>(null);
+  const [dialogue, setDialogue] = useState<any>(null);
+  
   const [dayOneNote, setDayOneNote] = useState<string | null>(null);
   const [milestoneNote, setMilestoneNote] = useState<string | null>(null);
   const [morningNudge, setMorningNudge] = useState<string | null>(null);
@@ -45,24 +50,41 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
   const [isResponding, setIsResponding] = useState(false);
 
-  // Use session cache for AI generated fallback
-  useEffect(() => {
-    const cached = sessionStorage.getItem(`jeiva_h1_${profile?.id}`);
-    if (cached) {
-      setJeivaInsight(JSON.parse(cached));
-    }
-  }, [profile?.id]);
-
   const fetchJeivaInsight = async () => {
-    if (!profile || jeivaInsight || firestoreSynthesis) return; 
+    if (!profile || firestoreSynthesis) return; 
     setIsLoading(true);
     try {
       const createdDate = profile.createdAt?.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt || Date.now());
       const daysActive = Math.max(1, Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24)));
       const maturity = daysActive > 30 ? 'established' : (daysActive > 7 ? 'developing' : 'new');
 
-      // 1. SC-1 Pattern Checkin (Potential State Change)
-      // Logic: Missed period flag + biometric shifts
+      // 1. Check for Pregnancy Mode
+      if (profile.lifeStage === 'Pregnancy' || profile.healthFocus?.toLowerCase().includes('pregnancy')) {
+        const pregnancyResult = await generatePregnancySynthesis({
+          firstName: profile.firstName,
+          currentWeek: profile.pregnancyWeek || 14, // Mock if missing
+          trimester: 2,
+          weeksRemaining: 26,
+          vitals: {
+            rhr: 78,
+            sleepHours: 7.2,
+            weightKg: 64,
+          },
+          checkin: {
+            nausea: 2,
+            energy: 3,
+            movementFelt: true,
+          },
+          daysActive,
+          targetLanguage: 'English'
+        });
+        setJeivaInsight(pregnancyResult.synthesis);
+        setTierReached('Pregnancy');
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. SC-1 Pattern Checkin (Potential State Change)
       const cycleDay = patientData.cycleData.currentDay;
       if (cycleDay > 32) {
         const checkinResult = await generatePatternCheckin({
@@ -75,7 +97,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         setPatternCheckin(checkinResult.checkInNote);
       }
 
-      // 2. Day 1 Welcome
+      // 3. Day 1 Welcome
       if (daysActive <= 1) {
         const welcome = await generateDayOneWelcome({
           firstName: profile.firstName,
@@ -111,7 +133,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         }
       }
 
-      // 3. Standard Synthesis
+      // 4. Standard Synthesis
       const result = await generateHealthRecommendations({
         clinicalData: {
           firstName: profile.firstName,
@@ -135,8 +157,10 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           toneMode: profile.toneMode || 'supportive'
         }
       });
-      setJeivaInsight(result);
-      sessionStorage.setItem(`jeiva_h1_${profile.id}`, JSON.stringify(result));
+      setJeivaInsight(result.observation || null);
+      setTierReached(result.tierReached);
+      setActionLine(result.actionLine || null);
+      setDialogue(result.dialogueMoment || null);
     } catch (error) {
       console.error(error);
     } finally {
@@ -169,7 +193,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       const userRef = doc(db, 'users', profile.id);
       await updateDoc(userRef, { toneMode, lastDialogueResponseDate: serverTimestamp() });
       toast({ title: "Noted.", description: "Jeiva will reflect this in tomorrow's synthesis." });
-      sessionStorage.removeItem(`jeiva_h1_${profile.id}`);
+      setDialogue(null);
       fetchJeivaInsight();
     } catch (error) {
       console.error(error);
@@ -185,7 +209,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
     }
   }, [profile, firestoreSynthesis]);
 
-  const displayObservation = patternCheckin || firestoreSynthesis?.content || jeivaInsight?.observation || dayOneNote;
+  const displayObservation = patternCheckin || firestoreSynthesis?.content || jeivaInsight || dayOneNote;
   const isReturn = profile?.reEngagementCount > 0 && !displayObservation;
 
   return (
@@ -201,7 +225,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           </CardDescription>
         </div>
         <Badge variant="outline" className="bg-white/10 text-white border-white/20 gap-1 px-3 py-1 rounded-full text-label font-bold uppercase tracking-widest">
-          {patternCheckin ? 'Pattern Check-In' : (jeivaInsight?.tierReached || 'Synthesis')}
+          {patternCheckin ? 'Pattern Check-In' : (tierReached || 'Synthesis')}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -235,27 +259,27 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               </div>
             )}
 
-            {jeivaInsight?.dialogueMoment && (
+            {dialogue && (
               <div className="bg-white/10 p-6 rounded-3xl border border-white/20 text-center animate-in fade-in slide-in-from-bottom-4">
-                <p className="font-content text-display font-bold mb-4">{jeivaInsight.dialogueMoment.question}</p>
+                <p className="font-content text-display font-bold mb-4">{dialogue.question}</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="rounded-2xl font-ui text-label h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('external')}>{jeivaInsight.dialogueMoment.optionA}</Button>
-                  <Button variant="outline" className="rounded-2xl font-ui text-label h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('internal')}>{jeivaInsight.dialogueMoment.optionB}</Button>
+                  <Button variant="outline" className="rounded-2xl font-ui text-label h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('external')}>{dialogue.optionA}</Button>
+                  <Button variant="outline" className="rounded-2xl font-ui text-label h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => handleDialogueResponse('internal')}>{dialogue.optionB}</Button>
                 </div>
               </div>
             )}
 
-            {displayObservation && !jeivaInsight?.dialogueMoment && (
+            {displayObservation && !dialogue && (
               <div className="space-y-4 animate-in fade-in duration-700">
                 <p className={cn(
                   "synthesis-body leading-relaxed text-white/90 pr-4",
-                  (patternCheckin || dayOneNote || milestoneNote) && "italic-voice"
+                  (patternCheckin || dayOneNote || milestoneNote || tierReached === 'Pregnancy') && "italic-voice"
                 )}>
                   "{displayObservation}"
                 </p>
-                {jeivaInsight?.actionLine && !patternCheckin && (
+                {actionLine && !patternCheckin && (
                   <Button variant="ghost" className="w-full justify-between h-14 bg-white/10 border-white/5 hover:bg-white/20 rounded-3xl px-5 text-white group">
-                    <span className="font-ui text-label font-black uppercase tracking-widest">{jeivaInsight.actionLine}</span>
+                    <span className="font-ui text-label font-black uppercase tracking-widest">{actionLine}</span>
                     <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 )}
@@ -270,7 +294,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           </div>
         )}
 
-        {phaseGuidance && (
+        {phaseGuidance && tierReached !== 'Pregnancy' && (
           <div className="pt-4 border-t border-white/10 space-y-3">
             <p className="text-label font-black text-white/40 uppercase tracking-[0.2em] px-1">Phase Invitations</p>
             <div className="grid grid-cols-2 gap-2">

@@ -32,3 +32,4 @@ import '@/ai/flows/generate-voice-observation.ts';
 import '@/ai/flows/interpret-medical-report.ts';
 import '@/ai/flows/generate-you-synthesis.ts';
 import '@/ai/flows/generate-pattern-checkin.ts';
+import '@/ai/flows/generate-pregnancy-synthesis.ts';
