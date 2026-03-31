@@ -14,6 +14,7 @@ import { generatePregnancySynthesis } from '@/ai/flows/generate-pregnancy-synthe
 import { generatePregnancyMilestone } from '@/ai/flows/generate-pregnancy-milestone';
 import { generateTrimesterTransition } from '@/ai/flows/generate-trimester-transition';
 import { acknowledgeBirth } from '@/ai/flows/acknowledge-birth';
+import { generatePostpartumSynthesis } from '@/ai/flows/generate-postpartum-synthesis';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -51,6 +52,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [pregnancyMilestone, setPregnancyMilestone] = useState<string | null>(null);
   const [trimesterTransition, setTrimesterTransition] = useState<string | null>(null);
   const [birthAcknowledgement, setBirthAcknowledgement] = useState<string | null>(null);
+  const [postpartumSynthesis, setPostpartumSynthesis] = useState<string | null>(null);
   const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
@@ -64,17 +66,42 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       const daysActive = Math.max(1, Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24)));
       const maturity = daysActive > 30 ? 'established' : (daysActive > 7 ? 'developing' : 'new');
 
-      // 1. Check for Birth event (Transition to Postpartum)
+      // 1. Check for Postpartum / Birth status
       if (profile.pregnancyData?.birthLoggedAt) {
-        const result = await acknowledgeBirth({
-          firstName: profile.firstName,
-          pregnancyWeeksTracked: profile.pregnancyData.weeksTrackedWithJeiva || 12,
-          weekAtBirth: profile.pregnancyData.currentWeek || 40,
-          daysActiveTotal: daysActive,
-          targetLanguage: 'English'
-        });
-        setBirthAcknowledgement(result.acknowledgement);
-        setTierReached('Postpartum');
+        const birthDate = profile.pregnancyData.birthLoggedAt.toDate ? profile.pregnancyData.birthLoggedAt.toDate() : new Date(profile.pregnancyData.birthLoggedAt);
+        const diffMs = new Date().getTime() - birthDate.getTime();
+        const daysSinceBirth = Math.floor(diffMs / (1000 * 3600 * 24));
+        const postpartumWeek = Math.floor(daysSinceBirth / 7);
+
+        // Show birth acknowledgement for the first 2 days
+        if (daysSinceBirth <= 1) {
+          const result = await acknowledgeBirth({
+            firstName: profile.firstName,
+            pregnancyWeeksTracked: profile.pregnancyData.weeksTrackedWithJeiva || 12,
+            weekAtBirth: profile.pregnancyData.currentWeek || 40,
+            daysActiveTotal: daysActive,
+            targetLanguage: 'English'
+          });
+          setBirthAcknowledgement(result.acknowledgement);
+          setTierReached('Birth Milestone');
+        } 
+        // Then show daily postpartum synthesis up to week 12
+        else if (postpartumWeek <= 12) {
+          const result = await generatePostpartumSynthesis({
+            firstName: profile.firstName,
+            postpartumWeek,
+            daysSinceBirth,
+            vitals: {
+              rhr: 72,
+              sleepHours: 4.5,
+              weightKg: profile.weight || 60,
+            },
+            targetLanguage: 'English'
+          });
+          setPostpartumSynthesis(result.synthesis);
+          setTierReached('Postpartum');
+        }
+        
         setIsLoading(false);
         return;
       }
@@ -92,7 +119,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           vitals: {
             rhr: 78,
             sleepHours: 7.2,
-            weightKg: 64,
+            weightKg: profile.weight || 64,
           },
           checkin: {
             nausea: 2,
@@ -116,7 +143,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           setPregnancyMilestone(milestoneResult.milestoneNote);
         }
 
-        // Check for Trimester Transitions (Week 13 and Week 27)
+        // Check for Trimester Transitions
         if (currentWeek === 13 || currentWeek === 27) {
           const transitionResult = await generateTrimesterTransition({
             firstName: profile.firstName,
@@ -257,7 +284,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
     }
   }, [profile, firestoreSynthesis]);
 
-  const displayObservation = patternCheckin || firestoreSynthesis?.content || jeivaInsight || dayOneNote || birthAcknowledgement;
+  const displayObservation = patternCheckin || firestoreSynthesis?.content || postpartumSynthesis || jeivaInsight || dayOneNote || birthAcknowledgement;
   const isReturn = profile?.reEngagementCount > 0 && !displayObservation;
 
   return (
@@ -288,6 +315,14 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
                 <p className="synthesis-body italic-voice text-white italic leading-relaxed">
                   "{birthAcknowledgement}"
+                </p>
+              </div>
+            )}
+
+            {postpartumSynthesis && !birthAcknowledgement && (
+              <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
+                <p className="synthesis-body italic-voice text-white italic leading-relaxed">
+                  "{postpartumSynthesis}"
                 </p>
               </div>
             )}
@@ -341,11 +376,11 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               </div>
             )}
 
-            {displayObservation && !dialogue && (
+            {displayObservation && !dialogue && !birthAcknowledgement && !postpartumSynthesis && (
               <div className="space-y-4 animate-in fade-in duration-700">
                 <p className={cn(
                   "synthesis-body leading-relaxed text-white/90 pr-4",
-                  (patternCheckin || dayOneNote || milestoneNote || tierReached === 'Pregnancy' || tierReached === 'Postpartum') && "italic-voice"
+                  (patternCheckin || dayOneNote || milestoneNote || tierReached === 'Pregnancy') && "italic-voice"
                 )}>
                   "{displayObservation}"
                 </p>
@@ -366,7 +401,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           </div>
         )}
 
-        {phaseGuidance && tierReached !== 'Pregnancy' && tierReached !== 'Postpartum' && (
+        {phaseGuidance && tierReached !== 'Pregnancy' && tierReached !== 'Postpartum' && tierReached !== 'Birth Milestone' && (
           <div className="pt-4 border-t border-white/10 space-y-3">
             <p className="text-label font-black text-white/40 uppercase tracking-[0.2em] px-1">Phase Invitations</p>
             <div className="grid grid-cols-2 gap-2">
