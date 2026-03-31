@@ -34,3 +34,4 @@ import '@/ai/flows/generate-you-synthesis.ts';
 import '@/ai/flows/generate-pattern-checkin.ts';
 import '@/ai/flows/generate-pregnancy-synthesis.ts';
 import '@/ai/flows/generate-pregnancy-milestone.ts';
+import '@/ai/flows/generate-trimester-transition.ts';

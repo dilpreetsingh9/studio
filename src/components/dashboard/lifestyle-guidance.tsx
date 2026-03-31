@@ -12,6 +12,7 @@ import { generateMorningNudge } from '@/ai/flows/generate-morning-nudge';
 import { generatePatternCheckin } from '@/ai/flows/generate-pattern-checkin';
 import { generatePregnancySynthesis } from '@/ai/flows/generate-pregnancy-synthesis';
 import { generatePregnancyMilestone } from '@/ai/flows/generate-pregnancy-milestone';
+import { generateTrimesterTransition } from '@/ai/flows/generate-trimester-transition';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -47,6 +48,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [morningNudge, setMorningNudge] = useState<string | null>(null);
   const [patternCheckin, setPatternCheckin] = useState<string | null>(null);
   const [pregnancyMilestone, setPregnancyMilestone] = useState<string | null>(null);
+  const [trimesterTransition, setTrimesterTransition] = useState<string | null>(null);
   const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
@@ -87,7 +89,6 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         setTierReached('Pregnancy');
 
         // Check for Pregnancy Weekly Milestone
-        // For MVP, we assume any day that is "Day 1" of a week triggers this
         if (daysActive % 7 === 1 || daysActive === 1) {
           const milestoneResult = await generatePregnancyMilestone({
             firstName: profile.firstName,
@@ -96,6 +97,18 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             targetLanguage: 'English'
           });
           setPregnancyMilestone(milestoneResult.milestoneNote);
+        }
+
+        // Check for Trimester Transitions (Week 13 and Week 27)
+        if (currentWeek === 13 || currentWeek === 27) {
+          const transitionResult = await generateTrimesterTransition({
+            firstName: profile.firstName,
+            enteringTrimester: currentWeek === 13 ? 2 : 3,
+            currentWeek,
+            daysActive,
+            targetLanguage: 'English'
+          });
+          setTrimesterTransition(transitionResult.transitionNote);
         }
 
         setIsLoading(false);
@@ -254,6 +267,14 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           </div>
         ) : (
           <div className="space-y-6">
+            {trimesterTransition && (
+              <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
+                <p className="synthesis-body italic-voice text-white italic leading-relaxed">
+                  "{trimesterTransition}"
+                </p>
+              </div>
+            )}
+
             {pregnancyMilestone && (
               <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
                 <p className="synthesis-body italic-voice text-white italic leading-relaxed">
@@ -276,7 +297,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               </div>
             )}
 
-            {!displayObservation && !milestoneNote && !isReturn && !pregnancyMilestone && (
+            {!displayObservation && !milestoneNote && !isReturn && !pregnancyMilestone && !trimesterTransition && (
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-col items-center text-center gap-3">
                 <BrainCircuit className="h-8 w-8 text-white/20" />
                 <p className="synthesis-body text-white/60 italic italic-voice">
