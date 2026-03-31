@@ -9,19 +9,47 @@ import {
   Target, 
   Bell, 
   Loader2,
+  ChevronRight,
+  Settings,
+  ShieldCheck,
+  Info
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { doc, collection } from 'firebase/firestore';
+import { doc, collection, updateDoc } from 'firebase/firestore';
 import { generateYouSynthesis } from '@/ai/flows/generate-you-synthesis';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle,
+  SheetDescription 
+} from '@/components/ui/sheet';
+import MedicationReminder from './medication-reminder';
+import LabResults from './lab-results';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
+const FOCUS_OPTIONS = [
+  "Energy and how I feel day to day",
+  "Hormonal balance and my cycle",
+  "Weight and metabolism",
+  "Sleep and recovery",
+  "Stress and mental clarity",
+  "General prevention — I just want to stay ahead"
+];
 
 export default function PatientProfile({ language = 'English', profile }: { language?: string; profile?: any }) {
   const [jeivaSynthesis, setJeivaSynthesis] = useState<string>('');
   const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [activeSheet, setActiveSheet] = useState<'routine' | 'labs' | 'focus' | 'notifications' | null>(null);
+  
   const auth = useAuth();
   const db = useFirestore();
   const { user } = useUser();
+  const { toast } = useToast();
 
   const avatarImage = PlaceHolderImages.find(img => img.id === 'patient-saher');
 
@@ -78,6 +106,17 @@ export default function PatientProfile({ language = 'English', profile }: { lang
     };
     fetchSynthesis();
   }, [profile, daysActive, relationship, language]);
+
+  const handleUpdateFocus = async (focus: string) => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, 'users', user.uid), { healthFocus: focus });
+      setActiveSheet(null);
+      toast({ title: "Focus updated", description: "Jeiva will now prioritize this in your insights." });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -159,24 +198,43 @@ export default function PatientProfile({ language = 'English', profile }: { lang
           icon={<Pill className="h-3.5 w-3.5 text-primary/60" />}
           label="Routine"
           meta={`${medications?.length || 0} active`}
+          onClick={() => setActiveSheet('routine')}
         />
 
         <MenuItem
           icon={<Microscope className="h-3.5 w-3.5 text-primary/60" />}
           label="Lab observations"
           meta={`${reportsCount} reports`}
+          onClick={() => setActiveSheet('labs')}
         />
 
         <MenuItem
           icon={<Target className="h-3.5 w-3.5 text-primary/60" />}
           label="Health focus"
           meta={resolveField(profile?.healthFocus, 'General balance')}
+          onClick={() => setActiveSheet('focus')}
         />
 
         <MenuItem
           icon={<Bell className="h-3.5 w-3.5 text-primary/60" />}
           label="Notifications"
           meta="Manage"
+          isLast
+          onClick={() => setActiveSheet('notifications')}
+        />
+      </div>
+
+      <div className="menu-card">
+        <div className="menu-section-label">Account</div>
+        <MenuItem
+          icon={<ShieldCheck className="h-3.5 w-3.5 text-primary/60" />}
+          label="Privacy & Security"
+          meta="Encrypted"
+        />
+        <MenuItem
+          icon={<Settings className="h-3.5 w-3.5 text-primary/60" />}
+          label="Settings"
+          meta="Advanced"
           isLast
         />
       </div>
@@ -185,6 +243,93 @@ export default function PatientProfile({ language = 'English', profile }: { lang
       <button className="signout-btn mt-2" onClick={handleLogout}>
         Sign out
       </button>
+
+      {/* ── Routine Sheet ────────────────────────────────── */}
+      <Sheet open={activeSheet === 'routine'} onOpenChange={(open) => !open && setActiveSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-[3rem] h-[85vh] p-0 overflow-hidden border-none shadow-2xl">
+          <div className="h-full flex flex-col p-6">
+            <SheetHeader className="text-left mb-6">
+              <SheetTitle className="text-2xl font-black">Your Routine</SheetTitle>
+              <SheetDescription>Daily sustenance and rituals Jeiva is tracking.</SheetDescription>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto pb-12">
+              <MedicationReminder 
+                medications={medications || []} 
+                language={language}
+                relationshipMaturity={relationship?.relationship_maturity || 'developing'}
+              />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Labs Sheet ──────────────────────────────────── */}
+      <Sheet open={activeSheet === 'labs'} onOpenChange={(open) => !open && setActiveSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-[3rem] h-[85vh] p-0 overflow-hidden border-none shadow-2xl">
+          <div className="h-full flex flex-col p-6">
+            <SheetHeader className="text-left mb-6">
+              <SheetTitle className="text-2xl font-black">Lab Observations</SheetTitle>
+              <SheetDescription>Translating clinical data into plain language.</SheetDescription>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto pb-12">
+              <LabResults profile={profile} language={language} />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Focus Sheet ──────────────────────────────────── */}
+      <Sheet open={activeSheet === 'focus'} onOpenChange={(open) => !open && setActiveSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-[3rem] h-[auto] min-h-[50vh] p-0 overflow-hidden border-none shadow-2xl">
+          <div className="p-8 space-y-6">
+            <SheetHeader className="text-left">
+              <SheetTitle className="text-2xl font-black">Change your focus</SheetTitle>
+              <SheetDescription>Jeiva uses this to decide what signals to surface first.</SheetDescription>
+            </SheetHeader>
+            <div className="grid gap-3">
+              {FOCUS_OPTIONS.map((option) => (
+                <Button
+                  key={option}
+                  variant="outline"
+                  className={cn(
+                    "h-auto py-4 px-6 justify-start text-left rounded-2xl border-primary/10 hover:border-primary/40 hover:bg-primary/5 transition-all",
+                    profile?.healthFocus === option && "border-primary bg-primary/5"
+                  )}
+                  onClick={() => handleUpdateFocus(option)}
+                >
+                  <span className="text-sm font-bold">{option}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Notifications Sheet ──────────────────────────── */}
+      <Sheet open={activeSheet === 'notifications'} onOpenChange={(open) => !open && setActiveSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-[3rem] h-[auto] p-0 overflow-hidden border-none shadow-2xl">
+          <div className="p-8 space-y-6">
+            <SheetHeader className="text-left">
+              <SheetTitle className="text-2xl font-black">Notifications</SheetTitle>
+              <SheetDescription>How Jeiva reaches out to you.</SheetDescription>
+            </SheetHeader>
+            <div className="space-y-4">
+              <div className="bg-primary/5 p-5 rounded-3xl border border-primary/10 flex gap-4 items-start">
+                <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-primary italic">Soft Reminders</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Jeiva uses "Soft Reminders" to protect your privacy. Instead of medical details, notifications will say "Upcoming event" or "A quick check-in."
+                  </p>
+                </div>
+              </div>
+              <Button className="w-full h-14 rounded-2xl font-black text-sm uppercase tracking-widest" variant="outline">
+                Manage Device Settings
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -198,9 +343,13 @@ function StatTile({ value, label }: { value: number; label: string }) {
   );
 }
 
-function MenuItem({ icon, label, meta, isLast = false }: { icon: React.ReactNode; label: string; meta: string; isLast?: boolean }) {
+function MenuItem({ icon, label, meta, isLast = false, onClick }: { icon: React.ReactNode; label: string; meta: string; isLast?: boolean; onClick?: () => void }) {
   return (
-    <div className={`menu-row ${isLast ? 'menu-row--last' : ''}`}>
+    <div className={cn(
+      "menu-row",
+      isLast && "menu-row--last",
+      onClick && "cursor-pointer active:opacity-60 transition-opacity"
+    )} onClick={onClick}>
       <div className="menu-icon">{icon}</div>
       <div className="menu-label">{label}</div>
       <div className="menu-meta">{meta}</div>
