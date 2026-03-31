@@ -123,6 +123,10 @@
     letter-spacing: -0.01em;
   }
 
+  .italic-voice {
+    font-style: italic;
+  }
+
   .greeting-name {
     font-family: var(--font-content);
     font-size: 22px;

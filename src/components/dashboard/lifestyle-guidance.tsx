@@ -9,11 +9,13 @@ import { generatePhaseGuidance, GeneratePhaseGuidanceOutput } from '@/ai/flows/g
 import { generateDayOneWelcome } from '@/ai/flows/generate-day-one-welcome';
 import { generateRelationshipMilestone } from '@/ai/flows/generate-relationship-milestone';
 import { generateMorningNudge } from '@/ai/flows/generate-morning-nudge';
+import { generatePatternCheckin } from '@/ai/flows/generate-pattern-checkin';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const iconMap: Record<string, any> = {
   Nutrition: Apple,
@@ -37,6 +39,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [dayOneNote, setDayOneNote] = useState<string | null>(null);
   const [milestoneNote, setMilestoneNote] = useState<string | null>(null);
   const [morningNudge, setMorningNudge] = useState<string | null>(null);
+  const [patternCheckin, setPatternCheckin] = useState<string | null>(null);
   const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
@@ -58,6 +61,21 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
       const daysActive = Math.max(1, Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24)));
       const maturity = daysActive > 30 ? 'established' : (daysActive > 7 ? 'developing' : 'new');
 
+      // 1. SC-1 Pattern Checkin (Potential State Change)
+      // Logic: Missed period flag + biometric shifts
+      const cycleDay = patientData.cycleData.currentDay;
+      if (cycleDay > 32) {
+        const checkinResult = await generatePatternCheckin({
+          missedPeriod: true,
+          hrvChange: true,
+          tempShift: true,
+          daysSinceLastPeriod: cycleDay,
+          targetLanguage: 'English'
+        });
+        setPatternCheckin(checkinResult.checkInNote);
+      }
+
+      // 2. Day 1 Welcome
       if (daysActive <= 1) {
         const welcome = await generateDayOneWelcome({
           firstName: profile.firstName,
@@ -93,6 +111,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         }
       }
 
+      // 3. Standard Synthesis
       const result = await generateHealthRecommendations({
         clinicalData: {
           firstName: profile.firstName,
@@ -166,7 +185,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
     }
   }, [profile, firestoreSynthesis]);
 
-  const displayObservation = firestoreSynthesis?.content || jeivaInsight?.observation || dayOneNote;
+  const displayObservation = patternCheckin || firestoreSynthesis?.content || jeivaInsight?.observation || dayOneNote;
   const isReturn = profile?.reEngagementCount > 0 && !displayObservation;
 
   return (
@@ -177,12 +196,12 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             <Sparkles className="h-5 w-5 text-secondary" />
             Jeiva's Daily Read
           </CardTitle>
-          <CardDescription className="text-white/60 font-medium font-content text-voice">
+          <CardDescription className="text-white/60 font-medium synthesis-body text-voice">
             {morningNudge || "Listening to your patterns"}
           </CardDescription>
         </div>
         <Badge variant="outline" className="bg-white/10 text-white border-white/20 gap-1 px-3 py-1 rounded-full text-label font-bold uppercase tracking-widest">
-          {jeivaInsight?.tierReached || 'Synthesis'}
+          {patternCheckin ? 'Pattern Check-In' : (jeivaInsight?.tierReached || 'Synthesis')}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -195,13 +214,13 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           <div className="space-y-6">
             {milestoneNote && (
               <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
-                <p className="synthesis-body text-white italic">"{milestoneNote}"</p>
+                <p className="synthesis-body italic-voice text-white italic">"{milestoneNote}"</p>
               </div>
             )}
 
             {isReturn && (
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-                <p className="synthesis-body leading-relaxed italic text-white/90">
+                <p className="synthesis-body leading-relaxed italic text-white/90 italic-voice">
                   "Welcome back. The body keeps its rhythm even when we aren't watching. Ready to check in?"
                 </p>
               </div>
@@ -210,7 +229,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
             {!displayObservation && !milestoneNote && !isReturn && (
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-col items-center text-center gap-3">
                 <BrainCircuit className="h-8 w-8 text-white/20" />
-                <p className="synthesis-body text-white/60 italic">
+                <p className="synthesis-body text-white/60 italic italic-voice">
                   "Our patterns are still quiet. Share a thought in your journal to help Jeiva learn your rhythm today."
                 </p>
               </div>
@@ -228,14 +247,23 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
             {displayObservation && !jeivaInsight?.dialogueMoment && (
               <div className="space-y-4 animate-in fade-in duration-700">
-                <p className="synthesis-body leading-relaxed italic text-white/90 pr-4">
+                <p className={cn(
+                  "synthesis-body leading-relaxed text-white/90 pr-4",
+                  (patternCheckin || dayOneNote || milestoneNote) && "italic-voice"
+                )}>
                   "{displayObservation}"
                 </p>
-                {jeivaInsight?.actionLine && (
+                {jeivaInsight?.actionLine && !patternCheckin && (
                   <Button variant="ghost" className="w-full justify-between h-14 bg-white/10 border-white/5 hover:bg-white/20 rounded-3xl px-5 text-white group">
                     <span className="font-ui text-label font-black uppercase tracking-widest">{jeivaInsight.actionLine}</span>
                     <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
+                )}
+                {patternCheckin && (
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <Button variant="outline" className="rounded-2xl font-ui text-label h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => { setPatternCheckin(null); toast({ title: "Noted.", description: "Jeiva will hold this observation quietly." }); }}>Yes</Button>
+                    <Button variant="outline" className="rounded-2xl font-ui text-label h-12 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={() => { setPatternCheckin(null); toast({ title: "Noted.", description: "Jeiva will update your patterns." }); }}>No</Button>
+                  </div>
                 )}
               </div>
             )}
