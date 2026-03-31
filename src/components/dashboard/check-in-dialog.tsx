@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -30,6 +29,7 @@ import { transcribeHealthDictation } from '@/ai/flows/transcribe-health-dictatio
 import { tagJournalEntry } from '@/ai/flows/tag-journal-entry';
 import { generateVoiceObservation } from '@/ai/flows/generate-voice-observation';
 import { confirmLogEntry } from '@/ai/flows/confirm-log-entry';
+import { acknowledgePregnancyCheckin } from '@/ai/flows/acknowledge-pregnancy-checkin';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +59,7 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
   const chunksRef = useRef<Blob[]>([]);
 
   const isMale = profile?.gender === 'Male';
+  const isPregnant = profile?.lifeStage === 'Pregnancy' || profile?.healthFocus?.toLowerCase().includes('pregnancy');
 
   const checkInTiles = [
     { type: 'Mood', icon: Smile, color: 'text-yellow-600 bg-yellow-100' },
@@ -172,18 +173,29 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
       createdAt: serverTimestamp()
     }, { merge: true });
 
-    const confirmation = await confirmLogEntry({
-      logType: 'voice',
-      logValue: reviewData.transcript,
-      timeOfDay: getTimeOfDay(),
-      isFirst: false,
-      streak: 5,
-      patternFlag: false,
-      sex: profile?.gender || 'Female',
-      targetLanguage: language
-    });
+    let confirmationText = '';
+    if (isPregnant) {
+      const pregnancyAck = await acknowledgePregnancyCheckin({
+        currentWeek: profile.pregnancyWeek || 14,
+        energy: 3, // Fallback for voice-only logic
+        targetLanguage: language
+      });
+      confirmationText = pregnancyAck.acknowledgement;
+    } else {
+      const confirmation = await confirmLogEntry({
+        logType: 'voice',
+        logValue: reviewData.transcript,
+        timeOfDay: getTimeOfDay(),
+        isFirst: false,
+        streak: 5,
+        patternFlag: false,
+        sex: profile?.gender || 'Female',
+        targetLanguage: language
+      });
+      confirmationText = confirmation.confirmation;
+    }
 
-    showSuccess(confirmation.confirmation);
+    showSuccess(confirmationText);
   };
 
   const handleTileTap = async (tile: string) => {
@@ -200,25 +212,36 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
       }
     }, { merge: true });
 
-    const confirmation = await confirmLogEntry({
-      logType: tile.toLowerCase() as any,
-      logValue: "4",
-      timeOfDay: getTimeOfDay(),
-      isFirst: false,
-      streak: 5,
-      patternFlag: false,
-      sex: profile?.gender || 'Female',
-      targetLanguage: language
-    });
+    let confirmationText = '';
+    if (isPregnant) {
+      const pregnancyAck = await acknowledgePregnancyCheckin({
+        currentWeek: profile.pregnancyWeek || 14,
+        [tile.toLowerCase()]: 4,
+        targetLanguage: language
+      });
+      confirmationText = pregnancyAck.acknowledgement;
+    } else {
+      const confirmation = await confirmLogEntry({
+        logType: tile.toLowerCase() as any,
+        logValue: "4",
+        timeOfDay: getTimeOfDay(),
+        isFirst: false,
+        streak: 5,
+        patternFlag: false,
+        sex: profile?.gender || 'Female',
+        targetLanguage: language
+      });
+      confirmationText = confirmation.confirmation;
+    }
 
-    showSuccess(confirmation.confirmation);
+    showSuccess(confirmationText);
   };
 
   const showSuccess = (line: string) => {
     setClosingLine(line);
     setFlowState('success');
     setIsProcessing(false);
-    setTimeout(() => onOpenChange(false), 2000);
+    setTimeout(() => onOpenChange(false), 3000);
   };
 
   const getTimeOfDay = () => {
@@ -356,7 +379,7 @@ export function CheckInDialog({ open, onOpenChange, profile, language }: CheckIn
               <div className="bg-emerald-100 text-emerald-600 p-4 rounded-full mb-6">
                 <Check className="h-10 w-10" />
               </div>
-              <p className="font-content text-display font-black tracking-tight text-primary leading-tight max-w-xs">
+              <p className="font-content text-display font-black tracking-tight text-primary leading-tight max-w-xs italic-voice">
                 "{closingLine}"
               </p>
               <div className="mt-8 flex items-center gap-2">
