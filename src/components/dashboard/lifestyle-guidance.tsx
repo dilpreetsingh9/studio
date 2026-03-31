@@ -11,6 +11,7 @@ import { generateRelationshipMilestone } from '@/ai/flows/generate-relationship-
 import { generateMorningNudge } from '@/ai/flows/generate-morning-nudge';
 import { generatePatternCheckin } from '@/ai/flows/generate-pattern-checkin';
 import { generatePregnancySynthesis } from '@/ai/flows/generate-pregnancy-synthesis';
+import { generatePregnancyMilestone } from '@/ai/flows/generate-pregnancy-milestone';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -45,6 +46,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
   const [milestoneNote, setMilestoneNote] = useState<string | null>(null);
   const [morningNudge, setMorningNudge] = useState<string | null>(null);
   const [patternCheckin, setPatternCheckin] = useState<string | null>(null);
+  const [pregnancyMilestone, setPregnancyMilestone] = useState<string | null>(null);
   const [phaseGuidance, setPhaseGuidance] = useState<GeneratePhaseGuidanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
@@ -60,11 +62,14 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
 
       // 1. Check for Pregnancy Mode
       if (profile.lifeStage === 'Pregnancy' || profile.healthFocus?.toLowerCase().includes('pregnancy')) {
+        const currentWeek = profile.pregnancyWeek || 14;
+        const trimester = currentWeek <= 12 ? 1 : (currentWeek <= 26 ? 2 : 3);
+
         const pregnancyResult = await generatePregnancySynthesis({
           firstName: profile.firstName,
-          currentWeek: profile.pregnancyWeek || 14, // Mock if missing
-          trimester: 2,
-          weeksRemaining: 26,
+          currentWeek,
+          trimester,
+          weeksRemaining: 40 - currentWeek,
           vitals: {
             rhr: 78,
             sleepHours: 7.2,
@@ -80,6 +85,19 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
         });
         setJeivaInsight(pregnancyResult.synthesis);
         setTierReached('Pregnancy');
+
+        // Check for Pregnancy Weekly Milestone
+        // For MVP, we assume any day that is "Day 1" of a week triggers this
+        if (daysActive % 7 === 1 || daysActive === 1) {
+          const milestoneResult = await generatePregnancyMilestone({
+            firstName: profile.firstName,
+            currentWeek,
+            trimester,
+            targetLanguage: 'English'
+          });
+          setPregnancyMilestone(milestoneResult.milestoneNote);
+        }
+
         setIsLoading(false);
         return;
       }
@@ -236,6 +254,14 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
           </div>
         ) : (
           <div className="space-y-6">
+            {pregnancyMilestone && (
+              <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
+                <p className="synthesis-body italic-voice text-white italic leading-relaxed">
+                  "{pregnancyMilestone}"
+                </p>
+              </div>
+            )}
+
             {milestoneNote && (
               <div className="bg-secondary/20 p-5 rounded-3xl border border-secondary/20 animate-in fade-in slide-in-from-bottom-4">
                 <p className="synthesis-body italic-voice text-white italic">"{milestoneNote}"</p>
@@ -250,7 +276,7 @@ export default function LifestyleGuidance({ profile }: { profile: any }) {
               </div>
             )}
 
-            {!displayObservation && !milestoneNote && !isReturn && (
+            {!displayObservation && !milestoneNote && !isReturn && !pregnancyMilestone && (
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-col items-center text-center gap-3">
                 <BrainCircuit className="h-8 w-8 text-white/20" />
                 <p className="synthesis-body text-white/60 italic italic-voice">
