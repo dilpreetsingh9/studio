@@ -1,43 +1,51 @@
+
 'use client';
+
+// CRITICAL: Explicit side-effect imports force Firebase to register its internal components
+// during module evaluation. This resolves "Component auth has not been registered yet".
+import 'firebase/auth';
+import 'firebase/firestore';
+import 'firebase/messaging';
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getMessaging, Messaging } from 'firebase/messaging';
 
-// IMPORTANT: Side-effect imports to ensure component registration
-// This resolves "Component auth has not been registered yet"
-import 'firebase/auth';
-import 'firebase/firestore';
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let firestore: Firestore | null = null;
+let messaging: Messaging | null = null;
 
 /**
- * Initializes Firebase services on the client side.
- * This function is idempotent and ensures that services are only 
- * instantiated in the browser environment to avoid registration errors.
+ * Initializes Firebase services strictly on the client.
+ * Uses a singleton pattern to ensure stability across Next.js HMR.
  */
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
-    return {
-      firebaseApp: null as unknown as FirebaseApp,
-      auth: null as unknown as Auth,
-      firestore: null as unknown as Firestore,
-    };
+    return { firebaseApp: null, auth: null, firestore: null, messaging: null };
   }
 
-  let firebaseApp: FirebaseApp;
-  
-  if (!getApps().length) {
-    firebaseApp = initializeApp(firebaseConfig);
-  } else {
-    firebaseApp = getApp();
+  if (!app) {
+    try {
+      app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      firestore = getFirestore(app);
+      
+      // Messaging might not be supported in all browsers
+      try {
+        messaging = getMessaging(app);
+      } catch (e) {
+        console.warn('Firebase Messaging not supported in this environment', e);
+      }
+    } catch (error) {
+      console.error('Firebase initialization failed', error);
+      throw error;
+    }
   }
 
-  // Get service instances
-  // Because of the side-effect imports above, these will succeed
-  const auth = getAuth(firebaseApp);
-  const firestore = getFirestore(firebaseApp);
-
-  return { firebaseApp, auth, firestore };
+  return { firebaseApp: app, auth, firestore, messaging };
 }
 
 export * from './provider';

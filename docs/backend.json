@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -55,6 +56,15 @@
         "reEngagementCount": {
           "type": "number",
           "description": "Count of times returning after absence."
+        },
+        "fcmTokens": {
+          "type": "array",
+          "description": "List of FCM registration tokens for push notifications.",
+          "items": { "type": "string" }
+        },
+        "notificationsEnabled": {
+          "type": "boolean",
+          "description": "Whether push notifications are globally enabled."
         },
         "pregnancyData": {
           "type": "object",
@@ -119,7 +129,7 @@
       "description": "Cross-report clinical synthesis.",
       "properties": {
         "content": { "type": "string" },
-        "generated_at": { "type": "string", "format": "date-time" },
+        "generated_at": { "type": "string", format: "date-time" },
         "reports_included": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["content", "generated_at"]
@@ -134,7 +144,7 @@
         "sentiment": { "type": "string" },
         "jeiva_observation": { "type": "string" },
         "log_type": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", format: "date-time" }
       }
     },
     "RelationshipState": {
@@ -145,7 +155,7 @@
         "relationship_maturity": { "type": "string", "enum": ["new", "developing", "established", "deep"] },
         "most_consistent_behaviour": { "type": "string" },
         "biggest_change": { "type": "string" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "updatedAt": { "type": "string", format: "date-time" }
       }
     }
   },
