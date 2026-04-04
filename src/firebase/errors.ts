@@ -1,5 +1,5 @@
 'use client';
-import { getAuth, type User } from 'firebase/auth';
+import { type Auth, type User } from 'firebase/auth';
 
 type SecurityRuleContext = {
   path: string;
@@ -74,12 +74,11 @@ function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
  * @param context The context of the failed Firestore operation.
  * @returns A structured request object.
  */
-function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
+function buildRequestObject(context: SecurityRuleContext, authInstance?: Auth): SecurityRuleRequest {
   let authObject: FirebaseAuthObject | null = null;
   try {
     // Safely attempt to get the current user.
-    const firebaseAuth = getAuth();
-    const currentUser = firebaseAuth.currentUser;
+    const currentUser = authInstance?.currentUser ?? null;
     if (currentUser) {
       authObject = buildAuthObject(currentUser);
     }
@@ -87,7 +86,6 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
     // This will catch errors if the Firebase app is not yet initialized.
     // In this case, we'll proceed without auth information.
   }
-
   return {
     auth: authObject,
     method: context.operation,
@@ -114,8 +112,8 @@ ${JSON.stringify(requestObject, null, 2)}`;
 export class FirestorePermissionError extends Error {
   public readonly request: SecurityRuleRequest;
 
-  constructor(context: SecurityRuleContext) {
-    const requestObject = buildRequestObject(context);
+  constructor(context: SecurityRuleContext, authInstance?: Auth) {
+    const requestObject = buildRequestObject(context, authInstance);
     super(buildErrorMessage(requestObject));
     this.name = 'FirebaseError';
     this.request = requestObject;
