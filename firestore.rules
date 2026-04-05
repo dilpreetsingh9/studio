@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,6 +11,15 @@ service cloud.firestore {
     // User document — top level
     match /users/{uid} {
       allow read, write: if isOwner(uid);
+
+      // Consent Logs: Audit trail must be immutable and owner-write-only.
+      match /consentLogs/{document} {
+        allow create: if isOwner(uid) 
+          && request.resource.data.userId == uid
+          && request.resource.data.timestamp == request.time;
+        // No client-side reads allowed for compliance logs; server-side audit only.
+        allow read, update, delete: if false;
+      }
 
       // Synthesis card
       match /synthesis/{document} {

@@ -24,6 +24,10 @@
           "description": "The user's primary email address.",
           "format": "email"
         },
+        "mobileNumber": {
+          "type": "string",
+          "description": "The user's contact number."
+        },
         "dateOfBirth": {
           "type": "string",
           "description": "The user's date of birth.",
@@ -91,6 +95,29 @@
         "dateOfBirth",
         "gender"
       ]
+    },
+    "ConsentLog": {
+      "title": "ConsentLog",
+      "type": "object",
+      "description": "Audit record of jurisdictional health data consent.",
+      "properties": {
+        "userId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "consentVersion": { "type": "string" },
+        "jurisdictions": { "type": "array", "items": { "type": "string" } },
+        "checkboxesAgreed": {
+          "type": "object",
+          "properties": {
+            "healthDataProcessing": { "type": "boolean" },
+            "privacyPolicyAndTerms": { "type": "boolean" },
+            "notMedicalAdvice": { "type": "boolean" }
+          }
+        },
+        "ipCountryHint": { "type": "string" },
+        "platform": { "type": "string", "enum": ["web", "ios", "android"] },
+        "policyUrl": { "type": "string" },
+        "consentWithdrawnAt": { "type": "string", "nullable": true }
+      }
     },
     "Report": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -175,6 +202,16 @@
             "$ref": "#/backend/entities/UserProfile"
           },
           "description": "Core demographic and health information."
+        }
+      },
+      {
+        "path": "users/{userId}/consentLogs/{logId}",
+        "definition": {
+          "entityName": "ConsentLog",
+          "schema": {
+            "$ref": "#/backend/entities/ConsentLog"
+          },
+          "description": "Jurisdictional health data consent audit records."
         }
       },
       {
