@@ -3,8 +3,8 @@ import {googleAI} from '@genkit-ai/google-genai';
 
 export const ai = genkit({
   plugins: [googleAI()],
-  // Using the robust 'latest' alias to avoid version-specific 404 errors
-  model: 'googleai/gemini-1.5-flash-latest',
+  // Using the standard model identifier to avoid version-specific 404 errors
+  model: 'googleai/gemini-1.5-flash',
 });
 
 /**
@@ -31,8 +31,8 @@ export async function runWithModelFallback<TInput, TOutput>(
       error.message?.toLowerCase().includes('not found');
 
     if (isQuotaError || isNotFoundError) {
-      // Fallback to 1.5 Flash using the 'latest' alias
-      const { output } = await promptFn(input, { model: 'googleai/gemini-1.5-flash-latest' });
+      // Fallback to 1.5 Flash using the standard identifier
+      const { output } = await promptFn(input, { model: 'googleai/gemini-1.5-flash' });
       if (!output) throw new Error('AI fallback returned no output');
       return output;
     }
