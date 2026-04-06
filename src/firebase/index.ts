@@ -1,8 +1,11 @@
-
 'use client';
 
-// CRITICAL: Explicit side-effect imports force Firebase to register its internal components
-// during module evaluation. This resolves "Component auth has not been registered yet".
+/**
+ * @fileOverview Firebase Client SDK Initialization
+ * 
+ * CRITICAL: Side-effect imports force registration of internal components (Auth, Firestore).
+ * This prevents "Component [service] has not been registered yet" errors.
+ */
 import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/messaging';
@@ -29,18 +32,22 @@ export function initializeFirebase() {
 
   if (!app) {
     try {
+      // 1. Initialize App
       app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      
+      // 2. Initialize Core Services (Deterministic Handshake)
+      // Calling getAuth/getFirestore after import ensures registration side-effects have run.
       auth = getAuth(app);
       firestore = getFirestore(app);
       
-      // Messaging might not be supported in all browsers
+      // 3. Initialize Optional Services
       try {
         messaging = getMessaging(app);
       } catch (e) {
-        console.warn('Firebase Messaging not supported in this environment', e);
+        console.warn('Firebase Messaging not supported in this environment');
       }
     } catch (error) {
-      console.error('Firebase initialization failed', error);
+      console.error('Firebase initialization failed:', error);
       throw error;
     }
   }

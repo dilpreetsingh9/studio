@@ -2,11 +2,13 @@ import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 /**
- * Genkit instance configured with Gemini 2.0 Flash as default.
+ * Genkit instance configured with Gemini 1.5 Flash as default.
+ * gemini-2.0-flash is currently avoided as default to prevent quota exceeded (429) errors
+ * in environments where 2.0 metrics are restricted.
  */
 export const ai = genkit({
   plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-1.5-flash',
 });
 
 /**
@@ -23,7 +25,7 @@ export async function runWithModelFallback<TInput, TOutput>(
   input: TInput
 ): Promise<TOutput> {
   try {
-    // Attempt with default model (Gemini 2.0 Flash)
+    // Attempt with default model (Gemini 1.5 Flash)
     const { output } = await promptFn(input);
     if (!output) throw new Error('AI returned no output');
     return output;
@@ -36,21 +38,14 @@ export async function runWithModelFallback<TInput, TOutput>(
     const isNotFoundError = msg.includes('404') || status === 404;
 
     if (isQuotaError || isNotFoundError) {
-      console.warn(`Primary model failed (${status || 'quota'}). Attempting fallback to gemini-1.5-flash...`);
+      console.warn(`Primary model failed (${status || 'quota/not-found'}). Attempting fallback to gemini-1.5-pro...`);
       try {
-        // First fallback: Gemini 1.5 Flash (Stable identifier)
-        const { output } = await promptFn(input, { model: 'googleai/gemini-1.5-flash' });
+        // Fallback: Gemini 1.5 Pro (Stable identifier)
+        const { output } = await promptFn(input, { model: 'googleai/gemini-1.5-pro' });
         if (output) return output;
       } catch (fallbackError: any) {
-        console.warn('Fallback to 1.5-flash failed. Attempting final fallback to gemini-1.5-pro...');
-        try {
-          // Second fallback: Gemini 1.5 Pro (Stable identifier)
-          const { output } = await promptFn(input, { model: 'googleai/gemini-1.5-pro' });
-          if (output) return output;
-        } catch (proError) {
-          console.error('All AI fallback attempts exhausted.');
-          throw error;
-        }
+        console.error('All AI fallback attempts exhausted.');
+        throw error;
       }
     }
     
